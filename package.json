@@ -1,0 +1,30 @@
+{
+  "name": "elementary-js",
+  "version": "1.0.0",
+  "description": "JavaScript without sharp edges",
+  "main": "dist/index.js",
+  "author": [
+    { "name": "Arjun Guha", "email": "arjun@cs.umass.edu>" },
+    { "name": "Sam Lee", "email": "chunghinlee@umass.edu" }
+  ],
+  "license": "BSD-3-Clause",
+  "private": false,
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "run": "node ./dist/bin.js"
+  },
+  "devDependencies": {
+    "@types/babel-core": "^6.25.4",
+    "@types/babel-traverse": "^6.25.3",
+    "@types/babel-types": "^7.0.2",
+    "@types/jest": "^23.3.0",
+    "@types/node": "^9.6.6",
+    "jest": "^23.4.1",
+    "typescript": "^2.9.2"
+  },
+  "dependencies": {
+    "babel-core": "^6.26.3",
+    "babel-types": "^6.26.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "include": [
+        "ts"
+        ],
+    "exclude": [
+    "dist"
+    ],
+    "compilerOptions": {
+        "pretty": true,
+        "strict": true,
+        "noImplicitReturns": true,
+        "inlineSourceMap": true,
+        "noUnusedLocals": true,
+        "module": "commonjs",
+        "outDir": "./dist",
+        "lib": ["es2016"],
+        "target": "es5"
+    }
+}
