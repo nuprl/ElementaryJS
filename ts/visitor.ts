@@ -116,6 +116,36 @@ export const visitor: Visitor = {
   LabeledStatement(path, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
   },
+  BinaryExpression(path, st: S) {
+    if (path.node.operator == 'in' ||
+        path.node.operator == 'instanceof') {
+      st.elem.error(path, `Do not use the '` + path.node.operator +
+          `' operator.`);
+    }
+  },
+  UnaryExpression(path, st:S) {
+    if (path.node.operator == 'delete' ||
+        path.node.operator == 'typeof') {
+      st.elem.error(path, `Do not use the '` + path.node.operator +
+      `' operator.`);
+    }
+  },
+  ThrowStatement(path, st:S) {
+    st.elem.error(path, `Do not use the 'throw' operator.`);
+  },
+  UpdateExpression(path, st: S) {
+    if ((path.node.operator == '++' || path.node.operator == '--') &&
+        path.node.prefix == false) {
+      st.elem.error(path, `Do not use post-increment or post-decrement ` +
+          `operators.`);
+    }
+  },
+  ForOfStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-of loops.`);
+  },
+  ForInStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-in loops.`);
+  },
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.

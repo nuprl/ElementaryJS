@@ -4,8 +4,9 @@
   "description": "JavaScript without sharp edges",
   "main": "dist/index.js",
   "author": [
-    { "name": "Arjun Guha", "email": "arjun@cs.umass.edu>" },
-    { "name": "Sam Lee", "email": "chunghinlee@umass.edu" }
+    { "name": "Arjun Guha", "email": "arjun@cs.umass.edu" },
+    { "name": "Sam Lee", "email": "chunghinlee@umass.edu" },
+    { "name": "Joydeep Biswas", "email": "joydeepb@cs.umass.edu" }
   ],
   "license": "BSD-3-Clause",
   "private": false,

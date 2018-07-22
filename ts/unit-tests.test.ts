@@ -71,3 +71,74 @@ test('dynamic error when looking up non-member', () => {
     .toMatch('y is not a member');
 });
 
+test('cannot use for-of', () => {
+  expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
+    expect.arrayContaining([
+    `Do not use for-of loops.`
+    ]));
+});
+
+test('cannot use for-in', () => {
+  expect(staticError(`let a = [1, 2]; for (x in a) {}`)).toEqual(
+    expect.arrayContaining([
+    `Do not use for-in loops.`
+    ]));
+});
+
+test('cannot use in', () => {
+  expect(staticError(`let a = [1, 2]; if (2 in a) {}`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'in' operator.`
+    ]));
+});
+
+test('can use iterator for loops', () => {
+  expect(run(`let i = 0; for(i = 0; i < 10; ++i) {} i`))
+    .toBe(10);
+});
+
+test('cannot use instanceof', () => {
+  expect(staticError(`"foo" instanceof String`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'instanceof' operator.`
+    ]));
+});
+
+
+test('cannot use post-increment operator', () => {
+  expect(run(`let a = 2; ++a`))
+    .toBe(3);
+  expect(run(`let a = 2; --a`))
+    .toBe(1);
+
+  expect(staticError(`let a = 2; let b = a++;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use post-increment or post-decrement operators.`
+    ]));
+  expect(staticError(`let a = 2; let b = a--;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use post-increment or post-decrement operators.`
+    ]));
+});
+
+test('cannot use delete', () => {
+  expect(staticError(`let a = { b: 1 }; delete a.b;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'delete' operator.`
+    ]));
+});
+
+test('cannot use typeof', () => {
+  expect(staticError(`let a = 2; let b = typeof a;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'typeof' operator.`
+    ]));
+});
+
+test('cannot use throw', () => {
+  expect(staticError(`throw "A user-defined exception.";`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'throw' operator.`
+    ]));
+});
+
