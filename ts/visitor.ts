@@ -130,6 +130,9 @@ export const visitor: Visitor = {
       `' operator.`);
     }
   },
+  ThrowStatement(path, st:S) {
+    st.elem.error(path, `Do not use the 'throw' operator.`);
+  },
   UpdateExpression(path, st: S) {
     if ((path.node.operator == '++' || path.node.operator == '--') &&
         path.node.prefix == false) {

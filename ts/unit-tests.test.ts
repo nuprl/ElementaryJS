@@ -136,3 +136,11 @@ test('cannot use typeof', () => {
     `Do not use the 'typeof' operator.`
     ]));
 });
+
+test('cannot use throw', () => {
+  expect(staticError(`throw "A user-defined exception.";`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'throw' operator.`
+    ]));
+});
+
