@@ -11,4 +11,9 @@ export function compile(code: string): string {
   return result.code!;
 }
 
+if (process.argv.length < 3) {
+  console.error('ERROR: You must provide specify a file to run.');
+  process.exit(1);
+}
+
 console.log(compile(fs.readFileSync(process.argv[2], { encoding: 'utf8' })));
