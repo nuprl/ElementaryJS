@@ -71,3 +71,9 @@ test('dynamic error when looking up non-member', () => {
     .toMatch('y is not a member');
 });
 
+test('cannot use for-of', () => {
+  expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
+    expect.arrayContaining([
+    `Use 'let' or 'const' to declare a variable.`
+    ]));
+});
