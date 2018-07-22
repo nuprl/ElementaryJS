@@ -123,6 +123,13 @@ export const visitor: Visitor = {
           `' operator.`);
     }
   },
+  UnaryExpression(path, st:S) {
+    if (path.node.operator == 'delete' ||
+        path.node.operator == 'typeof') {
+      st.elem.error(path, `Do not use the '` + path.node.operator +
+      `' operator.`);
+    }
+  },
   UpdateExpression(path, st: S) {
     if ((path.node.operator == '++' || path.node.operator == '--') &&
         path.node.prefix == false) {

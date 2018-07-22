@@ -122,3 +122,17 @@ test('cannot use post-increment operator', () => {
     `Do not use post-increment or post-decrement operators.`
     ]));
 });
+
+test('cannot use delete', () => {
+  expect(staticError(`let a = { b: 1 }; delete a.b;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'delete' operator.`
+    ]));
+});
+
+test('cannot use typeof', () => {
+  expect(staticError(`let a = 2; let b = typeof a;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'typeof' operator.`
+    ]));
+});
