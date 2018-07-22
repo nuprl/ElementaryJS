@@ -92,6 +92,11 @@ test('cannot use in', () => {
     ]));
 });
 
+test('can use iterator for loops', () => {
+  expect(run(`let i = 0; for(i = 0; i < 10; ++i) {} i`))
+    .toBe(10);
+});
+
 test('cannot use instanceof', () => {
   let codeFragment = `class MyClass{}; let c = new MyClass;` +
       `console.log(c instanceof MyClass);`;
