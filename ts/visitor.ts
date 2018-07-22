@@ -130,6 +130,12 @@ export const visitor: Visitor = {
           `operators.`);
     }
   },
+  ForOfStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-of loops.`);
+  },
+  ForInStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-in loops.`);
+  },
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
