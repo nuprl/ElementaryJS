@@ -116,6 +116,17 @@ export const visitor: Visitor = {
   LabeledStatement(path, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
   },
+  AssignmentExpression(path, st: S) {
+    if (path.node.operator == '>>=' ||
+        path.node.operator == '<<=' ||
+        path.node.operator == '>>>=' ||
+        path.node.operator == '&=' ||
+        path.node.operator == '|=' ||
+        path.node.operator == '^=') {
+      st.elem.error(path, `Do not use the '` + path.node.operator +
+          `' operator.`);
+    }
+  },
   BinaryExpression(path, st: S) {
     if (path.node.operator == 'in' ||
         path.node.operator == 'instanceof') {

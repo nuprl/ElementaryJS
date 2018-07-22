@@ -142,3 +142,56 @@ test('cannot use throw', () => {
     ]));
 });
 
+test('can use string concatenation and assignment operator', () => {
+  expect(run(`let a = "hello "; a += "world"`))
+    .toBe("hello world");
+});
+
+test('can use arithmetic assignment operators', () => {
+  expect(run(`let a = 1; a += 1`))
+    .toBe(2);
+
+  expect(run(`let a = 1; a -= 1`))
+    .toBe(0);
+
+  expect(run(`let a = 1; a *= 7`))
+    .toBe(7);
+
+  expect(run(`let a = 12; a /= 3`))
+    .toBe(4);
+});
+
+test('cannot use bitmask assignment operators', () => {
+  expect(staticError(`let x = 1, y = 2; x &= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '&=' operator.`
+    ]));
+
+  expect(staticError(`let x = 1, y = 2; x |= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '|=' operator.`
+    ]));
+
+  expect(staticError(`let x = 1, y = 2; x ^= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '^=' operator.`
+    ]));
+});
+
+test('cannot use shift assignment operators', () => {
+  expect(staticError(`let x = 1, y = 2; x >>= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '>>=' operator.`
+    ]));
+
+  expect(staticError(`let x = 1, y = 2; x <<= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '<<=' operator.`
+    ]));
+
+  expect(staticError(`let x = 1, y = 2; x >>>= y;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the '>>>=' operator.`
+    ]));
+});
+
