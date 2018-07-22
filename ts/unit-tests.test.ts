@@ -98,9 +98,7 @@ test('can use iterator for loops', () => {
 });
 
 test('cannot use instanceof', () => {
-  let codeFragment = `class MyClass{}; let c = new MyClass;` +
-      `console.log(c instanceof MyClass);`;
-  expect(staticError(codeFragment)).toEqual(
+  expect(staticError(`"foo" instanceof String`)).toEqual(
     expect.arrayContaining([
     `Do not use the 'instanceof' operator.`
     ]));
