@@ -93,3 +93,20 @@ test('cannot use instanceof', () => {
     `Do not use the 'instanceof' operator.`
     ]));
 });
+
+
+test('cannot use post-increment operator', () => {
+  expect(run(`let a = 2; ++a`))
+    .toBe(3);
+  expect(run(`let a = 2; --a`))
+    .toBe(1);
+
+  expect(staticError(`let a = 2; let b = a++;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use post-increment or post-decrement operators.`
+    ]));
+  expect(staticError(`let a = 2; let b = a--;`)).toEqual(
+    expect.arrayContaining([
+    `Do not use post-increment or post-decrement operators.`
+    ]));
+});

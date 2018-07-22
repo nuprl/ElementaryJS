@@ -123,6 +123,13 @@ export const visitor: Visitor = {
           `' operator.`);
     }
   },
+  UpdateExpression(path, st: S) {
+    if ((path.node.operator == '++' || path.node.operator == '--') &&
+        path.node.prefix == false) {
+      st.elem.error(path, `Do not use post-increment or post-decrement ` +
+          `operators.`);
+    }
+  },
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
