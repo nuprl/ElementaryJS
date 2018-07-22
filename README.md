@@ -39,6 +39,6 @@ These are the primary files of ElementaryJS:
 - `ts/index.ts`: Entrypoint of the ElementaryJS package. This is the interface to
   ElementaryJS.
 
-- `ts/bin.ts`: Runs ElementaryJS from the command-line (`yarn run run`). This
+- `ts/bin.ts`: Runs ElementaryJS from the command-line (`yarn run run file-to-run.js`). This
   may help you debug the compiler, but it is not how ElementaryJS will typically
   be used.
