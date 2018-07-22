@@ -77,3 +77,19 @@ test('cannot use for-of', () => {
     `Use 'let' or 'const' to declare a variable.`
     ]));
 });
+
+test('cannot use in', () => {
+  expect(staticError(`let a = [1, 2]; if (2 in a) {}`)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'in' operator.`
+    ]));
+});
+
+test('cannot use instanceof', () => {
+  let codeFragment = `class MyClass{}; let c = new MyClass;` +
+      `console.log(c instanceof MyClass);`;
+  expect(staticError(codeFragment)).toEqual(
+    expect.arrayContaining([
+    `Do not use the 'instanceof' operator.`
+    ]));
+});

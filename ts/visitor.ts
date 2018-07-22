@@ -116,6 +116,13 @@ export const visitor: Visitor = {
   LabeledStatement(path, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
   },
+  BinaryExpression(path, st: S) {
+    if (path.node.operator == 'in' ||
+        path.node.operator == 'instanceof') {
+      st.elem.error(path, `Do not use the '` + path.node.operator +
+          `' operator.`);
+    }
+  },
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
