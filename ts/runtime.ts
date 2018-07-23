@@ -14,3 +14,10 @@ export function dot(object: any, index: string) {
   }
   return object[index];
 }
+
+export function mustBeNumber(object: any) {
+  if (typeof object !== 'number') {
+    throw new ElementaryRuntimeError(`argument of operator must be a numer`);
+  }
+  return object;
+}

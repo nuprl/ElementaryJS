@@ -144,11 +144,22 @@ export const visitor: Visitor = {
   ThrowStatement(path, st:S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
-  UpdateExpression(path, st: S) {
-    if ((path.node.operator == '++' || path.node.operator == '--') &&
-        path.node.prefix == false) {
-      st.elem.error(path, `Do not use post-increment or post-decrement ` +
-          `operators.`);
+  UpdateExpression: {
+    enter(path: NodePath<t.UpdateExpression>, st: S) {
+      if ((path.node.operator == '++' || path.node.operator == '--') &&
+          path.node.prefix == false) {
+        st.elem.error(
+            path, `Do not use post-increment or post-decrement operators.`);
+      }
+    },
+    exit(path: NodePath<t.UpdateExpression>, st: S) {
+      const a = path.node.argument;
+      if (a.type !== 'Identifier') {
+        // Trying to update something that's not an identifier.
+        throw new Error(`ElementaryJS expected id. in UpdateExpression`);
+      }
+      path.replaceWith(dynCheck('mustBeNumber', a));
+      path.skip();
     }
   },
   ForOfStatement(path, st: S) {
