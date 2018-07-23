@@ -112,14 +112,14 @@ test('cannot use instanceof', () => {
     ]));
 });
 
-test('can post- or pre- increment numbers', () => {
+test('can use pre-update operator with numbers', () => {
   expect(run(`let a = 2; ++a`))
     .toBe(3);
   expect(run(`let a = 2; --a`))
     .toBe(1);
 });
 
-test('cannot use post-increment operator', () => {
+test('cannot use post-update operator', () => {
   expect(staticError(`let a = 2; let b = a++;`)).toEqual(
     expect.arrayContaining([
     `Do not use post-increment or post-decrement operators.`
