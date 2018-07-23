@@ -9,7 +9,8 @@ function run(code: string): any {
   if (result.kind === 'error') {
     throw result;
   }
-  const v = sandbox(code);
+  const compiledCode = generator(result.node, { }).code;
+  const v = sandbox(compiledCode);
   if (v.kind === 'exception') {
     throw v.value;
   }
