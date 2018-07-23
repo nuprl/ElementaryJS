@@ -71,6 +71,11 @@ test('dynamic error when looking up non-member', () => {
     .toMatch('y is not a member');
 });
 
+test('dynamic error when assigning a value to a non-member', () => {
+  expect(dynamicError(`let obj = {}; obj.y = 0;`))
+    .toMatch('y is not a member');
+});
+
 test('cannot use for-of', () => {
   expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
     expect.arrayContaining([
@@ -193,5 +198,25 @@ test('cannot use shift assignment operators', () => {
     expect.arrayContaining([
     `Do not use the '>>>=' operator.`
     ]));
+});
+
+test('gigantic test case', () => {
+  let source = `
+      // Fibonacci sequence, where fibonacci(0) = 0, 
+      function fibonacci(n) {
+        if ( (n % 1) != 0) {
+          console.error('n must be an integer!');
+          return 0;
+        }
+        if (n < 1) {
+          return 0;
+        } else if (n == 1) {
+          return 1;
+        }
+        return (fibonacci(n - 1) + fibonacci(n - 2));
+      }
+      fibonacci(10);
+  `;
+  expect(run(source)).toBe(55);
 });
 
