@@ -3,31 +3,25 @@
 // read code from files.
 import * as babel from 'babel-core';
 import { Node } from 'babel-types';
+import * as babylon from 'babylon';
 import * as visitor from './visitor';
 import { CompileOK, CompileError } from './types';
 
-function compileAst(node: Node) {
-  return  babel.transformFromAst(node, undefined, {
-    plugins: [visitor.plugin],
-    ast: true,
-    code: false
-  }).ast!;
-}
-
-function compileCode(code:string) {
-  return  babel.transform(code, {
-    plugins: [visitor.plugin],
-    ast: true,
-    code: false
-  }).ast!;
-}
-
-export function compile(program: string | Node): CompileOK | CompileError {
+export function compile(code: string | Node): CompileOK | CompileError {
   try {
+    // Babylon is the parser that Babel uses internally.
+    const ast = typeof code === 'string' ? 
+      babylon.parse(code).program : code;
+    const babelResult = babel.transformFromAst(ast, undefined, {
+      plugins: [visitor.plugin],
+      ast: true,
+      code: false
+    });
     return {
       kind: 'ok',
-      node: typeof program === 'string' ?
-        compileCode(program) : compileAst(program)
+      // NOTE(arjun): There is some imprecision in the type produced by Babel.
+      // I have verified that this cast is safe.
+      node: (babelResult.ast! as babel.types.File).program
     };
   }
   catch (exn) {
