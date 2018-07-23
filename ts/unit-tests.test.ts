@@ -73,10 +73,10 @@ test('dynamic error when looking up non-member', () => {
 
 test('dynamic error when incrementing or decrementing non-number', () => {
   expect(dynamicError(`let a = {}; --a`))
-    .toMatch('argument of operator must be a numer');
+    .toMatch('argument of operator must be a number');
 
   expect(dynamicError(`let a = "foo"; ++a`))
-    .toMatch('argument of operator must be a numer');
+    .toMatch('argument of operator must be a number');
 });
 
 test('cannot use for-of', () => {
