@@ -1,5 +1,7 @@
 # ElementaryJS
 
+** WARNING: ElementaryJS is not ready for general use.**
+
 JavaScript without sharp edges.
 
 # Usage
