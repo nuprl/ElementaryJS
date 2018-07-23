@@ -7,13 +7,20 @@ import * as babylon from 'babylon';
 import * as visitor from './visitor';
 import { CompileOK, CompileError } from './types';
 
-export function compile(code: string | Node): CompileOK | CompileError {
+/**
+ * 
+ * @param code the program to compile
+ * @param isOnline running online or offline?
+ */
+export function compile(
+  code: string | Node, 
+  isOnline: boolean): CompileOK | CompileError {
   try {
     // Babylon is the parser that Babel uses internally.
     const ast = typeof code === 'string' ? 
       babylon.parse(code).program : code;
     const babelResult = babel.transformFromAst(ast, undefined, {
-      plugins: [visitor.plugin],
+      plugins: [[visitor.plugin, { isOnline }]],
       ast: true,
       code: false
     });

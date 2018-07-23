@@ -5,7 +5,7 @@ import { default as generator } from 'babel-generator';
 // Helps write test cases that expect the program to terminate normally.
 // The result is the final value of the program.
 function run(code: string): any {
-  const result = compile(code);
+  const result = compile(code, false);
   if (result.kind === 'error') {
     throw result;
   }
@@ -21,7 +21,7 @@ function run(code: string): any {
 // A test case should check that the message is reasonable, or it could have
 // been some other kind of failure.
 function dynamicError(code: string): string {
-  const result = compile(code);
+  const result = compile(code, false);
   if (result.kind === 'error') {
     throw result;
   }
@@ -40,7 +40,7 @@ function dynamicError(code: string): string {
 // Helps write test cases that check for static errors. The result
 // is the array of error messages produced by ElementaryJS.
 function staticError(code: string): string[] {
-  const result = compile(code);
+  const result = compile(code, false);
   if (result.kind === 'ok') {
     throw new Error(`expected a static error, but none produced`);
   }
