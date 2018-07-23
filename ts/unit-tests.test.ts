@@ -72,6 +72,14 @@ test('dynamic error when looking up non-member', () => {
     .toMatch('y is not a member');
 });
 
+test('dynamic error when incrementing or decrementing non-number', () => {
+  expect(dynamicError(`let a = {}; --a`))
+    .toMatch('argument of operator must be a numer');
+
+  expect(dynamicError(`let a = "foo"; ++a`))
+    .toMatch('argument of operator must be a numer');
+});
+
 test('cannot use for-of', () => {
   expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
     expect.arrayContaining([
@@ -105,13 +113,14 @@ test('cannot use instanceof', () => {
     ]));
 });
 
-
-test('cannot use post-increment operator', () => {
+test('can post- or pre- increment numbers', () => {
   expect(run(`let a = 2; ++a`))
     .toBe(3);
   expect(run(`let a = 2; --a`))
     .toBe(1);
+});
 
+test('cannot use post-increment operator', () => {
   expect(staticError(`let a = 2; let b = a++;`)).toEqual(
     expect.arrayContaining([
     `Do not use post-increment or post-decrement operators.`
