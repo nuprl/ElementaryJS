@@ -6,8 +6,8 @@ export type Exception = { kind: 'exception', value: any };
 
 export function sandbox(code: string): OK | Exception {
   try {
-    const opts = { require: require };
-    return { kind: 'ok', value: vm.runInNewContext(code, opts) };
+    const sandbox = { require: require };
+    return { kind: 'ok', value: vm.runInNewContext(code, sandbox, { timeout: 2000 }) };
   }
   catch (exn) {
     return { kind: 'exception', value: exn };

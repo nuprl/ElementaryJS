@@ -15,7 +15,7 @@ export type CompileError = {
 
 export type CompileOK = {
   kind: 'ok';
-  node: t.Node
+  node: t.Program
 };
 
 export type CompilerResult = CompileOK | CompileError;

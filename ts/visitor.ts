@@ -47,7 +47,21 @@ function dynCheck(name: string, ...args: t.Expression[]): t.CallExpression {
 }
 
 interface S {
-  elem: State
+  elem: State,
+  opts: { 
+    isOnline: boolean
+  }
+}
+
+// The expression that loads the runtime system.
+function rtsExpression(st: S): t.Expression {
+  if (st.opts.isOnline) {
+    return t.identifier('elementaryjs');
+  }
+  else {
+    return t.callExpression(t.identifier('require'),
+      [t.stringLiteral('./runtime')]);
+  }
 }
 
 export const visitor: Visitor = {
@@ -57,17 +71,9 @@ export const visitor: Visitor = {
     },
     exit(path, st: S) {
       path.get('body.0').insertBefore(
-        t.variableDeclaration(
-          'var',
-          [t.variableDeclarator(
-            t.identifier('rts'),
-            t.callExpression(
-              t.identifier('require'),
-              [t.stringLiteral('./runtime')]
-            )
-          )]
-        )
-      );
+        t.variableDeclaration('var', [
+          t.variableDeclarator(t.identifier('rts'), rtsExpression(st))
+        ]));
       path.stop();
 
       if (st.elem.errors.length > 0) {

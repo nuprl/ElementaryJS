@@ -6,6 +6,7 @@
     "dist"
     ],
     "compilerOptions": {
+        "declaration": true,
         "pretty": true,
         "strict": true,
         "noImplicitReturns": true,
