@@ -62,6 +62,11 @@ test('cannot use switch', () => {
     ]));
 });
 
+test('can dynamically change types', () => {
+  expect(run(`let x = "foo"; x = 42`)).toBe(42);
+  expect(run(`let x = 42; x = "foo"`)).toBe("foo");
+});
+
 test('can lookup members', () => {
   expect(run(`let obj = { x: 100 }; obj.x = 42`))
       .toBe(42);
