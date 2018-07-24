@@ -22,7 +22,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "run": "node ./dist/bin.js"
+    "run": "node ./dist/bin.js",
+    "clean": "rm -f dist/*"
   },
   "jest": {
     "transform": {
