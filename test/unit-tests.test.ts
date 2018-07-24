@@ -106,8 +106,14 @@ test('updateexpression must not duplicate computation', () => {
     x[++i].y += 3;
     x[1].y
   `;
-  expect(run(code))
-      .toBe(6);
+  expect(run(code)).toBe(6);
+  code = `
+    let x = [ { y: 2 }, { y: 3 }];
+    let i = 0;
+    ++x[i += 1].y;
+    x[1].y
+  `;
+  expect(run(code)).toBe(4);
 });
 
 test('cannot assign array non- members', () => {
