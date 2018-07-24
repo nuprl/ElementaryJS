@@ -43,6 +43,9 @@ export function checkUpdateOperand(
     obj: any,
     member: string) {
   console.log(`obj.${member} is of type ${typeof(obj[member])}`);
+  if (obj.hasOwnProperty(member) === false) {
+    throw new ElementaryRuntimeError(`${member} is not a member`);
+  }
   if (typeof(obj[member]) !== 'number') {
     throw new ElementaryRuntimeError(`argument of operator must be a number`);
   }
