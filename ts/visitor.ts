@@ -48,7 +48,7 @@ function dynCheck(name: string, ...args: t.Expression[]): t.CallExpression {
 
 interface S {
   elem: State,
-  opts: { 
+  opts: {
     isOnline: boolean
   }
 }
@@ -61,6 +61,17 @@ function rtsExpression(st: S): t.Expression {
   else {
     return t.callExpression(t.identifier('require'),
       [t.stringLiteral('./runtime')]);
+  }
+}
+
+function unassign(op: string) {
+  switch (op) {
+    case '+=': return '+';
+    case '-=': return '-';
+    case '*=': return '*';
+    case '/=': return '/';
+    case '%=': return '%';
+    default: throw new Error(`should not happen`);
   }
 }
 
@@ -99,14 +110,13 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
-  
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((parent.type === 'UpdateExpression' && 
+      if ((parent.type === 'UpdateExpression' &&
            (parent as t.UpdateExpression).argument == path.node) ||
           (parent.type === 'AssignmentExpression' &&
            (parent as t.AssignmentExpression).left === path.node)) {
@@ -134,15 +144,30 @@ export const visitor: Visitor = {
   LabeledStatement(path, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
   },
-  AssignmentExpression(path, st: S) {
-    if (path.node.operator == '>>=' ||
-        path.node.operator == '<<=' ||
-        path.node.operator == '>>>=' ||
-        path.node.operator == '&=' ||
-        path.node.operator == '|=' ||
-        path.node.operator == '^=') {
-      st.elem.error(path, `Do not use the '` + path.node.operator +
-          `' operator.`);
+  AssignmentExpression: {
+    enter(path, st: S) {
+      const allowed = [ '=', '+=', '-=', '*=', '/=', '%=' ];
+      const op = path.node.operator;
+      if (allowed.includes(op) === false) {
+        st.elem.error(path, `Do not use the '${op}' operator.`);
+        path.skip();
+        return;
+      }
+      if (op == '=') {
+        return;
+      }
+      if (path.node.left.type === 'Identifier') {
+        path.replaceWith(t.assignmentExpression('=', path.node.left,
+          t.binaryExpression(unassign(op), path.node.left, path.node.right)));
+      }
+      else if (path.node.left.type === 'MemberExpression') {
+        throw new Error('NYI');
+      }
+      else {
+        st.elem.error(path, `Do not use patterns`);
+        path.skip();
+        return;
+      }
     }
   },
   BinaryExpression(path, st: S) {

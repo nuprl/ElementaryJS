@@ -1,5 +1,5 @@
-import { compile } from './index';
-import { sandbox } from './sandbox';
+import { compile } from '../ts/index';
+import { sandbox } from '../ts/sandbox';
 import { default as generator } from 'babel-generator';
 
 // Helps write test cases that expect the program to terminate normally.
