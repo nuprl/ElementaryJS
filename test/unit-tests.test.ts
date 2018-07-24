@@ -99,6 +99,17 @@ test('can update array members', () => {
       .toBe(11);
 });
 
+test('updateexpression must not duplicate computation', () => {
+  let code = `
+    let x = [ { y: 2 }, { y: 3 }];
+    let i = 0;
+    x[++i].y += 3;
+    x[1].y
+  `;
+  expect(run(code))
+      .toBe(6);
+});
+
 test('cannot assign array non- members', () => {
   expect(dynamicError(`let obj = []; obj[0] += 5`))
     .toMatch('Index 0 does not exist in array');
