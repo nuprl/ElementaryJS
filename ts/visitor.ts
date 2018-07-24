@@ -161,11 +161,12 @@ export const visitor: Visitor = {
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
-      console.log(`Update ` + a + ` of type ${a.type}`);
       if (a.type === 'Identifier') {
-        path.insertBefore(dynCheck('updateOnlyNumbers',
+        const check = dynCheck('updateOnlyNumbers',
             t.stringLiteral(path.node.operator),
-            a));
+            a);
+        path.replaceWith(t.sequenceExpression(
+          [check as t.Expression, path.node]));
         path.skip();
       } else if (a.type === 'MemberExpression') {
         const expr = a as t.MemberExpression;
@@ -181,6 +182,12 @@ export const visitor: Visitor = {
             t.stringLiteral(path.node.operator),
             obj,
             member));
+        path.skip();
+      } else if (a.type ==='CallExpression') {
+        // Hack: Just run the expression, and check if the result is a number.
+        path.replaceWith(dynCheck('checkNumberAndReturn', 
+            t.stringLiteral(path.node.operator),
+            path.node));
         path.skip();
       } else {
         // Trying to update something that's not an identifier.

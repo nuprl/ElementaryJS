@@ -22,6 +22,14 @@ export function updateOnlyNumbers(opcode: string, object: any) {
   }
 }
 
+export function checkNumberAndReturn(opcode: string, object: any) {
+  if (typeof object !== 'number') {
+    // TODO(joydeepb): Figure out how to print the operator.
+    throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);
+  }
+  return object;
+}
+
 export function elementaryJSBug(what: string) {
   let errorMsg = 'You have encountered a potential bug in ' +
       'ElementaryJS. Please report this to the developers, ' +
