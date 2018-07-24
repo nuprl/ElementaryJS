@@ -5,12 +5,17 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function dot(object: any, index: string) {
+export function dot(object: any, index: string | number) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an object');
   }
   if (!object.hasOwnProperty(index)) {
-    throw new ElementaryRuntimeError(`${index} is not a member`);
+    if (typeof index === 'number') {
+      throw new ElementaryRuntimeError(
+        `Index ${index} does not exist in array`);
+    } else {
+      throw new ElementaryRuntimeError(`${index} is not a member`);
+    }
   }
   return object[index];
 }
@@ -48,9 +53,14 @@ export function checkMember(o: any, k: any, v: any) {
 export function checkUpdateOperand(
     opcode: string,
     obj: any,
-    member: string) {
+    member: string | number) {
   if (obj.hasOwnProperty(member) === false) {
-    throw new ElementaryRuntimeError(`${member} is not a member`);
+    if (typeof member === 'number') {
+      throw new ElementaryRuntimeError(
+        `Index ${member} does not exist in array`);
+    } else {
+      throw new ElementaryRuntimeError(`${member} is not a member`);
+    }
   }
   if (typeof(obj[member]) !== 'number') {
     throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);

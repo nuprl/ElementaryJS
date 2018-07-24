@@ -84,6 +84,31 @@ test('can lookup members', () => {
     .toBe(2);
 });
 
+test('can access array members', () => {
+  expect(run(`let obj = [10]; obj[0] = 42`))
+      .toBe(42);
+});
+
+test('can assign array members', () => {
+  expect(run(`let obj = [10]; obj[0] += 42`))
+      .toBe(52);
+});
+
+test('can update array members', () => {
+  expect(run(`let obj = [10]; ++obj[0]`))
+      .toBe(11);
+});
+
+test('cannot assign array non- members', () => {
+  expect(dynamicError(`let obj = []; obj[0] += 5`))
+    .toMatch('Index 0 does not exist in array');
+});
+
+test('cannot update array non- members', () => {
+  expect(dynamicError(`let obj = []; ++obj[0]`))
+    .toMatch('Index 0 does not exist in array');
+});
+
 test('dynamic error when looking up non-member', () => {
   expect(dynamicError(`let obj = { x: 500 }; obj.y`))
     .toMatch('y is not a member');
