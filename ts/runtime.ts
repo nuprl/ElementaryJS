@@ -42,12 +42,11 @@ export function checkUpdateOperand(
     opcode: string,
     obj: any,
     member: string) {
-  console.log(`obj.${member} is of type ${typeof(obj[member])}`);
   if (obj.hasOwnProperty(member) === false) {
     throw new ElementaryRuntimeError(`${member} is not a member`);
   }
   if (typeof(obj[member]) !== 'number') {
-    throw new ElementaryRuntimeError(`argument of operator must be a number`);
+    throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);
   }
   if (opcode === '++') {
     return (++obj[member]);
