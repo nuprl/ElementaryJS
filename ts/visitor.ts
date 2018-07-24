@@ -75,6 +75,31 @@ function unassign(op: string) {
   }
 }
 
+
+function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
+  const parent = path.getFunctionParent().node;
+  if (t.isProgram(parent)) {
+    return parent.body;
+  }
+  else if (t.isFunctionExpression(parent) ||
+           t.isFunctionDeclaration(parent) ||
+           t.isObjectMethod(parent)) {
+    return parent.body.body;
+  }
+  else {
+    throw new Error(`parent is a ${parent.type}`);
+  }
+}
+
+function propertyAsString(node: t.MemberExpression): t.Expression {
+  if (node.computed) {
+    return node.property;
+  }
+  else {
+    return t.stringLiteral((node.property as t.Identifier).name);
+  }
+}
+
 export const visitor: Visitor = {
   Program: {
     enter(path, st: S) {
@@ -153,15 +178,35 @@ export const visitor: Visitor = {
         path.skip();
         return;
       }
-      if (op == '=') {
-        return;
+      const left = path.node.left;
+
+      if (left.type === 'Identifier') {
+        if (op === '=') {
+          return;
+        }
+
+        path.replaceWith(t.assignmentExpression('=', left,
+          t.binaryExpression(unassign(op), left, path.node.right)));
       }
-      if (path.node.left.type === 'Identifier') {
-        path.replaceWith(t.assignmentExpression('=', path.node.left,
-          t.binaryExpression(unassign(op), path.node.left, path.node.right)));
-      }
-      else if (path.node.left.type === 'MemberExpression') {
-        throw new Error('NYI');
+      else if (left.type === 'MemberExpression') {
+        // exp.x = rhs => checkMember(exp, 'x', rhs)
+        if (op === '=') {
+          path.replaceWith(dynCheck('checkMember',
+            left.object,
+            propertyAsString(left),
+            path.node.right));
+          path.skip();
+        }
+        else {
+          // exp.x += rhs =>  tmp = exp, tmp.x = tmp.x + rhs
+          const tmp = path.scope.generateUidIdentifier('tmp');
+          enclosingScopeBlock(path).push(
+            t.variableDeclaration('var', [
+              t.variableDeclarator(tmp)
+            ]));
+          path.replaceWith(t.assignmentExpression('=',
+            left, t.binaryExpression(unassign(op), left, path.node.right)));
+        }
       }
       else {
         st.elem.error(path, `Do not use patterns`);

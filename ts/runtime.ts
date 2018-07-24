@@ -40,64 +40,9 @@ export function elementaryJSBug(what: string) {
   
 }
 
-function assign(operator: string, o: any, x: any, v: any) {
-  // NOTE(arjun): I am concerned that this is going to slow code down
-  // considerably.
-  switch (operator) {
-    case '=':
-      return o[x] = v;
-    case '+=':
-      return o[x] += v;
-    case '-=':
-      return o[x] -= v;
-    case '*=':
-      return o[x] *= v;
-    case '-=':
-      return o[x] -= v;
-    case '%=':
-      return o[x] %= v;
-    default:
-      elementaryJSBug(`${operator} unsupported (should be caught statically)`);
-  }
-}
-
-/**
- * The dynamic check for expressions such as `o.x = v` and `o.x += v`.
- */
-export function checkObjectAssign(operator: string, o: any, x: any, v: any) {
-  if (!o.hasOwnProperty(x)) {
-    throw new ElementaryRuntimeError(`${x} is not a member`);
-  }
-  if (operator === '+=' &&
-      ((typeof o.x == 'string' && typeof v === 'string') ||
-       (typeof o.x == 'number' && typeof v === 'number'))) {
-    return assign(operator, o, x, v);
-  }
-
-  if (operator === '=') {
-    return assign(operator, o, x, v);
-  }
-
-  if (typeof o.x === 'number' && typeof v === 'number') {
-    return assign(operator, o, x, v);
-  }
-  throw new ElementaryRuntimeError(`${x} is not a number`);
-}
-
-/**
- * The dynamic check for expressions such as `arr[ix] = v` and `arr[ix] += v`.
- */
-export function checkArrayAssign(operator: string, arr: any, ix: any, v: any) {
-  if (arr instanceof Array === false) {
-    throw new ElementaryRuntimeError(`${arr} is not an array`);
-  }
-  if (typeof ix !== 'number') {
-    throw new ElementaryRuntimeError(`expected array index, found ${ix}`);
-  }
-  if (ix < 0 || ix >= arr.length) {
-    throw new ElementaryRuntimeError(`index out of range`);
-  }
-  return assign(operator, arr, ix, v);
+export function checkMember(o: any, k: any, v: any) {
+  dot(o, k);
+  return (o[k] = v);
 }
 
 export function checkUpdateOperand(
