@@ -137,7 +137,8 @@ test('can use pre-update operator with numbers', () => {
     function foo() {
       return { x: 10 };
     }
-    let a = ++foo().x`
+    let a = ++foo().x;
+    a`
   expect(run(code)).toBe(11);
 });
 
