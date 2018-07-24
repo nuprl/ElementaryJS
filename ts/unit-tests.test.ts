@@ -63,6 +63,8 @@ test('cannot use switch', () => {
 });
 
 test('can lookup members', () => {
+  expect(run(`let obj = { x: 100 }; obj.x = 42`))
+      .toBe(42);
   expect(run(`let obj = { x: 500 }; obj.x`))
     .toBe(500);
   expect(run(`let obj = { x: 16 }; Math.sqrt(obj.x)`))
