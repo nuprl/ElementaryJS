@@ -102,6 +102,17 @@ export const visitor: Visitor = {
   
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
+      const parent = path.parent;
+      // Some stupid cases to skip: o.x = v and ++o.x
+      // In these cases, the l-value is a MemberExpression, but we tackle
+      // these in the AssignmentExpression and UpdateExpression cases.
+      if ((parent.type === 'UpdateExpression' && 
+           (parent as t.UpdateExpression).argument == path.node) ||
+          (parent.type === 'AssignmentExpression' &&
+           (parent as t.AssignmentExpression).left === path.node)) {
+        return;
+      }
+
       const o = path.node.object;
       const p = path.node.property;
       if (path.node.computed === false) {
