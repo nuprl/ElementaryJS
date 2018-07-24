@@ -89,6 +89,9 @@ test('dynamic error when looking up non-member', () => {
     .toMatch('y is not a member');
   expect(dynamicError(`let obj = { x: 500 }; ++obj.y`))
     .toMatch('y is not a member');
+});
+
+test('dynamic error when looking up non-member 2', () => {
   expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
       .toMatch('y is not a member');
 });
