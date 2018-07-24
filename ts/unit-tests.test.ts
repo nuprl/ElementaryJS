@@ -78,6 +78,10 @@ test('can lookup members', () => {
     obj.x.y
   `;
   expect(run(code)).toBe(11);
+  expect(run(`function foo() { return { x: 1 }; } ++foo().x`))
+    .toBe(2);
+  expect(run(`function foo() { return { x: 1 }; } foo().x += 1`))
+    .toBe(2);
 });
 
 test('dynamic error when looking up non-member', () => {
