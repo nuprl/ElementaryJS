@@ -35,7 +35,7 @@ function dynamicError(code: string): string {
     }
     return v.value.message;
   }
-  throw new Error(`expected dynamic error, got result ${v.value}`);
+  throw new Error(`expected dynamic error, got result ${v.value} with sandbox result.kind = '${v.kind}'`);
 }
 
 // Helps write test cases that check for static errors. The result
@@ -65,6 +65,17 @@ test('cannot use switch', () => {
 test('can lookup members', () => {
   expect(run(`let obj = { x: 500 }; obj.x`))
     .toBe(500);
+  expect(run(`let obj = { x: 16 }; Math.sqrt(obj.x)`))
+    .toBe(4);
+  let code = `
+    function incr(x) {
+      ++x.y;
+    }
+    let obj = { x: { y: 10 } };
+    incr(obj.x);
+    obj.x.y
+  `;
+  expect(run(code)).toBe(11);
 });
 
 test('dynamic error when looking up non-member', () => {
@@ -74,10 +85,10 @@ test('dynamic error when looking up non-member', () => {
 
 test('dynamic error when incrementing or decrementing non-number', () => {
   expect(dynamicError(`let a = {}; --a`))
-    .toMatch('argument of operator must be a number');
+    .toMatch("argument of operator '--' must be a number");
 
   expect(dynamicError(`let a = "foo"; ++a`))
-    .toMatch('argument of operator must be a number');
+    .toMatch("argument of operator '++' must be a number");
 });
 
 test('cannot use for-of', () => {
@@ -114,10 +125,18 @@ test('cannot use instanceof', () => {
 });
 
 test('can use pre-update operator with numbers', () => {
+  expect(run(`let a = { b : 3 }; ++a.b`))
+    .toBe(4);
   expect(run(`let a = 2; ++a`))
     .toBe(3);
   expect(run(`let a = 2; --a`))
     .toBe(1);
+  let code = `
+    function foo() {
+      return { x: 10 };
+    }
+    let a = ++foo().x`
+  expect(run(code)).toBe(11);
 });
 
 test('cannot use post-update operator', () => {

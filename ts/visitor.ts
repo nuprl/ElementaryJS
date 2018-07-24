@@ -99,6 +99,7 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
+  
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const o = path.node.object;
@@ -160,12 +161,31 @@ export const visitor: Visitor = {
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
-      if (a.type !== 'Identifier') {
+      console.log(`Update ` + a + ` of type ${a.type}`);
+      if (a.type === 'Identifier') {
+        path.insertBefore(dynCheck('updateOnlyNumbers',
+            t.stringLiteral(path.node.operator),
+            a));
+        path.skip();
+      } else if (a.type === 'MemberExpression') {
+        const expr = a as t.MemberExpression;
+        let obj = expr.object;
+        let member : t.Expression;
+        if (expr.computed) {
+          member = a.property;
+        } else {
+          member = t.stringLiteral((a.property as t.Identifier).name);
+        }
+        // replace with dyn check function that takes in both obj and member.
+        path.replaceWith(dynCheck('checkUpdateOperand', 
+            t.stringLiteral(path.node.operator),
+            obj,
+            member));
+        path.skip();
+      } else {
         // Trying to update something that's not an identifier.
-        throw new Error(`ElementaryJS expected id. in UpdateExpression`);
+        throw new Error(`ElementaryJS Error: trying to update expression of type ${a.type}`);
       }
-      path.replaceWith(dynCheck('mustBeNumber', a));
-      path.skip();
     }
   },
   ForOfStatement(path, st: S) {
