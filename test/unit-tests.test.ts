@@ -121,12 +121,12 @@ test('updateexpression must not duplicate computation', () => {
   expect(run(code)).toBe(4);
 });
 
-test('cannot assign array non- members', () => {
+test('cannot assign array non-members', () => {
   expect(dynamicError(`let obj = []; obj[0] += 5`))
-    .toMatch('Index 0 does not exist in array');
+    .toMatch(`arguments of operator '+' must both be numbers or strings`);
 });
 
-test('cannot update array non- members', () => {
+test('cannot update array non-members', () => {
   expect(dynamicError(`let obj = []; ++obj[0]`))
     .toMatch('Index 0 does not exist in array');
 });

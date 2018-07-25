@@ -1,8 +1,29 @@
-// This module contains the primary visitor that enforces the static checks
-// and inserts the dynamic checks of ElementaryJS. To the extent possible,
-// the visitor does not throw an exception if a static check fails. Instead,
-// it accumulates a list of errors in visitor state. Once the visitor
-// reaches the end, it throws the list of errors if it is non-empty.
+/* This module contains the primary visitor that enforces the static checks
+ * and inserts the dynamic checks of ElementaryJS. To the extent possible,
+ * the visitor does not throw an exception if a static check fails. Instead,
+ * it accumulates a list of errors in visitor state. Once the visitor
+ * reaches the end, it throws the list of errors if it is non-empty.
+ *
+ * Guidelines on how to implement new checks:
+ *
+ * NodeType: {
+ *   enter(path, st: S): {
+ *     // Implement any static checks here by adding an error message by
+ *     st.elem.error(<message>);
+ *     // If the node is totally crazy and will break everything else, consider
+ *     // using path.skip() to give up processing this part of the AST. You
+ *     // can also use path.stop() to stop all further error-checks.
+ *
+ *     // If you are going to desugar this node, do it here and  *do not*
+ *     // use path.skip(). i.e., desugaring needs to revisit the node.
+ *   },
+ *   exit(path, st: S): {
+ *     // If you're going to implement a dynamic check, do it here and call
+ *     // path.skip() to avoid checking generated code.
+ *   }
+ * }
+ * 
+ */
 
 import * as t from 'babel-types';
 import { Visitor, NodePath } from 'babel-traverse';
@@ -197,48 +218,65 @@ export const visitor: Visitor = {
   },
   AssignmentExpression: {
     enter(path, st: S) {
+      // Disallow certain operators and patterns
       const allowed = [ '=', '+=', '-=', '*=', '/=', '%=' ];
-      const op = path.node.operator;
+      const { operator: op, left, right } = path.node;
       if (allowed.includes(op) === false) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
         path.skip();
         return;
       }
-      const left = path.node.left;
-
-      if (left.type === 'Identifier') {
-        if (op === '=') {
-          return;
-        }
-
-        path.replaceWith(t.assignmentExpression('=', left,
-          t.binaryExpression(unassign(op), left, path.node.right)));
-      }
-      else if (left.type === 'MemberExpression') {
-        // exp.x = rhs => checkMember(exp, 'x', rhs)
-        if (op === '=') {
-          path.replaceWith(dynCheck('checkMember',
-            left.object,
-            propertyAsString(left),
-            path.node.right));
-          path.skip();
-        }
-        else {
-          // exp.x += rhs =>  tmp = exp, tmp.x = tmp.x + rhs
-          const tmp = path.scope.generateUidIdentifier('tmp');
-          enclosingScopeBlock(path).push(
-            t.variableDeclaration('var', [
-              t.variableDeclarator(tmp)
-            ]));
-          path.replaceWith(t.assignmentExpression('=',
-            left, t.binaryExpression(unassign(op), left, path.node.right)));
-        }
-      }
-      else {
+      if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
         st.elem.error(path, `Do not use patterns`);
         path.skip();
         return;
       }
+
+      if (op === '=') {
+        return;
+      }
+
+      // Desugar everything that is not '='
+      if (left.type === 'Identifier') {
+        path.replaceWith(t.assignmentExpression('=', left,
+          t.binaryExpression(unassign(op), left, right)));
+      }
+      else {
+        // exp.x += rhs =>  tmp = exp, tmp.x = tmp.x + rhs
+        const tmp = path.scope.generateUidIdentifier('tmp');
+        enclosingScopeBlock(path).push(
+          t.variableDeclaration('var', [
+            t.variableDeclarator(tmp)
+          ]));
+        path.replaceWith(
+          t.sequenceExpression([
+            t.assignmentExpression('=', tmp, left.object),
+            t.assignmentExpression('=',
+              t.memberExpression(tmp, left.property, left.computed),
+              t.binaryExpression(unassign(op), 
+                t.memberExpression(tmp, left.property, left.computed), 
+                path.node.right))]));
+      }
+    },
+    exit(path, st: S) {
+      const { left, right } = path.node;
+      if (path.node.operator !== '=') {
+        throw new Error(`desugaring error`);
+      }
+      if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
+        throw new Error(`syntactic check error`);
+      }
+
+
+      if (left.type === 'Identifier') {
+        return;
+      }
+
+     // exp.x = rhs => checkMember(exp, 'x', rhs)
+      path.replaceWith(
+        dynCheck('checkMember', left.object, propertyAsString(left),
+          right));
+      path.skip();
     }
   },
   BinaryExpression: {
