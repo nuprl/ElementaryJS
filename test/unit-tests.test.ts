@@ -273,6 +273,17 @@ test('cannot use bitmask assignment operators', () => {
     ]));
 });
 
+test('loop body must be BlockStatement', () => {
+  expect(staticError(`for (let i = 0; i < 10; ++i) i;`)).toEqual(
+    expect.arrayContaining([
+    `Loop body must be enclosed in braces.`
+    ]));
+  expect(staticError(`let i = 0; while(i < 10) ++i;`)).toEqual(
+    expect.arrayContaining([
+    `Loop body must be enclosed in braces.`
+    ]));
+});
+
 test('cannot use shift assignment operators', () => {
   expect(staticError(`let x = 1, y = 2; x >>= y;`)).toEqual(
     expect.arrayContaining([

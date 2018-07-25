@@ -276,11 +276,22 @@ export const visitor: Visitor = {
       }
     }
   },
+
   ForOfStatement(path, st: S) {
     st.elem.error(path, `Do not use for-of loops.`);
   },
   ForInStatement(path, st: S) {
     st.elem.error(path, `Do not use for-in loops.`);
+  },
+  ForStatement(path, st: S) {
+    if (path.node.body.type !== 'BlockStatement') {
+      st.elem.error(path, `Loop body must be enclosed in braces.`);
+    }
+  },
+  WhileStatement(path, st: S) {
+    if (path.node.body.type !== 'BlockStatement') {
+      st.elem.error(path, `Loop body must be enclosed in braces.`);
+    }
   },
 }
 
