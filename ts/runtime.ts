@@ -9,7 +9,7 @@ export function dot(object: any, index: string | number) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an object');
   }
-  if (!object.hasOwnProperty(index)) {
+  if (object[index] === undefined) {
     if (typeof index === 'number') {
       throw new ElementaryRuntimeError(
         `Index ${index} does not exist in array`);
