@@ -248,6 +248,15 @@ export const visitor: Visitor = {
         st.elem.error(path, `Do not use the '${op}' operator.`);
         path.skip();
         return;
+      } else if (generalOperators.includes(op)) {
+        switch(op) {
+          case "==" : {
+            path.node.operator = "===";
+          } break;
+          case "!=" : {
+            path.node.operator = "!==";
+          } break;
+        }
       }
     },
     exit(path, st: S) {

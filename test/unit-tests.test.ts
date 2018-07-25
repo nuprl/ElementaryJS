@@ -324,6 +324,11 @@ test('cannot use shift assignment operators', () => {
     ]));
 });
 
+test('convert equality operators', () => {
+  expect(run(`let x = "1", y = 1; x == y`)).toBe(false);
+  expect(run(`let x = "1", y = 1; x != y`)).toBe(true);
+});
+
 test('gigantic test case', () => {
   let source = `
       // Fibonacci sequence, where fibonacci(0) = 0, 
