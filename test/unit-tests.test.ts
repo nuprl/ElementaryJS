@@ -189,6 +189,29 @@ test('cannot use instanceof', () => {
     ]));
 });
 
+test('preserve operator precedence', () => {
+  expect(run(`3 + 2 * 3`)).toBe(9);
+  expect(run(`4 * 3 + 2 * 3`)).toBe(18);
+  expect(run(`4 + 3 * 2 + 3`)).toBe(13);
+  expect(run(`12 / 3 * 2 + 3`)).toBe(11);
+});
+
+test('dynamic error when mixing types', () => {
+  expect(dynamicError(`let a = {}, b = 1; a + b`))
+    .toMatch("arguments of operator '+' must both be numbers or strings");
+  expect(dynamicError(`let a = "foo", b = 1; a - b`))
+    .toMatch("arguments of operator '-' must both be numbers");
+
+});
+
+test('dynamic num check order', () => {
+  // The * operator has precedence over -, hence should be dyn. checked first.
+  expect(dynamicError(`let a = "", b = 1, c = {}; a * b - c`))
+    .toMatch("arguments of operator '*' must both be numbers");
+  expect(dynamicError(`let a = "", b = 1, c = {}; a / b * c`))
+      .toMatch("arguments of operator '/' must both be numbers");
+});
+
 test('can use pre-update operator with numbers', () => {
   expect(run(`let a = { b : 3 }; ++a.b`))
     .toBe(4);

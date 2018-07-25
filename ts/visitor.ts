@@ -8,6 +8,32 @@ import * as t from 'babel-types';
 import { Visitor, NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
 
+let generalOperators = [
+  "==",
+  "!=",
+];
+let numOrStringOperators = [
+  "+",
+];
+let numOperators = [
+  "<=",
+  ">=",
+  "<",
+  ">",
+  "<<",
+  ">>",
+  ">>>",
+  "-",
+  "*",
+  "/",
+  "%",
+  "&",
+  "|",
+  "^"
+];
+let allowedBinaryOperators = 
+        generalOperators.concat(numOrStringOperators, numOperators);
+
 // This is the visitor state, which includes a list of errors. We throw
 // this object if something goes wrong.Clients of ElementaryJS only rely on the
 // CompileError interface.
@@ -215,11 +241,33 @@ export const visitor: Visitor = {
       }
     }
   },
-  BinaryExpression(path, st: S) {
-    if (path.node.operator == 'in' ||
-        path.node.operator == 'instanceof') {
-      st.elem.error(path, `Do not use the '` + path.node.operator +
-          `' operator.`);
+  BinaryExpression: {
+    enter(path, st: S) {
+      let op = path.node.operator;
+      if (!(allowedBinaryOperators.includes(op))) {
+        st.elem.error(path, `Do not use the '${op}' operator.`);
+        path.skip();
+        return;
+      }
+    },
+    exit(path, st: S) {
+      // Original: a + b
+      let op = path.node.operator;
+      if (numOrStringOperators.includes(op)) {
+        // Transformed: applyNumOrStringOp('+', a, b);
+        path.replaceWith(dynCheck("applyNumOrStringOp",
+          t.stringLiteral(op),
+          path.node.left,
+          path.node.right));
+        path.skip();
+      } else if (numOperators.includes(op)) {
+        // Transformed: applyNumOp('+', a, b);
+        path.replaceWith(dynCheck("applyNumOp",
+          t.stringLiteral(op),
+          path.node.left,
+          path.node.right));
+        path.skip();
+      }
     }
   },
   UnaryExpression(path, st:S) {

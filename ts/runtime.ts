@@ -42,7 +42,6 @@ export function elementaryJSBug(what: string) {
       'along with the following stack trace:\n';
     console.trace();
     throw new ElementaryRuntimeError(errorMsg);
-  
 }
 
 export function checkMember(o: any, k: any, v: any) {
@@ -73,5 +72,76 @@ export function checkUpdateOperand(
     // This will only happen if there is an update expression with an opcode other than ++ or --.
     elementaryJSBug('UpdateOperand dynamic check');
     return undefined;
+  }
+}
+
+export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
+  if (!((typeof(lhs) === "string" && typeof(rhs) === "string") ||
+      (typeof(lhs) === "number" && typeof(rhs) === "number"))) {
+    throw new ElementaryRuntimeError(
+        `arguments of operator '${op}' must both be numbers or strings`);
+  }
+  switch (op) {
+    case "+": {
+      return (<any>(lhs) + <any>(rhs));
+    } break;
+    default: {
+      elementaryJSBug(`applyNumOrStringOp '${op}'`);
+    }
+  }
+}
+
+export function applyNumOp(op: string, lhs: any, rhs: any) {
+  if (!(typeof(lhs) === "number" && typeof(rhs) === "number")) {
+    throw new ElementaryRuntimeError(
+        `arguments of operator '${op}' must both be numbers`);
+  }
+  switch (op) {
+    case "-": {
+      return (lhs - rhs);
+    } break;
+    case "/": {
+      return (lhs / rhs);
+    } break;
+    case "*": {
+      return (lhs * rhs);
+    } break;
+    case ">": {
+      return (lhs > rhs);
+    } break;
+    case "<": {
+      return (lhs < rhs);
+    } break;
+    case ">=": {
+      return (lhs >= rhs);
+    } break;
+    case "<=": {
+      return (lhs <= rhs);
+    } break;
+    case ">>": {
+      return (lhs >> rhs);
+    } break;
+    case ">>>": {
+      return (lhs >>> rhs);
+    } break;
+    case "<<": {
+      return (lhs << rhs);
+    } break;
+    case "|": {
+      return (lhs | rhs);
+    } break;
+    case "&": {
+      return (lhs & rhs);
+    } break;
+    case "^": {
+      return (lhs ^ rhs);
+    } break;
+    case "%": {
+      return (lhs % rhs);
+    } break;
+    default: {
+      elementaryJSBug(`applyNumOp '${op}'`);
+      return 0;
+    }
   }
 }
