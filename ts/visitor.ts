@@ -188,17 +188,17 @@ export const visitor: Visitor = {
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((parent.type === 'UpdateExpression' &&
-           (parent as t.UpdateExpression).argument == path.node) ||
-          (parent.type === 'AssignmentExpression' &&
-           (parent as t.AssignmentExpression).left === path.node)) {
+      if ((t.isUpdateExpression(parent) && 
+              parent.argument == path.node) ||
+          (t.isAssignmentExpression(parent) &&
+           parent.left === path.node)) {
         return;
       }
 
       const o = path.node.object;
       const p = path.node.property;
       if (path.node.computed === false) {
-        if (p.type !== 'Identifier') {
+        if (!t.isIdentifier(p)) {
           // This should never happen
           throw new Error(`ElementaryJS expected id. in MemberExpression`);
         }
@@ -226,7 +226,7 @@ export const visitor: Visitor = {
         path.skip();
         return;
       }
-      if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
+      if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         st.elem.error(path, `Do not use patterns`);
         path.skip();
         return;
@@ -237,7 +237,7 @@ export const visitor: Visitor = {
       }
 
       // Desugar everything that is not '='
-      if (left.type === 'Identifier') {
+      if (t.isIdentifier(left)) {
         path.replaceWith(t.assignmentExpression('=', left,
           t.binaryExpression(unassign(op), left, right)));
       }
@@ -263,12 +263,12 @@ export const visitor: Visitor = {
       if (path.node.operator !== '=') {
         throw new Error(`desugaring error`);
       }
-      if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
+      if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         throw new Error(`syntactic check error`);
       }
 
 
-      if (left.type === 'Identifier') {
+      if (t.isIdentifier(left)) {
         return;
       }
 
@@ -342,7 +342,7 @@ export const visitor: Visitor = {
       if (a.type !== 'Identifier' && a.type !== 'MemberExpression') {
         throw new Error(`not an l-value in update expression`);
       }
-      if (a.type === 'Identifier') {
+      if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
         const check = dynCheck('updateOnlyNumbers',
             t.stringLiteral(path.node.operator),
@@ -367,12 +367,12 @@ export const visitor: Visitor = {
     st.elem.error(path, `Do not use for-in loops.`);
   },
   ForStatement(path, st: S) {
-    if (path.node.body.type !== 'BlockStatement') {
+    if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
   WhileStatement(path, st: S) {
-    if (path.node.body.type !== 'BlockStatement') {
+    if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
