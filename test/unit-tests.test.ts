@@ -329,6 +329,14 @@ test('convert equality operators', () => {
   expect(run(`let x = "1", y = 1; x != y`)).toBe(true);
 });
 
+test('call a builtin method', () => {
+  expect(run(`
+    let x = [];
+    x.push(100);
+    x[0]`)).toBe(100);
+});
+
+
 test('gigantic test case', () => {
   let source = `
       // Fibonacci sequence, where fibonacci(0) = 0, 
