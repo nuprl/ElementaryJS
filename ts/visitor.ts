@@ -328,46 +328,34 @@ export const visitor: Visitor = {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
   UpdateExpression: {
-    enter(path: NodePath<t.UpdateExpression>, st: S) {
-      if ((path.node.operator == '++' || path.node.operator == '--') &&
-          path.node.prefix == false) {
+    enter(path, st: S) {
+      // Static checks
+      if (path.node.prefix == false) {
         st.elem.error(
             path, `Do not use post-increment or post-decrement operators.`);
+        return;
       }
+
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
+      if (a.type !== 'Identifier' && a.type !== 'MemberExpression') {
+        throw new Error(`not an l-value in update expression`);
+      }
       if (a.type === 'Identifier') {
+        // ++x ==> updateOnlyNumbers(++x), x
         const check = dynCheck('updateOnlyNumbers',
             t.stringLiteral(path.node.operator),
             a);
-        path.replaceWith(t.sequenceExpression(
-          [check as t.Expression, path.node]));
+        path.replaceWith(t.sequenceExpression([check, path.node]));
         path.skip();
-      } else if (a.type === 'MemberExpression') {
-        const expr = a as t.MemberExpression;
-        let obj = expr.object;
-        let member : t.Expression;
-        if (expr.computed) {
-          member = a.property;
-        } else {
-          member = t.stringLiteral((a.property as t.Identifier).name);
-        }
+      } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand', 
             t.stringLiteral(path.node.operator),
-            obj,
-            member));
+            a.object,
+            propertyAsString(a)));
         path.skip();
-      } else if (a.type ==='CallExpression') {
-        // Hack: Just run the expression, and check if the result is a number.
-        path.replaceWith(dynCheck('checkNumberAndReturn', 
-            t.stringLiteral(path.node.operator),
-            path.node));
-        path.skip();
-      } else {
-        // Trying to update something that's not an identifier.
-        throw new Error(`ElementaryJS Error: trying to update expression of type ${a.type}`);
       }
     }
   },
