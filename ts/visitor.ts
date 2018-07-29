@@ -182,6 +182,7 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
+  /*
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
@@ -206,7 +207,7 @@ export const visitor: Visitor = {
         path.skip();
       }
     }
-  },
+  },*/
   WithStatement(path, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
   },
