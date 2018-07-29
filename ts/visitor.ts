@@ -182,7 +182,7 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
-  /*
+  
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
@@ -195,7 +195,10 @@ export const visitor: Visitor = {
            parent.left === path.node)) {
         return;
       }
-
+      if (path.parent.type === 'CallExpression') {
+        // TODO: Insert dynamic check for member functions.
+        return;
+      }
       const o = path.node.object;
       const p = path.node.property;
       if (path.node.computed === false) {
@@ -207,7 +210,7 @@ export const visitor: Visitor = {
         path.skip();
       }
     }
-  },*/
+  },
   WithStatement(path, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
   },
