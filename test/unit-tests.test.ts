@@ -1,6 +1,7 @@
 import { compile } from '../ts/index';
 import { sandbox } from '../ts/sandbox';
 import { default as generator } from 'babel-generator';
+import 'jest';
 
 // Helps write test cases that expect the program to terminate normally.
 // The result is the final value of the program.

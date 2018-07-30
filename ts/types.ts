@@ -19,3 +19,8 @@ export type CompileOK = {
 };
 
 export type CompilerResult = CompileOK | CompileError;
+
+export type CompileOptions = {
+  isOnline: boolean,
+  runTests: boolean,
+}
