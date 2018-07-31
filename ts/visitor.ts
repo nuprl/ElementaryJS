@@ -28,6 +28,7 @@
 import * as t from 'babel-types';
 import { Visitor, NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
+import { testingFunctions } from './runtime-testing';
 
 let generalOperators = [
   "==",
@@ -112,6 +113,13 @@ function rtsExpression(st: S): t.Expression {
   }
 }
 
+function rtsTestingExpression(st: S) {
+  if (st.opts.isOnline) {
+    return t.identifier('celot');
+  }
+  return t.callExpression(t.identifier('require'), [t.stringLiteral('./runtime-testing')]);
+}
+
 function unassign(op: string) {
   switch (op) {
     case '+=': return '+';
@@ -165,13 +173,65 @@ export const visitor: Visitor = {
       if (st.elem.errors.length > 0) {
         throw st.elem;
       }
+      // --- Runtime testing stuff ---
+      if (!st.opts.runTests) {
+        return;
+      }
+      for (let i = 0; i < path.node.body.length; i++) {
+        const statement = path.node.body[i];
+        if (!t.isExpressionStatement(statement) || !t.isCallExpression(statement.expression)) {
+          continue;
+        }
+        if (t.isIdentifier(statement.expression.callee) &&
+          statement.expression.callee.name === 'test') {
+          statement.expression.callee = t.memberExpression(
+            t.identifier('rtsTest'),
+            t.identifier('test')
+          );
+        }
+      }
+
+      const runTimeVariableExpression = t.variableDeclaration('var', [
+        t.variableDeclarator(t.identifier('rtsTest'), rtsTestingExpression(st))
+      ]);
+
+      if (path.node.body.length !== 0) {
+        path.get('body.0').insertBefore(runTimeVariableExpression);
+      }
+      if (path.node.body.length === 0) {
+        path.node.body = [runTimeVariableExpression];
+      }
+      path.node.body.push(t.expressionStatement(
+        t.callExpression(
+          t.memberExpression(t.identifier('rtsTest'), t.identifier('summary')),
+          []
+        )
+      ))
     }
   },
+
+  CallExpression: {
+    exit(path, st: S) {
+      if (!st.opts.runTests) {
+        return;
+      }
+      if (t.isIdentifier(path.node.callee) && 
+      testingFunctions.includes(path.node.callee.name)) {
+        path.node.callee = t.memberExpression(
+          t.identifier('rtsTest'),
+          path.node.callee,
+        );
+      }
+      path.skip();
+    }
+  },
+
   VariableDeclaration(path, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
     }
   },
+
   VariableDeclarator(path, st: S) {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
