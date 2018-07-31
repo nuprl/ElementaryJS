@@ -11,7 +11,6 @@ export function assertEquals(expected: any, actual: any) {
     if (expected === actual) {
         return true;
     }
-    console.log(expected, actual);
     throw new Error(`Assertion failed\n  Expected: ${expected}\n  Actual: ${actual}`);
 }
 
