@@ -52,8 +52,8 @@ let numOperators = [
   "|",
   "^"
 ];
-let allowedBinaryOperators = 
-        generalOperators.concat(numOrStringOperators, numOperators);
+let allowedBinaryOperators =
+  generalOperators.concat(numOrStringOperators, numOperators);
 
 // This is the visitor state, which includes a list of errors. We throw
 // this object if something goes wrong.Clients of ElementaryJS only rely on the
@@ -96,7 +96,8 @@ function dynCheck(name: string, ...args: t.Expression[]): t.CallExpression {
 interface S {
   elem: State,
   opts: {
-    isOnline: boolean
+    isOnline: boolean,
+    runTests: boolean,
   }
 }
 
@@ -129,8 +130,8 @@ function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
     return parent.body;
   }
   else if (t.isFunctionExpression(parent) ||
-           t.isFunctionDeclaration(parent) ||
-           t.isObjectMethod(parent)) {
+    t.isFunctionDeclaration(parent) ||
+    t.isObjectMethod(parent)) {
     return parent.body.body;
   }
   else {
@@ -153,10 +154,12 @@ export const visitor: Visitor = {
       st.elem = new State([]);
     },
     exit(path, st: S) {
-      path.get('body.0').insertBefore(
-        t.variableDeclaration('var', [
-          t.variableDeclarator(t.identifier('rts'), rtsExpression(st))
-        ]));
+      if (path.node.body.length !== 0) {
+        path.get('body.0').insertBefore(
+          t.variableDeclaration('var', [
+            t.variableDeclarator(t.identifier('rts'), rtsExpression(st))
+          ]));
+      }
       path.stop();
 
       if (st.elem.errors.length > 0) {
@@ -182,17 +185,17 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
-  
+
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((t.isUpdateExpression(parent) && 
-              parent.argument == path.node) ||
-          (t.isAssignmentExpression(parent) &&
-           parent.left === path.node)) {
+      if ((t.isUpdateExpression(parent) &&
+        parent.argument == path.node) ||
+        (t.isAssignmentExpression(parent) &&
+          parent.left === path.node)) {
         return;
       }
       if (path.parent.type === 'CallExpression') {
@@ -223,7 +226,7 @@ export const visitor: Visitor = {
   AssignmentExpression: {
     enter(path, st: S) {
       // Disallow certain operators and patterns
-      const allowed = [ '=', '+=', '-=', '*=', '/=', '%=' ];
+      const allowed = ['=', '+=', '-=', '*=', '/=', '%='];
       const { operator: op, left, right } = path.node;
       if (allowed.includes(op) === false) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
@@ -257,8 +260,8 @@ export const visitor: Visitor = {
             t.assignmentExpression('=', tmp, left.object),
             t.assignmentExpression('=',
               t.memberExpression(tmp, left.property, left.computed),
-              t.binaryExpression(unassign(op), 
-                t.memberExpression(tmp, left.property, left.computed), 
+              t.binaryExpression(unassign(op),
+                t.memberExpression(tmp, left.property, left.computed),
                 path.node.right))]));
       }
     },
@@ -276,7 +279,7 @@ export const visitor: Visitor = {
         return;
       }
 
-     // exp.x = rhs => checkMember(exp, 'x', rhs)
+      // exp.x = rhs => checkMember(exp, 'x', rhs)
       path.replaceWith(
         dynCheck('checkMember', left.object, propertyAsString(left),
           right));
@@ -291,11 +294,11 @@ export const visitor: Visitor = {
         path.skip();
         return;
       } else if (generalOperators.includes(op)) {
-        switch(op) {
-          case "==" : {
+        switch (op) {
+          case "==": {
             path.node.operator = "===";
           } break;
-          case "!=" : {
+          case "!=": {
             path.node.operator = "!==";
           } break;
         }
@@ -321,14 +324,14 @@ export const visitor: Visitor = {
       }
     }
   },
-  UnaryExpression(path, st:S) {
+  UnaryExpression(path, st: S) {
     if (path.node.operator == 'delete' ||
-        path.node.operator == 'typeof') {
+      path.node.operator == 'typeof') {
       st.elem.error(path, `Do not use the '` + path.node.operator +
-      `' operator.`);
+        `' operator.`);
     }
   },
-  ThrowStatement(path, st:S) {
+  ThrowStatement(path, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
   UpdateExpression: {
@@ -336,7 +339,7 @@ export const visitor: Visitor = {
       // Static checks
       if (path.node.prefix == false) {
         st.elem.error(
-            path, `Do not use post-increment or post-decrement operators.`);
+          path, `Do not use post-increment or post-decrement operators.`);
         return;
       }
 
@@ -349,16 +352,16 @@ export const visitor: Visitor = {
       if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
         const check = dynCheck('updateOnlyNumbers',
-            t.stringLiteral(path.node.operator),
-            a);
+          t.stringLiteral(path.node.operator),
+          a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
         path.skip();
       } else {
         // replace with dyn check function that takes in both obj and member.
-        path.replaceWith(dynCheck('checkUpdateOperand', 
-            t.stringLiteral(path.node.operator),
-            a.object,
-            propertyAsString(a)));
+        path.replaceWith(dynCheck('checkUpdateOperand',
+          t.stringLiteral(path.node.operator),
+          a.object,
+          propertyAsString(a)));
         path.skip();
       }
     }

@@ -374,3 +374,6 @@ test('gigantic test case', () => {
   expect(run(source)).toBe(55);
 });
 
+test('Run empty program', () => {
+  expect(run('')).toBe(undefined);
+});
