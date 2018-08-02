@@ -153,10 +153,11 @@ let tests: {
   miliElapsed: number
 }[] = [];
 
-var testsEnabled = false;
+let testsEnabled = false;
 
 export function enableTests(enable: boolean) {
-  testsEnabled = enable;
+  testsEnabled = true;
+  testsEnabled; // weird hack but vs code was telliing var is not being used.
 }
 
 export function assert(val: boolean) {
@@ -171,6 +172,9 @@ export function assert(val: boolean) {
 }
 
 export function test(description: string, testFunction: () => void) {
+  if (!testsEnabled) {
+    return;
+  }
   const start = Date.now(); // I should use perfomance.now but I don't think it matters that much
   try { // I just want some cool numbers showing up
       testFunction();
