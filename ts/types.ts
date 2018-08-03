@@ -23,5 +23,6 @@ export type CompilerResult = CompileOK | CompileError;
 export type TestResult = {
   failed: boolean,
   description: string,
+  miliElapsed: number,
   error?: string
 };
