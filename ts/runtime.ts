@@ -151,11 +151,11 @@ let tests: TestResult[] = [];
 
 let testsEnabled = false;
 
-let globalRunner: any = undefined;
+let stopifyRunner: any = undefined;
 
 export function enableTests(enable: boolean, runner: any) {
   testsEnabled = enable;
-  globalRunner = runner;
+  stopifyRunner = runner;
   tests = [];
 }
 
@@ -175,9 +175,9 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   const now = Date.now(); // performance.now is probably better
-  if (typeof globalRunner !== 'undefined') {
-    globalRunner.externalHOF((complete: any) => {
-      return (globalRunner.runStopifiedCode(
+  if (typeof stopifyRunner !== 'undefined') {
+    stopifyRunner.externalHOF((complete: any) => {
+      return (stopifyRunner.runStopifiedCode(
         testFunction,
         (result: any) => {
           if (result.type === 'normal') {
