@@ -68,7 +68,7 @@ export class State implements CompileError {
 
   // Convenience method to add a new error
   error(path: NodePath<t.Node>, message: string) {
-    this.errors.push({ location: path.node.loc, message: message });
+    this.errors.push({ line: path.node.loc.start.line, message: message });
   }
 
   // Convenience: object prints reasonably for debugging the implementation
@@ -80,9 +80,8 @@ export class State implements CompileError {
     else {
       return 'class State in ElementaryJS With the following errors:\n' +
         this.errors.map(x => {
-          const l = x.location.start.line;
-          const c = x.location.start.column;
-          return `- ${x.message} (line ${l}, column ${c})`
+          const l = x.line;
+          return `- ${x.message} (line ${l})`
         }).join('\n');
     }
   }

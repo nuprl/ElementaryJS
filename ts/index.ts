@@ -35,6 +35,26 @@ export function compile(
     if (exn instanceof visitor.State) {
       return exn;
     }
-    throw exn;
+
+    if (exn instanceof SyntaxError) {
+      const groups = /^(.*) \((\d+):(\d+)\)$/.exec(exn.message);
+      if (groups === null) {
+        // NOTE(arjun): I don't think this can happen, but you never know with
+        // JavaScript.
+        return {
+          kind: 'error',
+          errors: [ { line: 0, message: exn.message } ]
+        };
+      }
+      return {
+        kind: 'error',
+        errors: [ { line: Number(groups[2]), message: groups[1] } ]
+      };
+    }
+    // NOTE(arjun): What else could it be?
+    return {
+      kind: 'error',
+      errors: [ { line: 0, message: exn.message } ]
+    };
   }
 }

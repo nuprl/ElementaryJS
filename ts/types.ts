@@ -4,7 +4,7 @@
 import * as t from 'babel-types';
 
 export type ElementarySyntaxError = {
-  location: t.SourceLocation,
+  line: number,
   message: string
 }
 
