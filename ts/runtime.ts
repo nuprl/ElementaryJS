@@ -152,8 +152,11 @@ let tests: TestResult[] = [];
 let testsEnabled = false;
 
 export function enableTests(enable: boolean) {
-  testsEnabled = true;
-  testsEnabled; // weird hack but vs code was telliing var is not being used.
+  testsEnabled = enable;
+}
+
+export function getEnableTests() {
+  return testsEnabled;
 }
 
 export function assert(val: boolean) {
@@ -178,22 +181,17 @@ export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
   }
-  const start = Date.now(); // I should use perfomance.now but I don't think it matters that much
-  try { // I just want some cool numbers showing up
+  try { 
       testFunction();
-      const end = Date.now(); 
       tests.push({
           failed: false,
           description: description,
-          miliElapsed: end - start,
       });
   } catch (e) {
-      const end = Date.now();
       tests.push({
           failed: true,
           description: description,
           error: e.message,
-          miliElapsed: end - start,
       });
 
   }
@@ -210,23 +208,19 @@ export function summary() {
   let style: string[] = [];
   let numPassed = 0;
   let numFailed = 0;
-  let totalMili = 0;
   for (let result of tests) {
-      totalMili += result.miliElapsed;
       if (result.failed) {
-          output.push(`%c FAILED %c ${result.description} (${result.miliElapsed.toFixed(0)}ms)\n         ${result.error!}`);
+          output.push(`%c FAILED %c ${result.description}\n         ${result.error!}`);
           style.push('background-color: #f44336; font-weight: bold', '');
           numFailed += 1;
           continue;
       }
-      output.push(`%c OK %c     ${result.description} (${result.miliElapsed.toFixed(0)}ms)`);
+      output.push(`%c OK %c     ${result.description}`);
       style.push('background-color: #2ac093; font-weight: bold', '');
       numPassed += 1;
   }
   output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
   style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
-  output.push(`Time:      ${(totalMili / 1000).toFixed(2)}s`);
-  style.push('');
   tests = [];
   return {
     output: output.join('\n'),
