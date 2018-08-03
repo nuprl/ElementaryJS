@@ -1,3 +1,4 @@
+import { TestResult } from './types';
 
 export class ElementaryRuntimeError extends Error {
   constructor(message: string) {
@@ -146,12 +147,7 @@ export function applyNumOp(op: string, lhs: any, rhs: any) {
   }
 }
 
-let tests: {
-  failed: boolean,
-  description: string,
-  error: string,
-  miliElapsed: number
-}[] = [];
+let tests: TestResult[] = [];
 
 let testsEnabled = false;
 
@@ -171,6 +167,13 @@ export function assert(val: boolean) {
   return true;
 }
 
+export function newTestResult(result: TestResult) {
+  if (!testsEnabled) {
+    return;
+  }
+  tests.push({...result});
+}
+
 export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
@@ -182,7 +185,6 @@ export function test(description: string, testFunction: () => void) {
       tests.push({
           failed: false,
           description: description,
-          error: '',
           miliElapsed: end - start,
       });
   } catch (e) {
@@ -199,34 +201,35 @@ export function test(description: string, testFunction: () => void) {
 
 export function summary() {
   if (tests.length === 0) {
-      console.log(`%c◈ You don't seem to have any tests written`, 'color: #e87ce8');
-      console.log(`%c◈ To run a test, begin a function name with 'test'`, 'color: #e87ce8');
-      return;
+      return {
+        output: `%c◈ You don't seem to have any tests written\n◈ To run a test, begin a function name with 'test'`,
+        style: ['color: #e87ce8']
+      };
   }
+  let output: string[] = [];
+  let style: string[] = [];
   let numPassed = 0;
   let numFailed = 0;
   let totalMili = 0;
   for (let result of tests) {
       totalMili += result.miliElapsed;
       if (result.failed) {
-          console.log(
-              `%c FAILED %c ${result.description} (${result.miliElapsed.toFixed(0)}ms)\n${result.error}`,
-              'background-color: #f44336; font-weight: bold',
-              'color: inherit; background-color: inherit'
-          );
+          output.push(`%c FAILED %c ${result.description} (${result.miliElapsed.toFixed(0)}ms)\n         ${result.error!}`);
+          style.push('background-color: #f44336; font-weight: bold', '');
           numFailed += 1;
           continue;
       }
-      console.log(
-          `%c OK %c ${result.description} (${result.miliElapsed.toFixed(0)}ms)`,
-          'background-color: #2ac093; font-weight: bold',
-          'color: inherit; background-color: inherit'
-      );
+      output.push(`%c OK %c     ${result.description} (${result.miliElapsed.toFixed(0)}ms)`);
+      style.push('background-color: #2ac093; font-weight: bold', '');
       numPassed += 1;
   }
-  console.log(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`,
-  'color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold'
-  );
-  console.log(`Time:      ${(totalMili / 1000).toFixed(2)}s`);
+  output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
+  style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  output.push(`Time:      ${(totalMili / 1000).toFixed(2)}s`);
+  style.push('');
   tests = [];
+  return {
+    output: output.join('\n'),
+    style: style
+  }
 }

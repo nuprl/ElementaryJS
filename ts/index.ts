@@ -5,7 +5,7 @@ import * as babel from 'babel-core';
 import { Node } from 'babel-types';
 import * as babylon from 'babylon';
 import * as visitor from './visitor';
-import { CompileOK, CompileError, CompileOptions } from './types';
+import { CompileOK, CompileError } from './types';
 
 /**
  * 
@@ -14,13 +14,13 @@ import { CompileOK, CompileError, CompileOptions } from './types';
  */
 export function compile(
   code: string | Node, 
-  options: CompileOptions): CompileOK | CompileError {
+  isOnline: boolean): CompileOK | CompileError {
   try {
     // Babylon is the parser that Babel uses internally.
     const ast = typeof code === 'string' ? 
       babylon.parse(code).program : code;
     const babelResult = babel.transformFromAst(ast, undefined, {
-      plugins: [[visitor.plugin, options]],
+      plugins: [[visitor.plugin, { isOnline }]],
       ast: true,
       code: false
     });
