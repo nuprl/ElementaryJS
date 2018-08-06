@@ -20,7 +20,7 @@
   "license": "BSD-3-Clause",
   "private": false,
   "scripts": {
-    "build": "tsc",
+    "build": "echo \"let EJSVERSION = '$(git rev-parse --short HEAD)';\nexport { EJSVERSION };\" > ts/version.ts && tsc",
     "test": "jest",
     "run": "node ./dist/bin.js",
     "clean": "rm -f dist/*"
