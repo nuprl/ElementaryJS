@@ -1,4 +1,9 @@
+import { EJSVERSION } from './version';
 import { TestResult } from './types';
+
+export  function version() {
+  return EJSVERSION;
+}
 
 export class ElementaryRuntimeError extends Error {
   constructor(message: string) {
