@@ -128,6 +128,14 @@ test('updateexpression must not duplicate computation', () => {
   expect(run(code)).toBe(11);
 });
 
+test('acessing members of anonymous objects', () => {
+  expect(dynamicError(`[].x`))
+    .toMatch(`x is not a member`);
+  expect(dynamicError(`[0, 1][10]`))
+      .toMatch(`Index 10 is out of array bounds`);
+  expect(run(`[3, 4][1]`)).toBe(4);
+});
+
 test('cannot access array non-members', () => {
   expect(dynamicError(`let a = []; let b = a[0];`))
     .toMatch(`Index 0 is out of array bounds`);
