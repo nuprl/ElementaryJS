@@ -6,17 +6,28 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function dot(object: any, index: string | number) {
+export function arrayCheck(object: any, index: string) {
+  if (typeof object !== 'object') {
+    throw new ElementaryRuntimeError('expected an array');
+  }
+  if (typeof index !== 'number' ||
+      index < 0 || (index % 1) !== 0) {
+    throw new ElementaryRuntimeError(
+        `${index} is not a valid array index`);
+  }
+  if (object[index] === undefined) {
+    throw new ElementaryRuntimeError(
+        `Index ${index} is out of array bounds`);
+  }
+  return object[index];
+}
+
+export function dot(object: any, index: string) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an object');
   }
   if (object[index] === undefined) {
-    if (typeof index === 'number') {
-      throw new ElementaryRuntimeError(
-        `Index ${index} does not exist in array`);
-    } else {
-      throw new ElementaryRuntimeError(`${index} is not a member`);
-    }
+    throw new ElementaryRuntimeError(`${index} is not a member`);
   }
   return object[index];
 }

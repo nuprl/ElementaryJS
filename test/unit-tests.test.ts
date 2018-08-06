@@ -128,9 +128,22 @@ test('updateexpression must not duplicate computation', () => {
   expect(run(code)).toBe(11);
 });
 
+test('cannot access array non-members', () => {
+  expect(dynamicError(`let a = []; let b = a[0];`))
+    .toMatch(`Index 0 is out of array bounds`);
+});
+
+
+test('array index must be non-negative integer', () => {
+  expect(dynamicError(`let a = []; let b = a[3.1415]`))
+    .toMatch(`3.1415 is not a valid array index`);
+  expect(dynamicError(`let a = []; let b = a[-1]`))
+      .toMatch(`-1 is not a valid array index`);
+});
+
 test('cannot assign array non-members', () => {
-  expect(dynamicError(`let obj = []; obj[0] += 5`))
-    .toMatch(`arguments of operator '+' must both be numbers or strings`);
+  expect(dynamicError(`let obj = []; obj[10] += 5`))
+    .toMatch(`Index 10 is out of array bounds`);
 });
 
 test('cannot update array non-members', () => {

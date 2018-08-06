@@ -212,6 +212,9 @@ export const visitor: Visitor = {
         }
         path.replaceWith(dynCheck('dot', o, t.stringLiteral(p.name)));
         path.skip();
+      } else {
+        path.replaceWith(dynCheck('arrayCheck', o, p));
+        path.skip();
       }
     }
   },
