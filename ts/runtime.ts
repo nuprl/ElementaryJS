@@ -61,6 +61,11 @@ export function checkMember(o: any, k: any, v: any) {
   return (o[k] = v);
 }
 
+export function checkArray(o: any, k: any, v: any) {
+  arrayCheck(o, k);
+  return (o[k] = v);
+}
+
 export function checkUpdateOperand(
   opcode: string,
   obj: any,

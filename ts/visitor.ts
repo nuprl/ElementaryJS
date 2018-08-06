@@ -283,10 +283,16 @@ export const visitor: Visitor = {
         return;
       }
 
-      // exp.x = rhs => checkMember(exp, 'x', rhs)
-      path.replaceWith(
-        dynCheck('checkMember', left.object, propertyAsString(left),
-          right));
+      if (left.computed) {
+        // exp[x] = rhs => checkArray(exp, x, rhs)
+        path.replaceWith(
+          dynCheck('checkArray', left.object, left.property, right));
+      } else {
+        // exp.x = rhs => checkMember(exp, 'x', rhs)
+        path.replaceWith(
+          dynCheck('checkMember', left.object, propertyAsString(left),
+            right));
+      }
       path.skip();
     }
   },

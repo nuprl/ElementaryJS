@@ -131,6 +131,8 @@ test('updateexpression must not duplicate computation', () => {
 test('cannot access array non-members', () => {
   expect(dynamicError(`let a = []; let b = a[0];`))
     .toMatch(`Index 0 is out of array bounds`);
+  expect(dynamicError(`let a = []; a[0] = 0;`))
+    .toMatch(`Index 0 is out of array bounds`);
 });
 
 
