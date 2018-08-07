@@ -186,7 +186,12 @@ export const visitor: Visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
-
+  CallExpression(path, st: S) {
+    if (path.node.callee.type === 'Identifier' &&
+        path.node.callee.name === 'Array') {
+      st.elem.error(path, `You must use the 'new' keyword to create a new array.`);
+    }
+  },
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
@@ -211,6 +216,9 @@ export const visitor: Visitor = {
           throw new Error(`ElementaryJS expected id. in MemberExpression`);
         }
         path.replaceWith(dynCheck('dot', o, t.stringLiteral(p.name)));
+        path.skip();
+      } else {
+        path.replaceWith(dynCheck('arrayBoundsCheck', o, p));
         path.skip();
       }
     }
@@ -280,10 +288,16 @@ export const visitor: Visitor = {
         return;
       }
 
-      // exp.x = rhs => checkMember(exp, 'x', rhs)
-      path.replaceWith(
-        dynCheck('checkMember', left.object, propertyAsString(left),
-          right));
+      if (left.computed) {
+        // exp[x] = rhs => checkArray(exp, x, rhs)
+        path.replaceWith(
+          dynCheck('checkArray', left.object, left.property, right));
+      } else {
+        // exp.x = rhs => checkMember(exp, 'x', rhs)
+        path.replaceWith(
+          dynCheck('checkMember', left.object, propertyAsString(left),
+            right));
+      }
       path.skip();
     }
   },
@@ -334,6 +348,23 @@ export const visitor: Visitor = {
   },
   ThrowStatement(path, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
+  },
+  NewExpression: {
+    enter(path, st: S) {
+
+    },
+    exit(path, st: S) {
+      if (path.node.callee.type === 'Identifier' &&
+          path.node.callee.name === 'Array'){
+        // This is a new array declaration.
+        // new Array(...) ==> new SafeArray(...)
+        const safeArray = 
+            t.memberExpression(t.identifier('rts'), t.identifier('SafeArray'), false);
+        const replacement = t.newExpression(safeArray, path.node.arguments);
+        path.replaceWith(replacement);
+        path.skip;
+      }
+    }
   },
   UpdateExpression: {
     enter(path, st: S) {

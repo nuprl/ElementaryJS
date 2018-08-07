@@ -6,17 +6,45 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function dot(object: any, index: string | number) {
+export function SafeArray(n: any, v: any) {
+  if (arguments.length < 1 || arguments.length > 2) {
+    throw new ElementaryRuntimeError('array initialization takes at least one, and at most two arguments');
+  } 
+  if (arguments.length === 1) v = 0;
+  if (typeof n !== 'number' ||
+      n < 0 ||
+      (n % 1) !== 0) {
+    throw new ElementaryRuntimeError('array size must be a non-negative integer');
+  }
+  let a = new Array(n);
+  for (let i = 0; i < a.length; ++i) {
+    a[i] = v;
+  }
+  return a;
+}
+
+export function arrayBoundsCheck(object: any, index: string) {
+  if (typeof object !== 'object') {
+    throw new ElementaryRuntimeError('expected an array');
+  }
+  if (typeof index !== 'number' ||
+      index < 0 || (index % 1) !== 0) {
+    throw new ElementaryRuntimeError(
+        `${index} is not a valid array index`);
+  }
+  if (object[index] === undefined) {
+    throw new ElementaryRuntimeError(
+        `Index ${index} is out of array bounds`);
+  }
+  return object[index];
+}
+
+export function dot(object: any, index: string) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an object');
   }
   if (object[index] === undefined) {
-    if (typeof index === 'number') {
-      throw new ElementaryRuntimeError(
-        `Index ${index} does not exist in array`);
-    } else {
-      throw new ElementaryRuntimeError(`${index} is not a member`);
-    }
+    throw new ElementaryRuntimeError(`${index} is not a member`);
   }
   return object[index];
 }
@@ -47,6 +75,11 @@ export function elementaryJSBug(what: string) {
 
 export function checkMember(o: any, k: any, v: any) {
   dot(o, k);
+  return (o[k] = v);
+}
+
+export function checkArray(o: any, k: any, v: any) {
+  arrayBoundsCheck(o, k);
   return (o[k] = v);
 }
 
@@ -243,8 +276,13 @@ export function summary() {
     style.push('background-color: #2ac093; font-weight: bold', '');
     numPassed += 1;
   }
-  output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
-  style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  if (numFailed > 0) {
+    output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
+    style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  } else {
+    output.push(`Tests:     %c${numPassed} passed, %c${numPassed + numFailed} total`);
+    style.push('color: #2ac093; font-weight: bold', 'font-weight: bold');
+  }
   output.push(`%cTime:      ${(totalTime/1000).toFixed(2)}s`);
   style.push('');
   return {
