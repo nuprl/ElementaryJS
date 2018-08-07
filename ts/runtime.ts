@@ -317,8 +317,13 @@ export function summary(hasStyles: boolean) {
     hasStyles && style.push('background-color: #2ac093; font-weight: bold', '');
     numPassed += 1;
   }
-  output.push(`Tests:     ${styleMark}${numFailed} failed, ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
-  hasStyles && style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  if (numFailed > 0) {
+    output.push(`Tests:     ${styleMark}${numFailed} failed, ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
+    hasStyles && style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  } else {
+    output.push(`Tests:     ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
+    hasStyles && style.push('color: #2ac093; font-weight: bold', 'font-weight: bold');
+  }
   enableTests(false, undefined);
   return {
     output: output.join('\n'),

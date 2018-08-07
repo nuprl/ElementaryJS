@@ -61,7 +61,10 @@ function testOk(description: string) {
 
 // Returns the expected test summary given number failed and number passed
 function testSummary(failed: number, passed: number) {
-  return `Tests:     ${failed} failed, ${passed} passed, ${failed + passed} total`;
+  if (failed > 0) {
+    return `Tests:     ${failed} failed, ${passed} passed, ${failed + passed} total`;
+  }
+  return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
 
 test('cannot use var', () => {
