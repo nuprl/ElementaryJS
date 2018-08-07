@@ -276,8 +276,13 @@ export function summary() {
     style.push('background-color: #2ac093; font-weight: bold', '');
     numPassed += 1;
   }
-  output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
-  style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  if (numFailed > 0) {
+    output.push(`Tests:     %c${numFailed} failed, %c${numPassed} passed, %c${numPassed + numFailed} total`);
+    style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
+  } else {
+    output.push(`Tests:     %c${numPassed} passed, %c${numPassed + numFailed} total`);
+    style.push('color: #2ac093; font-weight: bold', 'font-weight: bold');
+  }
   output.push(`%cTime:      ${(totalTime/1000).toFixed(2)}s`);
   style.push('');
   return {
