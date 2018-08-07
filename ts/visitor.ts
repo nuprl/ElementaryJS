@@ -122,7 +122,6 @@ function unassign(op: string) {
   }
 }
 
-
 function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
   const parent = path.getFunctionParent().node;
   if (t.isProgram(parent)) {
@@ -166,13 +165,6 @@ export const visitor: Visitor = {
       }
     }
   },
-
-  VariableDeclaration(path, st: S) {
-    if (path.node.kind !== 'let' && path.node.kind !== 'const') {
-      st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
-    }
-  },
-
   VariableDeclarator(path, st: S) {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
@@ -198,10 +190,8 @@ export const visitor: Visitor = {
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((t.isUpdateExpression(parent) &&
-        parent.argument == path.node) ||
-        (t.isAssignmentExpression(parent) &&
-          parent.left === path.node)) {
+      if ((t.isUpdateExpression(parent) && parent.argument == path.node) ||
+          (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
       }
       if (path.parent.type === 'CallExpression') {
@@ -222,15 +212,6 @@ export const visitor: Visitor = {
         path.skip();
       }
     }
-  },
-  WithStatement(path, st: S) {
-    st.elem.error(path, `Do not use the 'with' statement.`);
-  },
-  SwitchStatement(path, st: S) {
-    st.elem.error(path, `Do not use the 'switch' statement.`);
-  },
-  LabeledStatement(path, st: S) {
-    st.elem.error(path, `Do not use labels to alter control-flow`);
   },
   AssignmentExpression: {
     enter(path, st: S) {
@@ -346,9 +327,6 @@ export const visitor: Visitor = {
         `' operator.`);
     }
   },
-  ThrowStatement(path, st: S) {
-    st.elem.error(path, `Do not use the 'throw' operator.`);
-  },
   NewExpression: {
     enter(path, st: S) {
 
@@ -398,13 +376,6 @@ export const visitor: Visitor = {
       }
     }
   },
-
-  ForOfStatement(path, st: S) {
-    st.elem.error(path, `Do not use for-of loops.`);
-  },
-  ForInStatement(path, st: S) {
-    st.elem.error(path, `Do not use for-in loops.`);
-  },
   ForStatement(path, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
@@ -414,6 +385,29 @@ export const visitor: Visitor = {
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
+  },
+  VariableDeclaration(path, st: S) {
+    if (path.node.kind !== 'let' && path.node.kind !== 'const') {
+      st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
+    }
+  },
+  ThrowStatement(path, st: S) {
+    st.elem.error(path, `Do not use the 'throw' operator.`);
+  },
+  WithStatement(path, st: S) {
+    st.elem.error(path, `Do not use the 'with' statement.`);
+  },
+  SwitchStatement(path, st: S) {
+    st.elem.error(path, `Do not use the 'switch' statement.`);
+  },
+  LabeledStatement(path, st: S) {
+    st.elem.error(path, `Do not use labels to alter control-flow`);
+  },
+  ForOfStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-of loops.`);
+  },
+  ForInStatement(path, st: S) {
+    st.elem.error(path, `Do not use for-in loops.`);
   },
 }
 
