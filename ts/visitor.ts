@@ -26,7 +26,7 @@
  */
 
 import * as t from 'babel-types';
-import { Visitor, NodePath } from 'babel-traverse';
+import { NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
 
 let generalOperators = [
@@ -146,12 +146,12 @@ function propertyAsString(node: t.MemberExpression): t.Expression {
   }
 }
 
-export const visitor: Visitor = {
+export const visitor = {
   Program: {
-    enter(path, st: S) {
+    enter(path: NodePath<t.Program>, st: S) {
       st.elem = new State([]);
     },
-    exit(path, st: S) {
+    exit(path: NodePath<t.Program>, st: S) {
       if (path.node.body.length !== 0) {
         path.get('body.0').insertBefore(
           t.variableDeclaration('var', [
@@ -165,7 +165,7 @@ export const visitor: Visitor = {
       }
     }
   },
-  VariableDeclarator(path, st: S) {
+  VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
       st.elem.error(path, `Do not use destructuring patterns.`);
@@ -176,12 +176,6 @@ export const visitor: Visitor = {
     if (!t.isExpression(path.node.init)) {
       let x = path.node.id.name;
       st.elem.error(path, `You must initialize the variable '${x}'.`);
-    }
-  },
-  CallExpression(path, st: S) {
-    if (path.node.callee.type === 'Identifier' &&
-        path.node.callee.name === 'Array') {
-      st.elem.error(path, `You must use the 'new' keyword to create a new array.`);
     }
   },
   MemberExpression: {
@@ -214,7 +208,7 @@ export const visitor: Visitor = {
     }
   },
   AssignmentExpression: {
-    enter(path, st: S) {
+    enter(path: NodePath<t.AssignmentExpression>, st: S) {
       // Disallow certain operators and patterns
       const allowed = ['=', '+=', '-=', '*=', '/=', '%='];
       const { operator: op, left, right } = path.node;
@@ -255,7 +249,7 @@ export const visitor: Visitor = {
                 path.node.right))]));
       }
     },
-    exit(path, st: S) {
+    exit(path: NodePath<t.AssignmentExpression>, st: S) {
       const { left, right } = path.node;
       if (path.node.operator !== '=') {
         throw new Error(`desugaring error`);
@@ -283,7 +277,7 @@ export const visitor: Visitor = {
     }
   },
   BinaryExpression: {
-    enter(path, st: S) {
+    enter(path: NodePath<t.BinaryExpression>, st: S) {
       let op = path.node.operator;
       if (!(allowedBinaryOperators.includes(op))) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
@@ -300,7 +294,7 @@ export const visitor: Visitor = {
         }
       }
     },
-    exit(path, st: S) {
+    exit(path: NodePath<t.BinaryExpression>, st: S) {
       // Original: a + b
       let op = path.node.operator;
       if (numOrStringOperators.includes(op)) {
@@ -320,32 +314,15 @@ export const visitor: Visitor = {
       }
     }
   },
-  UnaryExpression(path, st: S) {
+  UnaryExpression(path: NodePath<t.UnaryExpression>, st: S) {
     if (path.node.operator == 'delete' ||
       path.node.operator == 'typeof') {
       st.elem.error(path, `Do not use the '` + path.node.operator +
         `' operator.`);
     }
   },
-  NewExpression: {
-    enter(path, st: S) {
-
-    },
-    exit(path, st: S) {
-      if (path.node.callee.type === 'Identifier' &&
-          path.node.callee.name === 'Array'){
-        // This is a new array declaration.
-        // new Array(...) ==> new SafeArray(...)
-        const safeArray = 
-            t.memberExpression(t.identifier('rts'), t.identifier('SafeArray'), false);
-        const replacement = t.newExpression(safeArray, path.node.arguments);
-        path.replaceWith(replacement);
-        path.skip;
-      }
-    }
-  },
   UpdateExpression: {
-    enter(path, st: S) {
+    enter(path: NodePath<t.UpdateExpression>, st: S) {
       // Static checks
       if (path.node.prefix == false) {
         st.elem.error(
@@ -376,39 +353,54 @@ export const visitor: Visitor = {
       }
     }
   },
-  ForStatement(path, st: S) {
+  ReferencedIdentifier(path: NodePath<t.Identifier>, st: S) {
+    // Babel AST is not well-designed here.
+    const parentType = path.parent.type;
+    if (parentType === 'BreakStatement' ||
+        parentType === 'ContinueStatement' ||
+        parentType === 'LabeledStatement') {
+      return;
+    }
+
+    if (path.node.name === 'Array') {
+      const e = t.memberExpression(t.identifier('rts'), path.node, false);
+      path.replaceWith(e);
+      path.skip();
+    }
+  },
+  ForStatement(path: NodePath<t.ForStatement>, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
-  WhileStatement(path, st: S) {
+  WhileStatement(path: NodePath<t.WhileStatement>, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
-  VariableDeclaration(path, st: S) {
+  VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
     }
   },
-  ThrowStatement(path, st: S) {
+  ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
-  WithStatement(path, st: S) {
+  WithStatement(path: NodePath<t.WithStatement>, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
   },
-  SwitchStatement(path, st: S) {
+  SwitchStatement(path: NodePath<t.SwitchStatement>, st: S) {
     st.elem.error(path, `Do not use the 'switch' statement.`);
   },
-  LabeledStatement(path, st: S) {
+  LabeledStatement(path: NodePath<t.LabeledStatement>, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
   },
-  ForOfStatement(path, st: S) {
+  ForOfStatement(path: NodePath<t.ForOfStatement>, st: S) {
     st.elem.error(path, `Do not use for-of loops.`);
   },
-  ForInStatement(path, st: S) {
+  ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
     st.elem.error(path, `Do not use for-in loops.`);
-  },
+  }
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.

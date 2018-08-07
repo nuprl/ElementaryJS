@@ -11,16 +11,21 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function SafeArray(n: any, v: any) {
-  if (arguments.length < 1 || arguments.length > 2) {
-    throw new ElementaryRuntimeError('array initialization takes at least one, and at most two arguments');
-  } 
-  if (arguments.length === 1) v = 0;
-  if (typeof n !== 'number' ||
-      n < 0 ||
-      (n % 1) !== 0) {
-    throw new ElementaryRuntimeError('array size must be a non-negative integer');
+function ArrayStub() {
+  throw new ElementaryRuntimeError(`Use Array.create(length, init)`);
+}
+
+export { ArrayStub as Array };
+
+(ArrayStub as any).create = function(n: any, v: any) {
+  if (arguments.length !== 2) {
+    throw new ElementaryRuntimeError('usage: Array.create(length, init)');
   }
+
+  if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
+    throw new ElementaryRuntimeError('array size must be a positive integer');
+  }
+
   let a = new Array(n);
   for (let i = 0; i < a.length; ++i) {
     a[i] = v;

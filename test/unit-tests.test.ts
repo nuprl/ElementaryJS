@@ -88,20 +88,20 @@ test('can dynamically change types', () => {
 
 test('invalid array creation', () => {
   expect(dynamicError(`let a = new Array();`)).toMatch(
-    'array initialization takes at least one, and at most two arguments'
+    'Use Array.create(length, init)'
   );
   expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
-    'array initialization takes at least one, and at most two arguments'
+    'Use Array.create(length, init)'
   );
-  expect(staticError(`let a = Array(2, 1);`)).toEqual(
-      expect.arrayContaining([
-          expect.stringMatching(`You must use the 'new' keyword to create a new array.`)
-  ]));
-});
+  expect(dynamicError(`let a = Array(2, 1);`)).toMatch(
+    'Use Array.create(length, init)');
+  expect(dynamicError(`let a = Array.create(3.5, 0); a`)).toMatch(
+    'positive integer');
+  });
 
 test('valid array creation', () => {
-  expect(run(`let a = new Array(2, 42); a`)).toEqual([42, 42]);
-  expect(run(`let a = new Array(3); a`)).toEqual([0, 0, 0]);
+  expect(run(`let a = Array.create(2, 42); a`)).toEqual([42, 42]);
+  expect(run(`let a = Array.create(3, 0); a`)).toEqual([0, 0, 0]);
 });
 
 test('can lookup members', () => {
@@ -181,7 +181,7 @@ test('cannot access array non-members', () => {
 });
 
 
-test('array index must be non-negative integer', () => {
+test('array index must be a positive integer', () => {
   expect(dynamicError(`let a = []; let b = a[3.1415]`))
     .toMatch(`3.1415 is not a valid array index`);
   expect(dynamicError(`let a = []; let b = a[-1]`))
