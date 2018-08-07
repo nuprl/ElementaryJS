@@ -67,6 +67,24 @@ test('can dynamically change types', () => {
   expect(run(`let x = 42; x = "foo"`)).toBe("foo");
 });
 
+test('invalid array creation', () => {
+  expect(dynamicError(`let a = new Array();`)).toMatch(
+    'array initialization takes at least one, and at most two arguments'
+  );
+  expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
+    'array initialization takes at least one, and at most two arguments'
+  );
+  expect(staticError(`let a = Array(2, 1);`)).toEqual(
+      expect.arrayContaining([
+          expect.stringMatching(`You must use the 'new' keyword to create a new array.`)
+  ]));
+});
+
+test('valid array creation', () => {
+  expect(run(`let a = new Array(2, 42); a`)).toEqual([42, 42]);
+  expect(run(`let a = new Array(3); a`)).toEqual([0, 0, 0]);
+});
+
 test('can lookup members', () => {
   expect(run(`let obj = { x: 100 }; obj.x = 42`))
       .toBe(42);

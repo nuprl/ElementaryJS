@@ -6,10 +6,11 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function SafeArray(n: any) {
-  if (arguments.length !== 1) {
-    throw new ElementaryRuntimeError('array initialization takes exactly one argument');
-  }
+export function SafeArray(n: any, v: any) {
+  if (arguments.length < 1 || arguments.length > 2) {
+    throw new ElementaryRuntimeError('array initialization takes at least one, and at most two arguments');
+  } 
+  if (arguments.length === 1) v = 0;
   if (typeof n !== 'number' ||
       n < 0 ||
       (n % 1) !== 0) {
@@ -17,7 +18,7 @@ export function SafeArray(n: any) {
   }
   let a = new Array(n);
   for (let i = 0; i < a.length; ++i) {
-    a[i] = 0;
+    a[i] = v;
   }
   return a;
 }
