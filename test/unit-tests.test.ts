@@ -1,5 +1,6 @@
 import { compile } from '../ts/index';
 import { sandbox } from '../ts/sandbox';
+import * as runtime from '../ts/runtime';
 import { default as generator } from 'babel-generator';
 
 // Helps write test cases that expect the program to terminate normally.
@@ -48,6 +49,21 @@ function staticError(code: string): string[] {
   return result.errors.map(x => x.message);
 }
 
+// Returns the expected failure message from testing
+function testFailure(description: string) {
+  return ` FAILED  ${description}\n         Assertion failed`;
+}
+
+// Returns the expected ok message from testing
+function testOk(description: string) {
+  return ` OK      ${description}`;
+}
+
+// Returns the expected test summary given number failed and number passed
+function testSummary(failed: number, passed: number) {
+  return `Tests:     ${failed} failed, ${passed} passed, ${failed + passed} total`;
+}
+
 test('cannot use var', () => {
   expect(staticError(`var x = 10`)).toEqual(
     expect.arrayContaining([
@@ -69,7 +85,7 @@ test('can dynamically change types', () => {
 
 test('can lookup members', () => {
   expect(run(`let obj = { x: 100 }; obj.x = 42`))
-      .toBe(42);
+    .toBe(42);
   expect(run(`let obj = { x: 500 }; obj.x`))
     .toBe(500);
   expect(run(`let obj = { x: 16 }; Math.sqrt(obj.x)`))
@@ -91,17 +107,17 @@ test('can lookup members', () => {
 
 test('can access array members', () => {
   expect(run(`let obj = [10]; obj[0] = 42`))
-      .toBe(42);
+    .toBe(42);
 });
 
 test('can assign array members', () => {
   expect(run(`let obj = [10]; obj[0] += 42`))
-      .toBe(52);
+    .toBe(52);
 });
 
 test('can update array members', () => {
   expect(run(`let obj = [10]; ++obj[0]`))
-      .toBe(11);
+    .toBe(11);
 });
 
 test('updateexpression must not duplicate computation', () => {
@@ -152,7 +168,7 @@ test.skip('dynamic error when calling non-member function', () => {
 
 test('dynamic error when looking up non-member 2', () => {
   expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
-      .toMatch('y is not a member');
+    .toMatch('y is not a member');
 });
 
 test('dynamic error when incrementing or decrementing non-number', () => {
@@ -171,21 +187,21 @@ test('dynamic error when assigning a value to a non-member', () => {
 test('cannot use for-of', () => {
   expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
     expect.arrayContaining([
-    `Do not use for-of loops.`
+      `Do not use for-of loops.`
     ]));
 });
 
 test('cannot use for-in', () => {
   expect(staticError(`let a = [1, 2]; for (x in a) {}`)).toEqual(
     expect.arrayContaining([
-    `Do not use for-in loops.`
+      `Do not use for-in loops.`
     ]));
 });
 
 test('cannot use in', () => {
   expect(staticError(`let a = [1, 2]; if (2 in a) {}`)).toEqual(
     expect.arrayContaining([
-    `Do not use the 'in' operator.`
+      `Do not use the 'in' operator.`
     ]));
 });
 
@@ -197,7 +213,7 @@ test('can use iterator for loops', () => {
 test('cannot use instanceof', () => {
   expect(staticError(`"foo" instanceof String`)).toEqual(
     expect.arrayContaining([
-    `Do not use the 'instanceof' operator.`
+      `Do not use the 'instanceof' operator.`
     ]));
 });
 
@@ -221,7 +237,7 @@ test('dynamic num check order', () => {
   expect(dynamicError(`let a = "", b = 1, c = {}; a * b - c`))
     .toMatch("arguments of operator '*' must both be numbers");
   expect(dynamicError(`let a = "", b = 1, c = {}; a / b * c`))
-      .toMatch("arguments of operator '/' must both be numbers");
+    .toMatch("arguments of operator '/' must both be numbers");
 });
 
 test('can use pre-update operator with numbers', () => {
@@ -243,32 +259,32 @@ test('can use pre-update operator with numbers', () => {
 test('cannot use post-update operator', () => {
   expect(staticError(`let a = 2; let b = a++;`)).toEqual(
     expect.arrayContaining([
-    `Do not use post-increment or post-decrement operators.`
+      `Do not use post-increment or post-decrement operators.`
     ]));
   expect(staticError(`let a = 2; let b = a--;`)).toEqual(
     expect.arrayContaining([
-    `Do not use post-increment or post-decrement operators.`
+      `Do not use post-increment or post-decrement operators.`
     ]));
 });
 
 test('cannot use delete', () => {
   expect(staticError(`let a = { b: 1 }; delete a.b;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the 'delete' operator.`
+      `Do not use the 'delete' operator.`
     ]));
 });
 
 test('cannot use typeof', () => {
   expect(staticError(`let a = 2; let b = typeof a;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the 'typeof' operator.`
+      `Do not use the 'typeof' operator.`
     ]));
 });
 
 test('cannot use throw', () => {
   expect(staticError(`throw "A user-defined exception.";`)).toEqual(
     expect.arrayContaining([
-    `Do not use the 'throw' operator.`
+      `Do not use the 'throw' operator.`
     ]));
 });
 
@@ -294,45 +310,45 @@ test('can use arithmetic assignment operators', () => {
 test('cannot use bitmask assignment operators', () => {
   expect(staticError(`let x = 1, y = 2; x &= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '&=' operator.`
+      `Do not use the '&=' operator.`
     ]));
 
   expect(staticError(`let x = 1, y = 2; x |= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '|=' operator.`
+      `Do not use the '|=' operator.`
     ]));
 
   expect(staticError(`let x = 1, y = 2; x ^= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '^=' operator.`
+      `Do not use the '^=' operator.`
     ]));
 });
 
 test('loop body must be BlockStatement', () => {
   expect(staticError(`for (let i = 0; i < 10; ++i) i;`)).toEqual(
     expect.arrayContaining([
-    `Loop body must be enclosed in braces.`
+      `Loop body must be enclosed in braces.`
     ]));
   expect(staticError(`let i = 0; while(i < 10) ++i;`)).toEqual(
     expect.arrayContaining([
-    `Loop body must be enclosed in braces.`
+      `Loop body must be enclosed in braces.`
     ]));
 });
 
 test('cannot use shift assignment operators', () => {
   expect(staticError(`let x = 1, y = 2; x >>= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '>>=' operator.`
+      `Do not use the '>>=' operator.`
     ]));
 
   expect(staticError(`let x = 1, y = 2; x <<= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '<<=' operator.`
+      `Do not use the '<<=' operator.`
     ]));
 
   expect(staticError(`let x = 1, y = 2; x >>>= y;`)).toEqual(
     expect.arrayContaining([
-    `Do not use the '>>>=' operator.`
+      `Do not use the '>>>=' operator.`
     ]));
 });
 
@@ -370,5 +386,89 @@ test('gigantic test case', () => {
 });
 
 test('Run empty program', () => {
-  expect(run('')).toBe(undefined);
+  expect(run('')).toBeUndefined();
+});
+
+describe('ElementaryJS Testing', () => {
+
+  beforeEach(() => {
+    runtime.enableTests(true, undefined);
+  });
+
+  test('No tests', () => {
+    expect(runtime.summary(false).output).toBe([
+      `◈ You don't seem to have any tests written`,
+      `◈ To run a test, begin a function name with 'test'`
+    ].join('\n'));
+  });
+
+  test('Assert test', () => {
+    expect(runtime.assert(true)).toBe(true);
+    expect(() => {
+      runtime.assert(false);
+    }).toThrow('Assertion failed');
+    expect(() => {
+      runtime.assert(2 as any);
+    }).toThrow('not a boolean');
+  });
+
+  test('One OK test', () => {
+    const description = 'Test 1'
+    runtime.test(description, () => {
+      return 1;
+    });
+    expect(runtime.summary(false).output).toBe([
+      testOk(description),
+      testSummary(0, 1)
+    ].join('\n'));
+  });
+
+  test('One failed Test', () => {
+    const description = 'Failed Test';
+    runtime.test(description, () => {
+      runtime.assert(false);
+    });
+    expect(runtime.summary(false).output).toBe([
+      testFailure(description),
+      testSummary(1, 0)
+    ].join('\n'));
+  });
+
+  test('One Ok, One failed', () => {
+    const okDesc = 'Ok test';
+    const failDesc = 'Failed';
+    runtime.test(okDesc, () => { return 1; });
+    runtime.test(failDesc, () => { runtime.assert(false) });
+    expect(runtime.summary(false).output).toBe([
+      testOk(okDesc),
+      testFailure(failDesc),
+      testSummary(1, 1),
+    ].join('\n'));
+  });
+
+  test('20 tests', () => {
+    let output: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      runtime.test(i.toString(), () => { runtime.assert(true); });
+      output.push(testOk(i.toString()));
+    }
+    for (let i = 10; i < 20; i++) {
+      runtime.test(i.toString(), () => { runtime.assert(false); });
+      output.push(testFailure(i.toString()));
+    }
+    output.push(testSummary(10, 10));
+    expect(runtime.summary(false).output).toBe(output.join('\n'));
+  });
+
+  test('Test not enabled', () => {
+    runtime.enableTests(false, undefined);
+    runtime.test('Test', () => { runtime.assert(false)});
+    expect(runtime.summary(false).output).toMatch(/not enabled/);
+  });
+
+  test('Summary twice not allowed', () => {
+    runtime.summary(false);
+    expect(runtime.summary(false).output).toMatch(/not enabled/);
+  });
+
 });
