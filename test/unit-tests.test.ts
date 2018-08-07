@@ -67,6 +67,24 @@ test('can dynamically change types', () => {
   expect(run(`let x = 42; x = "foo"`)).toBe("foo");
 });
 
+test('invalid array creation', () => {
+  expect(dynamicError(`let a = new Array();`)).toMatch(
+    'array initialization takes at least one, and at most two arguments'
+  );
+  expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
+    'array initialization takes at least one, and at most two arguments'
+  );
+  expect(staticError(`let a = Array(2, 1);`)).toEqual(
+      expect.arrayContaining([
+          expect.stringMatching(`You must use the 'new' keyword to create a new array.`)
+  ]));
+});
+
+test('valid array creation', () => {
+  expect(run(`let a = new Array(2, 42); a`)).toEqual([42, 42]);
+  expect(run(`let a = new Array(3); a`)).toEqual([0, 0, 0]);
+});
+
 test('can lookup members', () => {
   expect(run(`let obj = { x: 100 }; obj.x = 42`))
       .toBe(42);
@@ -128,9 +146,32 @@ test('updateexpression must not duplicate computation', () => {
   expect(run(code)).toBe(11);
 });
 
+test('acessing members of anonymous objects', () => {
+  expect(dynamicError(`[].x`))
+    .toMatch(`x is not a member`);
+  expect(dynamicError(`[0, 1][10]`))
+      .toMatch(`Index 10 is out of array bounds`);
+  expect(run(`[3, 4][1]`)).toBe(4);
+});
+
+test('cannot access array non-members', () => {
+  expect(dynamicError(`let a = []; let b = a[0];`))
+    .toMatch(`Index 0 is out of array bounds`);
+  expect(dynamicError(`let a = []; a[0] = 0;`))
+    .toMatch(`Index 0 is out of array bounds`);
+});
+
+
+test('array index must be non-negative integer', () => {
+  expect(dynamicError(`let a = []; let b = a[3.1415]`))
+    .toMatch(`3.1415 is not a valid array index`);
+  expect(dynamicError(`let a = []; let b = a[-1]`))
+      .toMatch(`-1 is not a valid array index`);
+});
+
 test('cannot assign array non-members', () => {
-  expect(dynamicError(`let obj = []; obj[0] += 5`))
-    .toMatch(`arguments of operator '+' must both be numbers or strings`);
+  expect(dynamicError(`let obj = []; obj[10] += 5`))
+    .toMatch(`Index 10 is out of array bounds`);
 });
 
 test('cannot update array non-members', () => {
