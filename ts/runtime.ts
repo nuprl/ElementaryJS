@@ -23,7 +23,7 @@ export function SafeArray(n: any, v: any) {
   return a;
 }
 
-export function arrayCheck(object: any, index: string) {
+export function arrayBoundsCheck(object: any, index: string) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an array');
   }
@@ -79,7 +79,7 @@ export function checkMember(o: any, k: any, v: any) {
 }
 
 export function checkArray(o: any, k: any, v: any) {
-  arrayCheck(o, k);
+  arrayBoundsCheck(o, k);
   return (o[k] = v);
 }
 
