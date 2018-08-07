@@ -6,6 +6,22 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
+export function SafeArray(n: any) {
+  if (arguments.length !== 1) {
+    throw new ElementaryRuntimeError('array initialization takes exactly one argument');
+  }
+  if (typeof n !== 'number' ||
+      n < 0 ||
+      (n % 1) !== 0) {
+    throw new ElementaryRuntimeError('array size must be a non-negative integer');
+  }
+  let a = new Array(n);
+  for (let i = 0; i < a.length; ++i) {
+    a[i] = 0;
+  }
+  return a;
+}
+
 export function arrayCheck(object: any, index: string) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an array');
