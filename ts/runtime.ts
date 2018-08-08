@@ -33,6 +33,13 @@ export { ArrayStub as Array };
   return a;
 }
 
+export function checkNotUndef(v: any) {
+  if (v === undefined) {
+    throw new ElementaryRuntimeError('return value expected from function');
+  }
+  return v;
+}
+
 export function arrayBoundsCheck(object: any, index: string) {
   if (typeof object !== 'object') {
     throw new ElementaryRuntimeError('expected an array');
