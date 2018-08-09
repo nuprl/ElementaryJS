@@ -1,7 +1,7 @@
 
 export default function timeoutTest(testFunction: () => void, timeout: number) {
   let isNode = false;
-  try { 
+  try {
     isNode = Object.prototype.toString.call(global.process) === '[object process]';
   } catch (error) {}
   // taken from https://www.npmjs.com/package/detect-node
@@ -11,5 +11,10 @@ export default function timeoutTest(testFunction: () => void, timeout: number) {
     vm.runInNewContext('testFunction();', { testFunction: testFunction }, { timeout: timeout });
     return;
   }
+  let timer = setTimeout(() => {
+    throw new Error('timed out');
+  }, timeout);
+
   testFunction();
+  clearTimeout(timer);
 }
