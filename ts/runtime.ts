@@ -1,6 +1,6 @@
 import { EJSVERSION } from './version';
 import { TestResult } from './types';
-import { runInNewContext } from 'vm';
+import timeoutTest from './timeout';
 
 export  function version() {
   return EJSVERSION;
@@ -279,12 +279,13 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   try {
-    runInNewContext('testFunction();', { testFunction: testFunction }, { timeout: timeoutMili });
+    timeoutTest(testFunction, timeoutMili);
     
     tests.push({
       failed: false,
       description: description,
     });
+
   } catch (e) {
     if (e.message.includes('timed out')) {
       tests.push({
