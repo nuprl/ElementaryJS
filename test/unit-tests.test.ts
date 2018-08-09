@@ -50,8 +50,8 @@ function staticError(code: string): string[] {
 }
 
 // Returns the expected failure message from testing
-function testFailure(description: string) {
-  return ` FAILED  ${description}\n         Assertion failed`;
+function testFailure(description: string, errorMsg: string = 'Assertion failed') {
+  return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
 // Returns the expected ok message from testing
@@ -537,4 +537,15 @@ describe('ElementaryJS Testing', () => {
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
 
+  test('Timing out', () => {
+    runtime.test('infinite loop', () => {
+      while (true) {
+        1;
+      }
+    });
+    expect(runtime.summary(false).output).toBe([
+      testFailure('infinite loop', 'Timed out'),
+      testSummary(1,0),
+    ].join('\n'));
+  })
 });
