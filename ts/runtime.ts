@@ -1,5 +1,6 @@
 import { EJSVERSION } from './version';
 import { TestResult } from './types';
+import { runInNewContext } from 'vm';
 
 export  function version() {
   return EJSVERSION;
@@ -208,6 +209,8 @@ let tests: TestResult[] = [];
 let testsEnabled = false;
 
 let stopifyRunner: any = undefined;
+
+let timeoutMili: number = 3000;
 /**
  * Enable/Disable testing and sets a stopify runner if needed
  * It clears out previous tests and starts anew
@@ -215,10 +218,11 @@ let stopifyRunner: any = undefined;
  * @param {boolean} enable
  * @param {*} runner
  */
-export function enableTests(enable: boolean, runner: any) {
+export function enableTests(enable: boolean, runner: any, timeout: number = 3000) {
   testsEnabled = enable;
   stopifyRunner = runner;
   tests = [];
+  timeoutMili = timeout;
 }
 /**
  * Assertions to be used in function passed into test
@@ -275,12 +279,21 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   try {
-    testFunction();
+    runInNewContext('testFunction();', { testFunction: testFunction }, { timeout: timeoutMili });
+    
     tests.push({
       failed: false,
       description: description,
     });
   } catch (e) {
+    if (e.message.includes('timed out')) {
+      tests.push({
+        failed: true,
+        description: description,
+        error: 'Timed out',
+      });
+      return;
+    }
     tests.push({
       failed: true,
       description: description,
