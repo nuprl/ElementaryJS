@@ -279,7 +279,7 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   try {
-    timeoutTest(testFunction, timeoutMili);
+    timeoutTest(testFunction, timeoutMilli);
     
     tests.push({
       failed: false,
