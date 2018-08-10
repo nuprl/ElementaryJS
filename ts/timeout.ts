@@ -11,10 +11,5 @@ export default function timeoutTest(testFunction: () => void, timeout: number) {
     vm.runInNewContext('testFunction();', { testFunction: testFunction }, { timeout: timeout });
     return;
   }
-  let timer = setTimeout(() => {
-    throw new Error('timed out');
-  }, timeout);
-
-  testFunction();
-  clearTimeout(timer);
+  testFunction(); // there doesn't seem to be any way to time out functions 
 }
