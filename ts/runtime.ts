@@ -222,7 +222,7 @@ export function enableTests(enable: boolean, runner: any, timeout: number = 3000
   testsEnabled = enable;
   stopifyRunner = runner;
   tests = [];
-  timeoutMili = timeout;
+  timeoutMilli = timeout;
 }
 /**
  * Assertions to be used in function passed into test
