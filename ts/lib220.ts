@@ -7,42 +7,19 @@ if (typeof ImageData === 'undefined') {
     width: number = 1;
     height: number = 1;
     data: Uint8ClampedArray = new Uint8ClampedArray(4);
-    constructor(width: number, height: number);
-    constructor(array: Uint8ClampedArray, width: number, height: number);
-    constructor(widthOrArray: number | Uint8ClampedArray, widthOrHeight: number, height?: number) {
-      if (arguments.length > 3 || arguments.length < 2) {
-        throw new TypeError(`Failed to construct 'ImageData': 2 or 3 arguments required but ${arguments.length} given`);
+    constructor(width: number, height: number) {
+      if (arguments.length !== 2) {
+        throw new TypeError(`Failed to construct Node 'ImageData': 2 arguments required but ${arguments.length} given`);
       }
-      if (arguments.length === 2 && (typeof widthOrArray !== 'number' || widthOrArray === 0)) {
-        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
-      }
-      if (arguments.length == 2 && (typeof widthOrHeight !== 'number' || widthOrHeight === 0)) {
-        throw new Error('Failed to construct \'ImageData\': height is zero or not a number.');
-      }
-      if (arguments.length == 2) {
-        widthOrArray = widthOrArray as number;
-        this.width = widthOrArray;
-        this.height = widthOrHeight;
-        this.data = new Uint8ClampedArray(4 * this.width * this.height);
-      }
-      if (arguments.length !== 3) {
-        return;
-      }
-      if (Object.prototype.toString.call(widthOrArray) !== '[object Uint8ClampedArray]') {
-        throw new TypeError(`Failed to construct 'ImageData': parameter 1 is not of type 'Uint8ClampedArray'`);
-      }
-      if ((typeof widthOrHeight !== 'number' || widthOrHeight === 0)) {
+      if ((typeof width !== 'number' || width === 0)) {
         throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
       }
       if ((typeof height !== 'number' || height === 0)) {
         throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
       }
-      if ((widthOrArray as Uint8ClampedArray).length !== 4 * widthOrHeight * height) {
-        throw new Error(`Failed to construct 'ImageData': The input data length is not equal to (4 * width * height).`);
-      }
-      this.width = widthOrHeight;
+      this.width = width;
       this.height = height;
-      this.data = widthOrArray as Uint8ClampedArray;
+      this.data = new Uint8ClampedArray(4 * this.width * this.height);
     }
   }
 }
@@ -69,11 +46,21 @@ function EncapsulatedImage(imageData: any) {
     }
   }
 
+
+
   return Object.freeze({
     width: w,
     height: h,
     copy: function() {
-      return EncapsulatedImage(new ImageData(data.slice(), w, h));
+      const copiedImage = EncapsulatedImage(new ImageData(w, h));
+      let pixel;
+      for (let i = 0; i < w; i++) {
+        for (let j = 0; j < h; j++) {
+          pixel = this.getPixel(i, j);
+          copiedImage.setPixel(i, j, pixel);
+        }
+      }
+      return copiedImage;
     },
     show: function () {
       if (typeof document === 'undefined') {
