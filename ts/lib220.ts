@@ -1,5 +1,52 @@
 var runner: any = undefined;
 
+var ImageData: any = ImageData;
+
+if (typeof ImageData === 'undefined') {
+  ImageData = class {
+    width: number = 1;
+    height: number = 1;
+    data: Uint8ClampedArray = new Uint8ClampedArray(4);
+    constructor(width: number, height: number);
+    constructor(array: Uint8ClampedArray, width: number, height: number);
+    constructor(widthOrArray: number | Uint8ClampedArray, widthOrHeight: number, height?: number) {
+      if (arguments.length > 3 || arguments.length < 2) {
+        throw new TypeError(`Failed to construct 'ImageData': 2 or 3 arguments required but ${arguments.length} given`);
+      }
+      if (arguments.length === 2 && (typeof widthOrArray !== 'number' || widthOrArray === 0)) {
+        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+      }
+      if (arguments.length == 2 && (typeof widthOrHeight !== 'number' || widthOrHeight === 0)) {
+        throw new Error('Failed to construct \'ImageData\': height is zero or not a number.');
+      }
+      if (arguments.length == 2) {
+        widthOrArray = widthOrArray as number;
+        this.width = widthOrArray;
+        this.height = widthOrHeight;
+        this.data = new Uint8ClampedArray(4 * this.width * this.height);
+      }
+      if (arguments.length !== 3) {
+        return;
+      }
+      if (Object.prototype.toString.call(widthOrArray) !== '[object Uint8ClampedArray]') {
+        throw new TypeError(`Failed to construct 'ImageData': parameter 1 is not of type 'Uint8ClampedArray'`);
+      }
+      if ((typeof widthOrHeight !== 'number' || widthOrHeight === 0)) {
+        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+      }
+      if ((typeof height !== 'number' || height === 0)) {
+        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+      }
+      if ((widthOrArray as Uint8ClampedArray).length !== 4 * widthOrHeight * height) {
+        throw new Error(`Failed to construct 'ImageData': The input data length is not equal to (4 * width * height).`);
+      }
+      this.width = widthOrHeight;
+      this.height = height;
+      this.data = widthOrArray as Uint8ClampedArray;
+    }
+  }
+}
+
 function assertValidPixel(pixel: any) {
   if (pixel.length !== 3) {
     throw new Error(`A pixel must be a 3-element array`);
@@ -26,9 +73,12 @@ function EncapsulatedImage(imageData: any) {
     width: w,
     height: h,
     copy: function() {
-      return EncapsulatedImage(new ImageData(data, w, h));
+      return EncapsulatedImage(new ImageData(data.slice(), w, h));
     },
     show: function () {
+      if (typeof document === 'undefined') {
+        return; //  for node
+      }
       const canvases = document.getElementById('canvases')!;
       const canvas = document.createElement('canvas');
       canvas.setAttribute('width', w);
@@ -71,6 +121,9 @@ export function setRunner(newRunner: any) {
 };
 
 export function loadImageFromURL(url: any) {
+  if (typeof document === 'undefined') {
+    return; // for node
+  }
   if (runner === undefined) {
     throw new Error('Program is not running');
   }
@@ -97,9 +150,22 @@ export function loadImageFromURL(url: any) {
       });
     };
 
-    img.setAttribute('crossOrigin', '');
+    img.setAttribute('crossOrigin', 'Anonymous');
     img.src = url;
   });
 }
 
-
+export function createImage(width: number, height: number, fill?: [number, number, number]) {
+  let img = EncapsulatedImage(new ImageData(width, height));
+  if (typeof fill !== 'undefined') {
+    assertValidPixel(fill);
+    let i, j;
+    for (i = 0; i < width; i++) {
+      for (j = 0; j < height; j++) {
+        img.setPixel(i, j, fill)
+      }
+    }
+  }
+  
+  return img;
+}
