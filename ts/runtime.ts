@@ -210,7 +210,7 @@ let testsEnabled = false;
 
 let stopifyRunner: any = undefined;
 
-let timeoutMili: number = 3000;
+let timeoutMilli: number = 3000;
 /**
  * Enable/Disable testing and sets a stopify runner if needed
  * It clears out previous tests and starts anew
