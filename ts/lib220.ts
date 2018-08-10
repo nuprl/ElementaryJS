@@ -1,5 +1,29 @@
 var runner: any = undefined;
 
+var ImageData: any = ImageData;
+
+if (typeof ImageData === 'undefined') {
+  ImageData = class {
+    width: number = 1;
+    height: number = 1;
+    data: Uint8ClampedArray = new Uint8ClampedArray(4);
+    constructor(width: number, height: number) {
+      if (arguments.length !== 2) {
+        throw new TypeError(`Failed to construct Node 'ImageData': 2 arguments required but ${arguments.length} given`);
+      }
+      if ((typeof width !== 'number' || width === 0)) {
+        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+      }
+      if ((typeof height !== 'number' || height === 0)) {
+        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+      }
+      this.width = width;
+      this.height = height;
+      this.data = new Uint8ClampedArray(4 * this.width * this.height);
+    }
+  }
+}
+
 function assertValidPixel(pixel: any) {
   if (pixel.length !== 3) {
     throw new Error(`A pixel must be a 3-element array`);
@@ -22,13 +46,26 @@ function EncapsulatedImage(imageData: any) {
     }
   }
 
+
+
   return Object.freeze({
     width: w,
     height: h,
     copy: function() {
-      return EncapsulatedImage(new ImageData(data, w, h));
+      const copiedImage = EncapsulatedImage(new ImageData(w, h));
+      let pixel;
+      for (let i = 0; i < w; i++) {
+        for (let j = 0; j < h; j++) {
+          pixel = this.getPixel(i, j);
+          copiedImage.setPixel(i, j, pixel);
+        }
+      }
+      return copiedImage;
     },
     show: function () {
+      if (typeof document === 'undefined') {
+        return; //  for node
+      }
       const canvases = document.getElementById('canvases')!;
       const canvas = document.createElement('canvas');
       canvas.setAttribute('width', w);
@@ -71,6 +108,9 @@ export function setRunner(newRunner: any) {
 };
 
 export function loadImageFromURL(url: any) {
+  if (typeof document === 'undefined') {
+    return; // for node
+  }
   if (runner === undefined) {
     throw new Error('Program is not running');
   }
@@ -97,9 +137,22 @@ export function loadImageFromURL(url: any) {
       });
     };
 
-    img.setAttribute('crossOrigin', '');
+    img.setAttribute('crossOrigin', 'Anonymous');
     img.src = url;
   });
 }
 
-
+export function createImage(width: number, height: number, fill?: [number, number, number]) {
+  let img = EncapsulatedImage(new ImageData(width, height));
+  if (typeof fill !== 'undefined') {
+    assertValidPixel(fill);
+    let i, j;
+    for (i = 0; i < width; i++) {
+      for (j = 0; j < height; j++) {
+        img.setPixel(i, j, fill)
+      }
+    }
+  }
+  
+  return img;
+}
