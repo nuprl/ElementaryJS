@@ -89,7 +89,15 @@ export class State implements CompileError {
 
 function dynCheck(name: string, ...args: t.Expression[]): t.CallExpression {
   const f = t.memberExpression(t.identifier('rts'), t.identifier(name), false);
-  return t.callExpression(f, args);
+  const c = t.callExpression(f, args);
+  // Use the location of the first argument to the dynamic check as the location
+  // of CallExpression, which is what Stopify uses to report stack traces.
+  // This should be good enough for most cases. If we need finer control, we
+  // could add an optional SourceLocation argument to the dynCheck function.
+  if (args.length > 0) {
+    c.loc = args[0].loc;
+  }
+  return c;
 }
 
 interface S {
