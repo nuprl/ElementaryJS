@@ -21,7 +21,7 @@ class FudgedImageData implements ImageData {
 }
 
 function createImageData(w: number, h: number): ImageData {
-  if (ImageData !== undefined) {
+  if (typeof ImageData !== 'undefined') {
     return new ImageData(w, h);
   }
   else {
