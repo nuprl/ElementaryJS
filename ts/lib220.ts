@@ -1,26 +1,31 @@
 import { getRunner } from './runtime';
 
-var ImageData: any = ImageData;
-
-if (typeof ImageData === 'undefined') {
-  ImageData = class {
-    width: number = 1;
-    height: number = 1;
-    data: Uint8ClampedArray = new Uint8ClampedArray(4);
-    constructor(width: number, height: number) {
-      if (arguments.length !== 2) {
-        throw new TypeError(`Failed to construct Node 'ImageData': 2 arguments required but ${arguments.length} given`);
-      }
-      if ((typeof width !== 'number' || width === 0)) {
-        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
-      }
-      if ((typeof height !== 'number' || height === 0)) {
-        throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
-      }
-      this.width = width;
-      this.height = height;
-      this.data = new Uint8ClampedArray(4 * this.width * this.height);
+class FudgedImageData implements ImageData {
+  width: number = 1;
+  height: number = 1;
+  data: Uint8ClampedArray = new Uint8ClampedArray(4);
+  constructor(width: number, height: number) {
+    if (arguments.length !== 2) {
+      throw new TypeError(`Failed to construct Node 'ImageData': 2 arguments required but ${arguments.length} given`);
     }
+    if ((typeof width !== 'number' || width === 0)) {
+      throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+    }
+    if ((typeof height !== 'number' || height === 0)) {
+      throw new Error('Failed to construct \'ImageData\': width is zero or not a number.');
+    }
+    this.width = width;
+    this.height = height;
+    this.data = new Uint8ClampedArray(4 * this.width * this.height);
+  }
+}
+
+function createImageData(w: number, h: number): ImageData {
+  if (ImageData !== undefined) {
+    return new ImageData(w, h);
+  }
+  else {
+    return new FudgedImageData(w, h);
   }
 }
 
@@ -46,13 +51,11 @@ function EncapsulatedImage(imageData: any) {
     }
   }
 
-
-
   return Object.freeze({
     width: w,
     height: h,
     copy: function() {
-      const copiedImage = EncapsulatedImage(new ImageData(w, h));
+      const copiedImage = EncapsulatedImage(createImageData(w, h));
       let pixel;
       for (let i = 0; i < w; i++) {
         for (let j = 0; j < h; j++) {
