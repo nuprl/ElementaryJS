@@ -208,7 +208,20 @@ let tests: TestResult[] = [];
 
 let testsEnabled = false;
 
+// NOTE(arjun): It seems silly to depend on all of Stopify just to get the type
+// of AsyncRun
 let stopifyRunner: any = undefined;
+
+export function getRunner(): { kind: 'ok', value: any } | { kind: 'error' }  {
+  if (stopifyRunner === undefined) {
+    return { kind: 'error' };
+  }
+  return { kind: 'ok', value: stopifyRunner };
+}
+
+export function setRunner(runner: any) {
+  stopifyRunner = runner;
+}
 
 let timeoutMilli: number = 3000;
 /**

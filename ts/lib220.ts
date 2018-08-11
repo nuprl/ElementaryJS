@@ -1,4 +1,4 @@
-var runner: any = undefined;
+import { getRunner } from './runtime';
 
 var ImageData: any = ImageData;
 
@@ -102,18 +102,16 @@ function EncapsulatedImage(imageData: any) {
   });
 }
 
-
-export function setRunner(newRunner: any) {
-    runner = newRunner;
-};
-
 export function loadImageFromURL(url: any) {
   if (typeof document === 'undefined') {
     return; // for node
   }
-  if (runner === undefined) {
+  const runnerResult = getRunner();
+  if (runnerResult.kind === 'error') {
     throw new Error('Program is not running');
   }
+  const runner = runnerResult.value;
+
   return runner.pauseImmediate(() => {
     const img = new Image();
 
