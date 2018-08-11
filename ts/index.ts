@@ -7,6 +7,8 @@ import * as babylon from 'babylon';
 import * as visitor from './visitor';
 import { CompileOK, CompileError } from './types';
 
+export { CompileOK, CompileError } from './types';
+
 /**
  * 
  * @param code the program to compile
