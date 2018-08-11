@@ -107,7 +107,8 @@ function EncapsulatedImage(imageData: any) {
 
 export function loadImageFromURL(url: any) {
   if (typeof document === 'undefined') {
-    return; // for node
+    return EncapsulatedImage(createImageData(50, 50));
+    // TODO (Sam): student can get a pixel that is out of bound.
   }
   const runnerResult = getRunner();
   if (runnerResult.kind === 'error') {
@@ -144,7 +145,7 @@ export function loadImageFromURL(url: any) {
 }
 
 export function createImage(width: number, height: number, fill?: [number, number, number]) {
-  let img = EncapsulatedImage(new ImageData(width, height));
+  let img = EncapsulatedImage(createImageData(width, height));
   if (typeof fill !== 'undefined') {
     assertValidPixel(fill);
     let i, j;
