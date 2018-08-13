@@ -315,17 +315,19 @@ export const visitor = {
     exit(path: NodePath<t.BinaryExpression>, st: S) {
       // Original: a + b
       let op = path.node.operator;
+      let opName = t.stringLiteral(op);
+      opName.loc = path.node.loc;
       if (numOrStringOperators.includes(op)) {
         // Transformed: applyNumOrStringOp('+', a, b);
         path.replaceWith(dynCheck("applyNumOrStringOp",
-          t.stringLiteral(op),
+          opName,
           path.node.left,
           path.node.right));
         path.skip();
       } else if (numOperators.includes(op)) {
         // Transformed: applyNumOp('+', a, b);
         path.replaceWith(dynCheck("applyNumOp",
-          t.stringLiteral(op),
+          opName,
           path.node.left,
           path.node.right));
         path.skip();
@@ -354,17 +356,19 @@ export const visitor = {
       if (a.type !== 'Identifier' && a.type !== 'MemberExpression') {
         throw new Error(`not an l-value in update expression`);
       }
+      let opName = t.stringLiteral(path.node.operator);
+      opName.loc = path.node.loc;
       if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
         const check = dynCheck('updateOnlyNumbers',
-          t.stringLiteral(path.node.operator),
+          opName,
           a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
         path.skip();
       } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand',
-          t.stringLiteral(path.node.operator),
+          opName,
           a.object,
           propertyAsString(a)));
         path.skip();
