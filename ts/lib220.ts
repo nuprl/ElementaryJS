@@ -160,7 +160,7 @@ export function loadImageFromURL(url: any) {
     }).catch(err => {
       runner.continueImmediate({
         type: 'exception',
-        value: new Error(`Could not load image: ${err}`),
+        value: new Error(`Could not load image`),
       });
     });
   });
