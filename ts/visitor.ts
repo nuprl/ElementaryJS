@@ -126,7 +126,7 @@ function unassign(op: string) {
     case '*=': return '*';
     case '/=': return '/';
     case '%=': return '%';
-    default: throw new Error(`should not happen`);
+    default: throw new Error(`unexpected operator type '${op}'`);
   }
 }
 

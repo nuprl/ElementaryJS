@@ -13,14 +13,14 @@ export class ElementaryRuntimeError extends Error {
 }
 
 function ArrayStub() {
-  throw new ElementaryRuntimeError(`Use Array.create(length, init)`);
+  throw new ElementaryRuntimeError(`use Array.create(length, init)`);
 }
 
 export { ArrayStub as Array };
 
 (ArrayStub as any).create = function(n: any, v: any) {
   if (arguments.length !== 2) {
-    throw new ElementaryRuntimeError('usage: Array.create(length, init)');
+    throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
   }
 
   if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
@@ -43,26 +43,26 @@ export function checkNotUndef(v: any) {
 
 export function arrayBoundsCheck(object: any, index: string) {
   if (typeof object !== 'object') {
-    throw new ElementaryRuntimeError('expected an array');
+    throw new ElementaryRuntimeError('array indexing called on a non-array value type');
   }
   if (typeof index !== 'number' ||
       index < 0 || (index % 1) !== 0) {
     throw new ElementaryRuntimeError(
-        `${index} is not a valid array index`);
+        `array index '${index}' is not valid`);
   }
   if (object[index] === undefined) {
     throw new ElementaryRuntimeError(
-        `Index ${index} is out of array bounds`);
+        `index '${index}' is out of array bounds`);
   }
   return object[index];
 }
 
 export function dot(object: any, index: string) {
   if (typeof object !== 'object') {
-    throw new ElementaryRuntimeError('expected an object');
+    throw new ElementaryRuntimeError(`cannot access member of non-object value types`);
   }
   if (object[index] === undefined) {
-    throw new ElementaryRuntimeError(`${index} is not a member`);
+    throw new ElementaryRuntimeError(`object does not have member '${index}'`);
   }
   return object[index];
 }
@@ -108,9 +108,9 @@ export function checkUpdateOperand(
   if (obj.hasOwnProperty(member) === false) {
     if (typeof member === 'number') {
       throw new ElementaryRuntimeError(
-        `Index ${member} does not exist in array`);
+        `index '${member}' is out of array bounds`);
     } else {
-      throw new ElementaryRuntimeError(`${member} is not a member`);
+      throw new ElementaryRuntimeError(`object does not have member '${member}'`);
     }
   }
   if (typeof (obj[member]) !== 'number') {
@@ -245,10 +245,10 @@ export function enableTests(enable: boolean, runner: any, timeout: number = 3000
  */
 export function assert(val: boolean) {
   if (typeof val !== 'boolean') {
-    throw new ElementaryTestingError(`${val} is not a boolean value`);
+    throw new ElementaryTestingError(`assertion argument '${val}' is not a boolean value`);
   }
   if (!val) {
-    throw new ElementaryTestingError(`Assertion failed`);
+    throw new ElementaryTestingError(`assertion failed`);
   }
 
   return true;
