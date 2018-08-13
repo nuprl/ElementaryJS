@@ -140,7 +140,29 @@ export function loadImageFromURL(url: any) {
     };
 
     img.setAttribute('crossOrigin', 'Anonymous');
-    img.src = url;
+    const userEmail = localStorage.getItem('userEmail');
+    const sessionId = localStorage.getItem('sessionId');
+    if (userEmail === null || sessionId === null) {
+      runner.continueImmediate({
+        type: 'exception',
+        value: new Error(`User is not logged in`)
+      });
+    }
+    const encodedURL = encodeURIComponent(url);
+    const getUrlLink = ` https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/geturl?`
+    const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
+    console.log(queryURL);
+    fetch(queryURL).then(response => {
+      return response.blob();
+    }).then(blob => {
+      let objectURL = URL.createObjectURL(blob);
+      img.src = objectURL;
+    }).catch(err => {
+      runner.continueImmediate({
+        type: 'exception',
+        value: new Error(`Could not load image: ${err}`),
+      });
+    });
   });
 }
 
