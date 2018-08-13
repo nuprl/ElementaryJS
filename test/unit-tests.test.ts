@@ -50,7 +50,7 @@ function staticError(code: string): string[] {
 }
 
 // Returns the expected failure message from testing
-function testFailure(description: string, errorMsg: string = 'Assertion failed') {
+function testFailure(description: string, errorMsg: string = 'assertion failed') {
   return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
@@ -88,13 +88,13 @@ test('can dynamically change types', () => {
 
 test('invalid array creation', () => {
   expect(dynamicError(`let a = new Array();`)).toMatch(
-    'Use Array.create(length, init)'
+    'use Array.create(length, init)'
   );
   expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
-    'Use Array.create(length, init)'
+    'use Array.create(length, init)'
   );
   expect(dynamicError(`let a = Array(2, 1);`)).toMatch(
-    'Use Array.create(length, init)');
+    'use Array.create(length, init)');
   expect(dynamicError(`let a = Array.create(3.5, 0); a`)).toMatch(
     'positive integer');
   });
@@ -189,42 +189,42 @@ test('updateexpression must not duplicate computation', () => {
 
 test('acessing members of anonymous objects', () => {
   expect(dynamicError(`[].x`))
-    .toMatch(`x is not a member`);
+    .toMatch(`object does not have member 'x'`);
   expect(dynamicError(`[0, 1][10]`))
-      .toMatch(`Index 10 is out of array bounds`);
+      .toMatch(`index '10' is out of array bounds`);
   expect(run(`[3, 4][1]`)).toBe(4);
 });
 
 test('cannot access array non-members', () => {
   expect(dynamicError(`let a = []; let b = a[0];`))
-    .toMatch(`Index 0 is out of array bounds`);
+    .toMatch(`index '0' is out of array bounds`);
   expect(dynamicError(`let a = []; a[0] = 0;`))
-    .toMatch(`Index 0 is out of array bounds`);
+    .toMatch(`index '0' is out of array bounds`);
 });
 
 
 test('array index must be a positive integer', () => {
   expect(dynamicError(`let a = []; let b = a[3.1415]`))
-    .toMatch(`3.1415 is not a valid array index`);
+    .toMatch(`array index '3.1415' is not valid`);
   expect(dynamicError(`let a = []; let b = a[-1]`))
-      .toMatch(`-1 is not a valid array index`);
+      .toMatch(`array index '-1' is not valid`);
 });
 
 test('cannot assign array non-members', () => {
   expect(dynamicError(`let obj = []; obj[10] += 5`))
-    .toMatch(`Index 10 is out of array bounds`);
+    .toMatch(`index '10' is out of array bounds`);
 });
 
 test('cannot update array non-members', () => {
   expect(dynamicError(`let obj = []; ++obj[0]`))
-    .toMatch('Index 0 does not exist in array');
+    .toMatch(`index '0' is out of array bounds`);
 });
 
 test('dynamic error when looking up non-member', () => {
   expect(dynamicError(`let obj = { x: 500 }; obj.y`))
-    .toMatch('y is not a member');
+    .toMatch(`object does not have member 'y'`);
   expect(dynamicError(`let obj = { x: 500 }; ++obj.y`))
-    .toMatch('y is not a member');
+    .toMatch(`object does not have member 'y'`);
 });
 
 test.skip('dynamic error when calling non-member function', () => {
@@ -234,7 +234,7 @@ test.skip('dynamic error when calling non-member function', () => {
 
 test('dynamic error when looking up non-member 2', () => {
   expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
-    .toMatch('y is not a member');
+    .toMatch(`object does not have member 'y'`);
 });
 
 test('dynamic error when incrementing or decrementing non-number', () => {
@@ -247,7 +247,7 @@ test('dynamic error when incrementing or decrementing non-number', () => {
 
 test('dynamic error when assigning a value to a non-member', () => {
   expect(dynamicError(`let obj = {}; obj.y = 0;`))
-    .toMatch('y is not a member');
+    .toMatch(`object does not have member 'y'`);
 });
 
 test('cannot use for-of', () => {
@@ -472,7 +472,7 @@ describe('ElementaryJS Testing', () => {
     expect(runtime.assert(true)).toBe(true);
     expect(() => {
       runtime.assert(false);
-    }).toThrow('Assertion failed');
+    }).toThrow('assertion failed');
     expect(() => {
       runtime.assert(2 as any);
     }).toThrow('not a boolean');

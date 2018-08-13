@@ -31,11 +31,11 @@ function createImageData(w: number, h: number): ImageData {
 
 function assertValidPixel(pixel: any) {
   if (pixel.length !== 3) {
-    throw new Error(`A pixel must be a 3-element array`);
+    throw new Error(`A pixel value must be a 3-element array`);
   }
   for (let i = 0; i < 3; i++) {
     if (pixel[i] < 0.0 || pixel[i] > 1.0) {
-      throw new Error(`Pixel not in range`);
+      throw new Error(`Pixel channel value ${pixel[i]} is invalid`);
     }
   }
 }
@@ -46,8 +46,7 @@ function EncapsulatedImage(imageData: any) {
   const h = imageData.height;
   function assertValidCoordinate(x: any, y: any) {
     if (x < 0 || y < 0 || x >= w || y >= h) {
-      throw new Error(`Coordinate (${x}, ${y}) is not valid. The image has height
-      ${h} and width ${w}.`);
+      throw new Error(`Pixel coordinate (${x}, ${y}) is invalid. The image has height ${h} and width ${w}.`);
     }
   }
 
