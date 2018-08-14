@@ -155,7 +155,7 @@ export function loadImageFromURL(url: any) {
       if (response.status !== 200) {
         runner.continueImmediate({
           type: 'exception',
-          value: new Error(`Could not load image, URL may have been redirected`),
+          value: new Error(`Could not load image, URL may be invalid or redirected`),
         });
       }
       return response.blob();
