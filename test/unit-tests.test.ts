@@ -149,20 +149,6 @@ test('function can return undef if not required', () => {
   expect(run(code)).toBe(undefined);
 });
 
-test('function must return value for assignment', () => {
-  let code = `
-    function foo() {};
-    let a = foo();
-  `;
-  expect(dynamicError(code)).toMatch('return value expected from function');
-  code = `
-    function foo() {};
-    function bar(v) { return v; };
-    let a = foo();
-  `;
-  expect(dynamicError(code)).toMatch('return value expected from function');
-});
-
 test('updateexpression must not duplicate computation', () => {
   let code = `
     let x = [ { y: 2 }, { y: 3 }];
