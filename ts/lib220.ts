@@ -152,6 +152,12 @@ export function loadImageFromURL(url: any) {
     const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
     console.log(queryURL);
     fetch(queryURL).then(response => {
+      if (response.status !== 200) {
+        runner.continueImmediate({
+          type: 'exception',
+          value: new Error(`Could not load image, URL may have been redirected`),
+        });
+      }
       return response.blob();
     }).then(blob => {
       let objectURL = URL.createObjectURL(blob);
