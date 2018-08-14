@@ -186,16 +186,6 @@ export const visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
-  CallExpression: {
-    exit(path: NodePath<t.CallExpression>) {
-      if (path.parent.type === "ExpressionStatement") {
-        return;
-      }
-      // f(...) => rts.checkNotUndef(f(...))
-      path.replaceWith(dynCheck('checkNotUndef', path.node));
-      path.skip();
-    }
-  },
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
