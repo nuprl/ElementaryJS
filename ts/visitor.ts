@@ -325,8 +325,7 @@ export const visitor = {
     }
   },
   UnaryExpression(path: NodePath<t.UnaryExpression>, st: S) {
-    if (path.node.operator == 'delete' ||
-      path.node.operator == 'typeof') {
+    if (path.node.operator == 'delete') {
       st.elem.error(path, `Do not use the '` + path.node.operator +
         `' operator.`);
     }
