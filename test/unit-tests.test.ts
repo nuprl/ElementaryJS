@@ -340,13 +340,6 @@ test('cannot use delete', () => {
     ]));
 });
 
-test('cannot use typeof', () => {
-  expect(staticError(`let a = 2; let b = typeof a;`)).toEqual(
-    expect.arrayContaining([
-      `Do not use the 'typeof' operator.`
-    ]));
-});
-
 test('cannot use throw', () => {
   expect(staticError(`throw "A user-defined exception.";`)).toEqual(
     expect.arrayContaining([
