@@ -93,9 +93,8 @@ test('invalid array creation', () => {
   expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
     'use Array.create(length, init)'
   );
-  // NOTE(arjun): Using ES2015 classes, we get a different error.
-  // expect(dynamicError(`let a = Array(2, 1);`)).toMatch(
-  //   'use Array.create(length, init)');
+  expect(dynamicError(`let a = Array(2, 1);`)).toMatch(
+    'use Array.create(length, init)');
   expect(dynamicError(`let a = Array.create(3.5, 0); a`)).toMatch(
     'positive integer');
   });
