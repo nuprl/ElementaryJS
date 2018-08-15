@@ -12,27 +12,37 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-function ArrayStub() {
-  throw new ElementaryRuntimeError(`use Array.create(length, init)`);
+class ArrayStub {
+
+  constructor() {
+    throw new ElementaryRuntimeError(`use Array.create(length, init)`);
+  }
+
+  static create(n: any, v: any) {
+    if (arguments.length !== 2) {
+      throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
+    }
+  
+    if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
+      throw new ElementaryRuntimeError('array size must be a positive integer');
+    }
+  
+    let a = new Array(n);
+    for (let i = 0; i < a.length; ++i) {
+      a[i] = v;
+    }
+    const maybeRunner = getRunner();
+    if (maybeRunner.kind === 'error') {
+      return a; // Stopify not loaded
+    }
+    // A very undocumented interface!
+    return maybeRunner.value.continuationsRTS.stopifyArray(a);
+  }  
+
 }
 
 export { ArrayStub as Array };
 
-(ArrayStub as any).create = function(n: any, v: any) {
-  if (arguments.length !== 2) {
-    throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
-  }
-
-  if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
-    throw new ElementaryRuntimeError('array size must be a positive integer');
-  }
-
-  let a = new Array(n);
-  for (let i = 0; i < a.length; ++i) {
-    a[i] = v;
-  }
-  return a;
-}
 
 export function arrayBoundsCheck(object: any, index: string) {
   if (typeof object !== 'object') {
