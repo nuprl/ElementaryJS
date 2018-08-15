@@ -15,6 +15,6 @@
         "module": "commonjs",
         "outDir": "./dist",
         "lib": ["es2016", "dom"],
-        "target": "es2015"
+        "target": "es5"
     }
 }
