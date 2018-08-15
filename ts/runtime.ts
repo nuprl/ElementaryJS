@@ -12,86 +12,27 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-/**
- * Arrays that cooperate with Stopify to allow functional arguments to pause
- * and resume execution. Since we are being lazy about Stopify's types, these
- * are the two relevant functions:
- * 
- * externalHOF(body: (complete: (result: Result) => void) => never): void;
- * runStopifiedCode(body: () => void, callback: (x: Result) => void): void;
- */
-class CooperativeArray extends Array {
-
-  map(f: (value: any, index: number, array: any[]) => any): CooperativeArray {
-    const maybeRunner = getRunner();
-    if (maybeRunner.kind === 'error') {
-      // No longer a CooperativeArray after this, but that should not matter
-      return Array.prototype.map.call(this, f);
-    }
-
-    // Now, for an epic implementation of map ...
-    const runner = maybeRunner.value;
-    // Save the caller's continuation
-    return runner.externalHOF((complete: (result: any) => void) => {
-      const results: any[] = [ ];
-      let index = 0;
-      const nextApp = () => {
-        if (index === this.length) {
-          // Resume the caller's continuation with the final array.
-          return complete({ type: 'normal', value: results });
-        }
-        // Run the functional argument within the context of Stopify's main
-        // loop, so that it can save/restore continuations.
-        return runner.runStopifiedCode(
-          () => f(this[index], index, this),
-          (result: any) => {
-            if (result.type !== 'normal') {
-              // Caller threw an exception, so abort.
-              // TODO(arjun): Stack trace returned does not include the stack
-              // trace of the caller's captured continuation.
-              return complete(result);
-            }
-            results.push(result.value);
-            index = index + 1;
-            nextApp();
-          });        
-        }
-      return nextApp();
-    });
-  }
-  
-  
+function ArrayStub() {
+  throw new ElementaryRuntimeError(`use Array.create(length, init)`);
 }
-
-
-class ArrayStub {
-
-  constructor() {
-    throw new ElementaryRuntimeError(`use Array.create(length, init)`);
-  }
-
-  static create(n: any, v: any) {
-    if (arguments.length !== 2) {
-      throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
-    }
-  
-    if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
-      throw new ElementaryRuntimeError('array size must be a positive integer');
-    }
-  
-    let a = new CooperativeArray(n);
-    for (let i = 0; i < a.length; ++i) {
-      a[i] = v;
-    }
-    return a;
-  }
-  
-
-}
-
 
 export { ArrayStub as Array };
 
+(ArrayStub as any).create = function(n: any, v: any) {
+  if (arguments.length !== 2) {
+    throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
+  }
+
+  if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
+    throw new ElementaryRuntimeError('array size must be a positive integer');
+  }
+
+  let a = new Array(n);
+  for (let i = 0; i < a.length; ++i) {
+    a[i] = v;
+  }
+  return a;
+}
 
 export function arrayBoundsCheck(object: any, index: string) {
   if (typeof object !== 'object') {
