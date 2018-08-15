@@ -29,9 +29,9 @@ import * as t from 'babel-types';
 import { NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
 
-let generalOperators = [
-  "==",
-  "!=",
+let comparisonOperators = [
+  "===",
+  "!=="
 ];
 let numOrStringOperators = [
   "+",
@@ -52,8 +52,7 @@ let numOperators = [
   "|",
   "^"
 ];
-let allowedBinaryOperators =
-  generalOperators.concat(numOrStringOperators, numOperators);
+let allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
 
 // This is the visitor state, which includes a list of errors. We throw
 // this object if something goes wrong.Clients of ElementaryJS only rely on the
@@ -287,19 +286,15 @@ export const visitor = {
   BinaryExpression: {
     enter(path: NodePath<t.BinaryExpression>, st: S) {
       let op = path.node.operator;
-      if (!(allowedBinaryOperators.includes(op))) {
+      if (op === '==') {
+        st.elem.error(path, `Do not use the '==' operator. Use '===' instead.`);
+        path.skip();
+      } else if (op === '!=') {
+        st.elem.error(path, `Do not use the '!=' operator. Use '!==' instead.`);
+        path.skip();
+      } else if (!(allowedBinaryOperators.includes(op))) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
         path.skip();
-        return;
-      } else if (generalOperators.includes(op)) {
-        switch (op) {
-          case "==": {
-            path.node.operator = "===";
-          } break;
-          case "!=": {
-            path.node.operator = "!==";
-          } break;
-        }
       }
     },
     exit(path: NodePath<t.BinaryExpression>, st: S) {

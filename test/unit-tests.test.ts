@@ -397,9 +397,22 @@ test('cannot use shift assignment operators', () => {
     ]));
 });
 
-test('convert equality operators', () => {
-  expect(run(`let x = "1", y = 1; x == y`)).toBe(false);
-  expect(run(`let x = "1", y = 1; x != y`)).toBe(true);
+test('disallowed comparison operators', () => {
+  expect(staticError(`let x = "1", y = 1; x == y`)).toEqual(
+    expect.arrayContaining([
+      `Do not use the '==' operator. Use '===' instead.`
+    ]));
+  expect(staticError(`let x = "1", y = 1; x != y`)).toEqual(
+    expect.arrayContaining([
+      `Do not use the '!=' operator. Use '!==' instead.`
+    ]));
+});
+
+test('allowed comparison operators', () => {
+  expect(run(`let x = 1, y = 1; x === y`)).toBe(true);
+  expect(run(`let x = 2, y = 1; x === y`)).toBe(false);
+  expect(run(`let x = 1, y = 1; x !== y`)).toBe(false);
+  expect(run(`let x = 2, y = 1; x !== y`)).toBe(true);
 });
 
 test('call a builtin method', () => {
@@ -414,13 +427,13 @@ test('gigantic test case', () => {
   let source = `
       // Fibonacci sequence, where fibonacci(0) = 0, 
       function fibonacci(n) {
-        if ( (n % 1) != 0) {
+        if ( (n % 1) !== 0) {
           console.error('n must be an integer!');
           return 0;
         }
         if (n < 1) {
           return 0;
-        } else if (n == 1) {
+        } else if (n === 1) {
           return 1;
         }
         return (fibonacci(n - 1) + fibonacci(n - 2));
