@@ -172,5 +172,8 @@ export function loadImageFromURL(url: any) {
 }
 
 export function createImage(width: number, height: number) {
+  if (arguments.length !== 2) {
+    throw new Error(`createImage expects 2 arguments, received ${arguments.length}`);
+  }
   return EncapsulatedImage(createImageData(width, height));
 }
