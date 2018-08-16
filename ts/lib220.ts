@@ -171,17 +171,6 @@ export function loadImageFromURL(url: any) {
   });
 }
 
-export function createImage(width: number, height: number, fill?: [number, number, number]) {
-  let img = EncapsulatedImage(createImageData(width, height));
-  if (typeof fill !== 'undefined') {
-    assertValidPixel(fill);
-    let i, j;
-    for (i = 0; i < width; i++) {
-      for (j = 0; j < height; j++) {
-        img.setPixel(i, j, fill)
-      }
-    }
-  }
-  
-  return img;
+export function createImage(width: number, height: number) {
+  return EncapsulatedImage(createImageData(width, height));
 }
