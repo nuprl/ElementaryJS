@@ -172,6 +172,9 @@ export function loadImageFromURL(url: any) {
 }
 
 export function createImage(width: number, height: number, fill: [number, number, number]) {
+  if (arguments.length !== 3) {
+    throw new Error(`createImage expects 3 arguments, received ${arguments.length}`);
+  }
   let img = EncapsulatedImage(createImageData(width, height));
   assertValidPixel(fill);
   let i, j;
