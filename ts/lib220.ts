@@ -171,9 +171,15 @@ export function loadImageFromURL(url: any) {
   });
 }
 
-export function createImage(width: number, height: number) {
-  if (arguments.length !== 2) {
-    throw new Error(`createImage expects 2 arguments, received ${arguments.length}`);
+export function createImage(width: number, height: number, fill: [number, number, number]) {
+  let img = EncapsulatedImage(createImageData(width, height));
+  assertValidPixel(fill);
+  let i, j;
+  for (i = 0; i < width; i++) {
+    for (j = 0; j < height; j++) {
+      img.setPixel(i, j, fill)
+    }
   }
-  return EncapsulatedImage(createImageData(width, height));
+
+  return img;
 }
