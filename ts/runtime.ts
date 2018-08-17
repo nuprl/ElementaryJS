@@ -61,7 +61,10 @@ export function arrayBoundsCheck(object: any, index: string) {
 }
 
 export function dot(object: any, index: string) {
-  if (typeof object !== 'object') {
+  if (typeof object !== 'object'  && 
+      typeof object !== 'string'  && 
+      typeof object !== 'boolean' &&
+      typeof object !== 'number') {
     throw new ElementaryRuntimeError(`cannot access member of non-object value types`);
   }
   if (object[index] === undefined) {
