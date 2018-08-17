@@ -447,6 +447,84 @@ test('Run empty program', () => {
   expect(run('')).toBeUndefined();
 });
 
+test('Can set fields of this in a constructor', () => {
+  expect(run(`
+    class C { constructor() { this.x = 5; } }
+    (new C()).x`)).toBe(5);
+});
+
+test('Dynamic checks when settings fields of other objects in constructor', () => {
+  expect(dynamicError(`
+    class C { 
+      constructor(o) { 
+        o.x = 5;
+      }
+    }
+    new C({ })`)).toMatch(`object does not have member 'x'`);
+});
+
+test('Dynamic check for this.x = y in function nested in constructor', () => {
+  expect(dynamicError(`
+    class C { 
+      constructor() { 
+        (function() { this.x = 5; })();
+      }
+    }
+    new C()`)).toMatch(`object does not have member 'x'`);
+});
+
+test('Classes test', () => {
+  expect(run(`
+    class Rectangle {
+      constructor(w, h) {
+        if (w === undefined || h === undefined) {
+          console.error("ERROR: MUST SPECIFY WIDTH AND HEIGHT");
+        }
+        this.width = w;
+        this.height = h;
+      }
+      area() {
+        return this.width * this.height;
+      }
+      name() {
+        return "rectangle";
+      }
+      properties() {
+        return "width:" + this.width.toString() + 
+          ", height:" + this.height.toString();
+      }
+    };
+    
+    class Circle {
+      constructor(r) {
+        if (r === undefined) {
+          console.error("ERROR: MUST SPECIFY RADIUS");
+        }
+        this.radius = r;
+      }
+      area() {
+        return Math.PI * Math.pow(this.radius, 2);
+      }
+      name() {
+        return "circle";
+      }
+      properties() {
+        return "radius:" + this.radius.toString();
+      }
+    };
+    
+    let shapes = [
+      new Rectangle(2, 3),
+      new Circle(1),
+    ];
+    
+    shapes.forEach(function(s) {
+      console.log("Area of " + s.name() + 
+        " with " + s.properties() + 
+        " = " + s.area().toString());
+    });`));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {

@@ -61,6 +61,8 @@ export class State implements CompileError {
 
   // Allows clients to discriminate between CompileError and CompileResult.
   public kind: 'error' = 'error';
+  public inConstructor: boolean = false;
+  public inConstructorStack: boolean[] = [];
 
   constructor(public errors: ElementarySyntaxError[]) {
   }
@@ -172,6 +174,17 @@ export const visitor = {
       }
     }
   },
+  Function: {
+    enter(path: NodePath<t.Function>, st: S) {
+      const inCtor = path.node.type === 'ClassMethod' &&
+        path.node.kind === 'constructor';
+      st.elem.inConstructorStack.push(st.elem.inConstructor);
+      st.elem.inConstructor = inCtor;
+    },
+    exit(path: NodePath<t.Function>, st: S) {
+      st.elem.inConstructor = st.elem.inConstructorStack.pop()!
+    },
+  },
   VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
@@ -267,6 +280,10 @@ export const visitor = {
 
 
       if (t.isIdentifier(left)) {
+        return;
+      }
+
+      if (st.elem.inConstructor && left.object.type === 'ThisExpression') {
         return;
       }
 

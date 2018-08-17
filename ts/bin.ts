@@ -3,22 +3,21 @@
  * This is not how anyone will usually run ElementaryJS, but it is helpful
  * for debugging.
  */
-import * as babel from 'babel-core';
-import * as visitor from './visitor';
+import * as generator from 'babel-generator';
+import * as index from './index';
 import * as fs from 'fs';
-
-function compile(code: string): string {
-  const result = babel.transform(code, {
-    plugins: [visitor.plugin],
-    ast: false,
-    code: true
-  });
-  return result.code!;
-}
 
 if (process.argv.length < 3) {
   console.error('ERROR: You must provide specify a file to run.');
   process.exit(1);
 }
 
-console.log(compile(fs.readFileSync(process.argv[2], { encoding: 'utf8' })));
+const code = fs.readFileSync(process.argv[2], { encoding: 'utf8' });
+
+const result = index.compile(code, false);
+if (result.kind === 'error') {
+  console.log(result);
+}
+else {
+  console.log(generator.default(result.node).code);
+}

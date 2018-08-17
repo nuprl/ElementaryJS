@@ -9,6 +9,10 @@ import { CompileOK, CompileError } from './types';
 
 export { CompileOK, CompileError } from './types';
 
+// NOTE(arjun): This may not be needed, but I am using require instead of the
+// name so that Webpack can statically link.
+const transformClasses = require('babel-plugin-transform-es2015-classes');
+
 /**
  * 
  * @param code the program to compile
@@ -21,16 +25,24 @@ export function compile(
     // Babylon is the parser that Babel uses internally.
     const ast = typeof code === 'string' ? 
       babylon.parse(code).program : code;
-    const babelResult = babel.transformFromAst(ast, undefined, {
-      plugins: [[visitor.plugin, { isOnline }]],
+    const result1 = babel.transformFromAst(ast, 
+      typeof code === 'string' && code || undefined, {
+      plugins: [ [visitor.plugin, { isOnline }] ],
       ast: true,
-      code: false
+      code: true
     });
+    const result2 = babel.transformFromAst(result1.ast!,
+      result1.code!, { 
+        plugins: [transformClasses], 
+        ast: true,
+        code: false
+    });
+
     return {
       kind: 'ok',
       // NOTE(arjun): There is some imprecision in the type produced by Babel.
       // I have verified that this cast is safe.
-      node: (babelResult.ast! as babel.types.File).program
+      node: (result2.ast! as babel.types.File).program
     };
   }
   catch (exn) {
