@@ -407,7 +407,7 @@ export const visitor = {
       return;
     }
     if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
-      st.elem.error(path, `Two bodies of if else statement must be enclosed in braces.`);
+      st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
     }
   },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
