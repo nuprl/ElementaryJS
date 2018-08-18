@@ -2,6 +2,7 @@ import { compile } from '../ts/index';
 import { sandbox } from '../ts/sandbox';
 import * as runtime from '../ts/runtime';
 import { default as generator } from 'babel-generator';
+import 'jest'
 
 // Helps write test cases that expect the program to terminate normally.
 // The result is the final value of the program.
@@ -534,6 +535,16 @@ test('if else must be BlockStatement', () => {
     expect.arrayContaining([
       `Two bodies of if else statement must be enclosed in braces.`
     ]));
+  expect(run(`let i = 0; if (true) { ++i}; i;`)).toBe(1);
+  expect(run(`
+    let i = 0; 
+    if (false) { 
+      ++i
+    } else {
+      i += 2;
+    }
+    i;
+  `)).toBe(2);
 });
 
 describe('ElementaryJS Testing', () => {
