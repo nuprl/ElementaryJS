@@ -525,6 +525,17 @@ test('Classes test', () => {
     });`));
 });
 
+test('if else must be BlockStatement', () => {
+  expect(staticError(`let s = 1; if (true) ++s;`)).toEqual(
+    expect.arrayContaining([
+      `if statement body must be enclosed in braces.`
+    ]));
+  expect(staticError(`let i = 0; if (true) ++i; else ++i`)).toEqual(
+    expect.arrayContaining([
+      `Two bodies of if else statement must be enclosed in braces.`
+    ]));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
