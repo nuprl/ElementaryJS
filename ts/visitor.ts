@@ -410,6 +410,16 @@ export const visitor = {
       st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
     }
   },
+  BreakStatement(path: NodePath<t.BreakStatement>, st: S) {
+    if (path.node.label !== null) {
+      st.elem.error(path, `break statement must not have label`);
+    }
+  },
+  ContinueStatement(path: NodePath<t.ContinueStatement>, st: S) {
+    if (path.node.label !== null) {
+      st.elem.error(path, `continue statement must not have label`);
+    }
+  },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);

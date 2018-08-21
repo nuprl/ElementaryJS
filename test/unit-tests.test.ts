@@ -546,6 +546,28 @@ test('if else must be BlockStatement', () => {
   `)).toBe(2);
 });
 
+test('continue statement must not have label', () => {
+  expect(staticError(`
+  loop:
+  for (let i = 0; i < 10; ++i) {
+    continue loop;
+  }
+  `)).toEqual(expect.arrayContaining([
+    `continue statement must not have label`
+  ]));
+});
+
+test('break statement must not have label', () => {
+  expect(staticError(`
+  loop:
+  for (let i = 0; i < 10; ++i) {
+    break loop;
+  }
+  `)).toEqual(expect.arrayContaining([
+    `break statement must not have label`
+  ]));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
