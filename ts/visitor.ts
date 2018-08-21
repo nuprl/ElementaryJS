@@ -392,6 +392,20 @@ export const visitor = {
     }
   },
   ForStatement(path: NodePath<t.ForStatement>, st: S) {
+    if (path.node.init === null) {
+      st.elem.error(path, `for statement variable initialization must be present`);
+    }
+    if (path.node.init !== null && 
+      !t.isAssignmentExpression(path.node.init) && 
+      !t.isVariableDeclaration(path.node.init)) {
+      st.elem.error(path, `for statement variable initialization must be an assignment or a variable declaration`);
+    }
+    if (path.node.test === null) {
+      st.elem.error(path, `for statement termination test must be present`);
+    }
+    if (path.node.update === null) {
+      st.elem.error(path, `for statement update expression must be present`);
+    }
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
