@@ -401,6 +401,15 @@ export const visitor = {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
+  IfStatement(path: NodePath<t.IfStatement>, st: S) {
+    if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
+      st.elem.error(path, `if statement body must be enclosed in braces.`);
+      return;
+    }
+    if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
+      st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
+    }
+  },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);

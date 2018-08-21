@@ -11,5 +11,5 @@ export default function timeoutTest(testFunction: () => void, timeout: number) {
     vm.runInNewContext('testFunction();', { testFunction: testFunction }, { timeout: timeout });
     return;
   }
-  testFunction(); // there doesn't seem to be any way to time out functions 
+  testFunction(); // this should not run.
 }
