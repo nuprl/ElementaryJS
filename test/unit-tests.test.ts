@@ -588,6 +588,45 @@ test('break statement must not have label', () => {
   `)).toBe(5);
 });
 
+test('for statement must have three parts present', () => {
+  expect(staticError(`
+    for (;;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement variable initialization must be present`,
+    `for statement termination test must be present`,
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (let i = 0;;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement termination test must be present`,
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (let i = 0; i < 10;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (something(); i < 10; ++i) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement variable initialization must be an assignment or a variable declaration`
+  ]));
+  expect(run(`
+    let i = 0;
+    for (i = 0; i < 3; ++i) {}
+    i;
+  `)).toBe(3);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
