@@ -401,6 +401,11 @@ export const visitor = {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
+  DoWhileStatement(path: NodePath<t.DoWhileStatement>, st: S) {
+    if (!t.isBlockStatement(path.node.body)) {
+      st.elem.error(path, `Loop body must be enclosed in braces.`);
+    }
+  },
   IfStatement(path: NodePath<t.IfStatement>, st: S) {
     if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
       st.elem.error(path, `if statement body must be enclosed in braces.`);

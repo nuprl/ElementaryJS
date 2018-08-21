@@ -378,6 +378,10 @@ test('loop body must be BlockStatement', () => {
     expect.arrayContaining([
       `Loop body must be enclosed in braces.`
     ]));
+  expect(staticError(`let i = 0; do ++i; while (i < 10)`)).toEqual(
+    expect.arrayContaining([
+      `Loop body must be enclosed in braces.`
+    ]));
 });
 
 test('cannot use shift assignment operators', () => {
