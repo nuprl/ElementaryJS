@@ -204,6 +204,11 @@ test('array index must be a positive integer', () => {
       .toMatch(`array index '-1' is not valid`);
 });
 
+test('cannot pass array non-members as arguments to function', () => {
+  expect(dynamicError(`let a = []; Math.abs(a[0]);`))
+    .toMatch(`index '0' is out of array bounds`);
+});
+
 test('cannot assign array non-members', () => {
   expect(dynamicError(`let obj = []; obj[10] += 5`))
     .toMatch(`index '10' is out of array bounds`);
