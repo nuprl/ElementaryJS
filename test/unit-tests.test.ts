@@ -67,6 +67,13 @@ function testSummary(failed: number, passed: number) {
   return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
 
+test('duplicate let binding', () => {
+  expect(compile(`let x = 0; let x = 1`, false)).toMatchObject({
+    kind: 'error',
+    errors: [ { line: 1, message: `unknown: Duplicate declaration "x"` } ]
+  });
+});
+
 test('cannot use var', () => {
   expect(staticError(`var x = 10`)).toEqual(
     expect.arrayContaining([

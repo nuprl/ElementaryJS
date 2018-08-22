@@ -50,25 +50,33 @@ export function compile(
       return exn;
     }
 
+    let line: number = 0;
+    let message: string = '';
+
     if (exn instanceof SyntaxError) {
       const groups = /^(.*) \((\d+):(\d+)\)$/.exec(exn.message);
       if (groups === null) {
         // NOTE(arjun): I don't think this can happen, but you never know with
         // JavaScript.
-        return {
-          kind: 'error',
-          errors: [ { line: 0, message: exn.message } ]
-        };
+        message = exn.message;
       }
-      return {
-        kind: 'error',
-        errors: [ { line: Number(groups[2]), message: groups[1] } ]
-      };
+      else {
+        line = Number(groups[2]);
+        message = groups[1];
+      }
     }
-    // NOTE(arjun): What else could it be?
+    // This can happen due to Babel.
+    else if (exn.loc && exn.loc.line) {
+      line = Number(exn.loc.line);
+      message = exn.message;
+    }
+    else {
+      message = exn.message;
+    }
+
     return {
       kind: 'error',
-      errors: [ { line: 0, message: exn.message } ]
+      errors: [ { line, message } ]
     };
   }
 }
