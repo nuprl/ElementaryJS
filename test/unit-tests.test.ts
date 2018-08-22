@@ -173,6 +173,14 @@ test('updateexpression must not duplicate computation', () => {
   expect(run(code)).toBe(11);
 });
 
+test('accessing member of string', () => {
+  let code = `
+    let str = 'test';
+    str.length;
+  `;
+  expect(run(code)).toBe(4);
+});
+
 test('acessing members of anonymous objects', () => {
   expect(dynamicError(`[].x`))
     .toMatch(`object does not have member 'x'`);
