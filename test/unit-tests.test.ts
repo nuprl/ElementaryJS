@@ -485,6 +485,18 @@ test('Dynamic check for this.x = y in function nested in constructor', () => {
     new C()`)).toMatch(`object does not have member 'x'`);
 });
 
+test('arity-mismatch: too few arguments', () => {
+  expect(dynamicError(`
+    function F(x) { }
+    F()`)).toMatch(`function F expected 1 argument but received 0 arguments`);
+});
+
+test('arity-mismatch: too many arguments', () => {
+  expect(dynamicError(`
+    function F(x) { }
+    F(1,2,3)`)).toMatch(`function F expected 1 argument but received 3 arguments`);
+});
+
 test('Classes test', () => {
   expect(run(`
     class Rectangle {
@@ -529,8 +541,10 @@ test('Classes test', () => {
       new Rectangle(2, 3),
       new Circle(1),
     ];
-    
-    shapes.forEach(function(s) {
+    // NOTE(arjun): We are testing without stopify, thus the builtin .forEach
+    // calls us with more arguments. I think the HOFs need to be moved into
+    // ElementaryJS in the future.
+    shapes.forEach(function(s, _, __) {
       console.log("Area of " + s.name() + 
         " with " + s.properties() + 
         " = " + s.area().toString());
