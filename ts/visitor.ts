@@ -237,7 +237,10 @@ export const visitor = {
         return;
       }
       if (t.isCallExpression(parent) && parent.callee === path.node) {
-        // TODO: Insert dynamic check for member functions.
+        // This MemberExpression is the callee in a CallExpression, i.e.,
+        // obj.method(...).
+        // We can simply leave this intact. JavaScript will throw an exception
+        // with a reasonable error message if obj.method is not a function.
         return;
       }
       const o = path.node.object;
