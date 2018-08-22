@@ -204,6 +204,15 @@ export function applyNumOp(op: string, lhs: any, rhs: any) {
   }
 }
 
+export function arityCheck(name: string, expected: number, actual: number) {
+  if (expected !== actual) {
+    const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`;
+    const actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
+    throw new ElementaryRuntimeError(
+      `function ${name} expected ${expectedStr} but received ${actualStr}`);
+  }
+}
+
 export class ElementaryTestingError extends Error {
   constructor(message: string) {
     super(message);
