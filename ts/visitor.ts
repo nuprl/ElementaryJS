@@ -131,15 +131,29 @@ function unassign(op: string) {
   }
 }
 
+export function functionBody(node: t.Function | t.Program): t.Statement[] {
+  if (node.type === 'Program') {
+    return node.body;
+  }
+  else if (t.isFunctionExpression(node) ||
+           t.isFunctionDeclaration(node) ||
+           t.isClassMethod(node) ||
+           t.isObjectMethod(node)) {
+    return node.body.body;
+  }
+  else {
+    throw new Error(`node is a ${node.type}`);
+  }
+}
+
 function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
   const parent = path.getFunctionParent().node;
-  if (t.isProgram(parent)) {
-    return parent.body;
-  }
-  else if (t.isFunctionExpression(parent) ||
+  if (t.isProgram(parent) ||
+    t.isClassMethod(parent) ||
+    t.isFunctionExpression(parent) ||
     t.isFunctionDeclaration(parent) ||
     t.isObjectMethod(parent)) {
-    return parent.body.body;
+    return functionBody(parent);
   }
   else {
     throw new Error(`parent is a ${parent.type}`);
@@ -183,6 +197,20 @@ export const visitor = {
     },
     exit(path: NodePath<t.Function>, st: S) {
       st.elem.inConstructor = st.elem.inConstructorStack.pop()!
+
+      // Inserts the expression `dynCheck(N, arguments.length, name)` at the
+      // top of the function, where N is the number of declared arguments
+      // and name is the name of the function or '(anonymous').
+      const body = functionBody(path.node);
+      const id = path.node.id;
+      const expected = t.numericLiteral(path.node.params.length);
+      const actual = t.memberExpression(t.identifier('arguments'), 
+        t.identifier('length'), false);
+      const name = t.stringLiteral(id ? id.name : '(anonymous)');
+      body.unshift(t.expressionStatement(
+        dynCheck('arityCheck', name, expected, actual)));
+
+      path.skip();
     },
   },
   VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
