@@ -665,6 +665,16 @@ test('for statement must have three parts present', () => {
   `)).toBe(3);
 });
 
+test('Only booleans for logical operators', () => {
+  expect(dynamicError(`1 || false`)).toMatch(`arguments of operator '||' must both be booleans`);
+  expect(dynamicError(`false || ''`)).toMatch(`arguments of operator '||' must both be booleans`);
+  expect(dynamicError(`false || 1`)).toMatch(`arguments of operator '||' must both be booleans`);
+  expect(dynamicError(`1 && false`)).toMatch(`arguments of operator '&&' must both be booleans`);
+  expect(dynamicError(`false && ''`)).toMatch(`arguments of operator '&&' must both be booleans`);
+  expect(dynamicError(`false && 1`)).toMatch(`arguments of operator '&&' must both be booleans`);
+  expect(run(`true || false`)).toBe(true);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {

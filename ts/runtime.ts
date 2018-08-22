@@ -148,7 +148,20 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
     }
   }
 }
-
+export function applyBinaryBooleanOp(op: string, lhs: any, rhs: any) {
+  if (typeof lhs !== 'boolean' || typeof rhs !== 'boolean') {
+    throw new ElementaryRuntimeError(`arguments of operator '${op}' must both be booleans`);
+  }
+  switch (op) {
+    case '&&':
+      return (lhs && rhs);
+    case '||':
+      return (lhs || rhs);
+    default:
+      elementaryJSBug(`applyBinaryBooleanOp '${op}'`);
+      return false;
+  }
+}
 export function applyNumOp(op: string, lhs: any, rhs: any) {
   if (!(typeof (lhs) === "number" && typeof (rhs) === "number")) {
     throw new ElementaryRuntimeError(
