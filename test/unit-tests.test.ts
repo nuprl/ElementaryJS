@@ -226,9 +226,9 @@ test('dynamic error when looking up non-member', () => {
     .toMatch(`object does not have member 'y'`);
 });
 
-test.skip('dynamic error when calling non-member function', () => {
+test('dynamic error when calling non-member function', () => {
   expect(dynamicError(`let obj = { }; obj.foo(42)`))
-    .toMatch('foo is not a member function of obj');
+    .toMatch('obj.foo is not a function');
 });
 
 test('dynamic error when looking up non-member 2', () => {
