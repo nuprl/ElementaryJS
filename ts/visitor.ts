@@ -208,7 +208,7 @@ export const visitor = {
           (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
       }
-      if (path.parent.type === 'CallExpression') {
+      if (t.isCallExpression(parent) && parent.callee === path.node) {
         // TODO: Insert dynamic check for member functions.
         return;
       }
