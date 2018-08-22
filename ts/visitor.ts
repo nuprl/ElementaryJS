@@ -331,6 +331,20 @@ export const visitor = {
       path.skip();
     }
   },
+  LogicalExpression: { // logical expressions only has && and || as operators
+    exit(path: NodePath<t.LogicalExpression>, st: S) {
+      let op = path.node.operator;
+      let opName = t.stringLiteral(op);
+      opName.loc = path.node.loc;
+      path.replaceWith(dynCheck(
+        'applyBinaryBooleanOp',
+        opName,
+        path.node.left,
+        path.node.right, 
+      ));
+      path.skip();
+    }
+  },
   BinaryExpression: {
     enter(path: NodePath<t.BinaryExpression>, st: S) {
       let op = path.node.operator;
