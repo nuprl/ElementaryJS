@@ -386,6 +386,10 @@ test('loop body must be BlockStatement', () => {
     expect.arrayContaining([
       `Loop body must be enclosed in braces.`
     ]));
+  expect(staticError(`let i = 0; do ++i; while (i < 10)`)).toEqual(
+    expect.arrayContaining([
+      `Loop body must be enclosed in braces.`
+    ]));
 });
 
 test('cannot use shift assignment operators', () => {
@@ -552,6 +556,87 @@ test('if else must be BlockStatement', () => {
     }
     i;
   `)).toBe(2);
+});
+
+test('continue statement must not have label', () => {
+  expect(staticError(`
+  loop:
+  for (let i = 0; i < 10; ++i) {
+    continue loop;
+  }
+  `)).toEqual(expect.arrayContaining([
+    `continue statement must not have label`
+  ]));
+  expect(run(`
+  let k = 0;
+  for (let i = 0; i < 10; ++i) {
+    if (i >= 5) {
+      continue;
+    }
+    k += 1;
+  }
+  k
+  `)).toBe(5);
+});
+
+test('break statement must not have label', () => {
+  expect(staticError(`
+  loop:
+  for (let i = 0; i < 10; ++i) {
+    break loop;
+  }
+  `)).toEqual(expect.arrayContaining([
+    `break statement must not have label`
+  ]));
+  expect(run(`
+  let k = 0;
+  for (let i = 0; i < 10; ++i) {
+    if (i >= 5) {
+      break;
+    }
+    k += 1;
+  }
+  k
+  `)).toBe(5);
+});
+
+test('for statement must have three parts present', () => {
+  expect(staticError(`
+    for (;;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement variable initialization must be present`,
+    `for statement termination test must be present`,
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (let i = 0;;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement termination test must be present`,
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (let i = 0; i < 10;) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement update expression must be present`
+  ]));
+  expect(staticError(`
+    for (something(); i < 10; ++i) {
+      break;
+    }
+  `)).toEqual(expect.arrayContaining([
+    `for statement variable initialization must be an assignment or a variable declaration`
+  ]));
+  expect(run(`
+    let i = 0;
+    for (i = 0; i < 3; ++i) {}
+    i;
+  `)).toBe(3);
 });
 
 describe('ElementaryJS Testing', () => {

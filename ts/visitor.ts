@@ -392,11 +392,30 @@ export const visitor = {
     }
   },
   ForStatement(path: NodePath<t.ForStatement>, st: S) {
+    if (path.node.init === null) {
+      st.elem.error(path, `for statement variable initialization must be present`);
+    }
+    if (path.node.init !== null && 
+      !t.isAssignmentExpression(path.node.init) && 
+      !t.isVariableDeclaration(path.node.init)) {
+      st.elem.error(path, `for statement variable initialization must be an assignment or a variable declaration`);
+    }
+    if (path.node.test === null) {
+      st.elem.error(path, `for statement termination test must be present`);
+    }
+    if (path.node.update === null) {
+      st.elem.error(path, `for statement update expression must be present`);
+    }
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
   WhileStatement(path: NodePath<t.WhileStatement>, st: S) {
+    if (!t.isBlockStatement(path.node.body)) {
+      st.elem.error(path, `Loop body must be enclosed in braces.`);
+    }
+  },
+  DoWhileStatement(path: NodePath<t.DoWhileStatement>, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
@@ -408,6 +427,16 @@ export const visitor = {
     }
     if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
       st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
+    }
+  },
+  BreakStatement(path: NodePath<t.BreakStatement>, st: S) {
+    if (path.node.label !== null) {
+      st.elem.error(path, `break statement must not have label`);
+    }
+  },
+  ContinueStatement(path: NodePath<t.ContinueStatement>, st: S) {
+    if (path.node.label !== null) {
+      st.elem.error(path, `continue statement must not have label`);
     }
   },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
