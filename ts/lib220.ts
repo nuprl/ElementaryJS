@@ -1,5 +1,79 @@
 import { getRunner } from './runtime';
 
+function hexColorChannel(n: number): string {
+  let v = (Math.floor(n * 255)).toString(16);
+  if (v.length < 2) v = '0' + v;
+  return v;
+}
+
+function rgbToHex(rgb: number[]): string {
+  let hex = '#';
+  for (let i = 0; i < 3; ++i) {
+    hex += hexColorChannel(rgb[i]);
+  }
+  return hex;
+}
+
+export class DrawingCanvas {
+  width: number = 1;
+  height: number = 1;
+  ctx: CanvasRenderingContext2D | undefined = undefined;
+  constructor(w: number, h: number) {
+    if (arguments.length !== 2) {
+      throw new TypeError(`Failed to construct Node 'DrawingCanvas': 2 arguments required but ${arguments.length} given`);
+    }
+    this.width = w;
+    this.height = h;
+    if (typeof document === 'undefined') {
+      return; //  for node
+    }
+    const canvases = document.getElementById('canvases')!;
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('width', this.width.toString());
+    canvas.setAttribute('height', this.height.toString());
+    this.ctx = canvas.getContext('2d')!;
+    canvases.appendChild(canvas);
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, this.width, this.height);
+  }
+  drawLine(x1: number, y1: number, x2: number, y2: number, col: number[]) {
+    if (this.ctx === undefined) {
+      throw new Error(`Unable to draw to an uninitialized canvas`);
+    }
+    if (col.length !== 3 ||
+        typeof(col[0]) !== 'number' ||
+        typeof(col[1]) !== 'number' ||
+        typeof(col[2]) !== 'number') {
+        throw new Error(`Invalid color value`);
+    }
+    this.ctx.strokeStyle = rgbToHex(col);
+    this.ctx.beginPath();
+    this.ctx.moveTo(x1, y1);
+    this.ctx.lineTo(x2, y2);
+    this.ctx.stroke();
+  }
+  drawArc(x: number, y: number, r: number, a0: number, a1: number, col: number[]) {
+    if (this.ctx === undefined) {
+      throw new Error(`Unable to draw to an uninitialized canvas`);
+    }
+    this.ctx.strokeStyle = rgbToHex(col);
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, r, a0, a1);
+    this.ctx.stroke();
+  }
+  clear() {
+    if (this.ctx === undefined) {
+      throw new Error(`Unable to draw to an uninitialized canvas`);
+    }
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, this.width, this.height);
+  }
+}
+
+export function newCanvas(w: number, h: number) {
+  return new DrawingCanvas(w, h);
+}
+
 class FudgedImageData implements ImageData {
   width: number = 1;
   height: number = 1;
