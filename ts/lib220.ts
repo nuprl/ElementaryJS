@@ -148,6 +148,7 @@ function EncapsulatedImage(imageData: any) {
       canvas.setAttribute('height', h);
       const ctx = canvas.getContext('2d')!;
       ctx.putImageData(imageData, 0, 0);
+      canvases.appendChild(document.createElement('br'));
       canvases.appendChild(canvas);
     },
     setPixel: function(x: any, y: any, c: any) {

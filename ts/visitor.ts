@@ -88,16 +88,10 @@ export class State implements CompileError {
   }
 }
 
-function dynCheck(name: string, ...args: t.Expression[]): t.CallExpression {
+function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
   const f = t.memberExpression(t.identifier('rts'), t.identifier(name), false);
   const c = t.callExpression(f, args);
-  // Use the location of the first argument to the dynamic check as the location
-  // of CallExpression, which is what Stopify uses to report stack traces.
-  // This should be good enough for most cases. If we need finer control, we
-  // could add an optional SourceLocation argument to the dynCheck function.
-  if (args.length > 0) {
-    c.loc = args[0].loc;
-  }
+  c.loc = loc;
   return c;
 }
 
@@ -208,7 +202,7 @@ export const visitor = {
         t.identifier('length'), false);
       const name = t.stringLiteral(id ? id.name : '(anonymous)');
       body.unshift(t.expressionStatement(
-        dynCheck('arityCheck', name, expected, actual)));
+        dynCheck('arityCheck', path.node.loc, name, expected, actual)));
 
       path.skip();
     },
@@ -250,10 +244,10 @@ export const visitor = {
           // This should never happen
           throw new Error(`ElementaryJS expected id. in MemberExpression`);
         }
-        path.replaceWith(dynCheck('dot', o, t.stringLiteral(p.name)));
+        path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
         path.skip();
       } else {
-        path.replaceWith(dynCheck('arrayBoundsCheck', o, p));
+        path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
         path.skip();
       }
     }
@@ -321,11 +315,11 @@ export const visitor = {
       if (left.computed) {
         // exp[x] = rhs => checkArray(exp, x, rhs)
         path.replaceWith(
-          dynCheck('checkArray', left.object, left.property, right));
+          dynCheck('checkArray', left.object.loc, left.object, left.property, right));
       } else {
         // exp.x = rhs => checkMember(exp, 'x', rhs)
         path.replaceWith(
-          dynCheck('checkMember', left.object, propertyAsString(left),
+          dynCheck('checkMember', left.object.loc, left.object, propertyAsString(left),
             right));
       }
       path.skip();
@@ -335,9 +329,9 @@ export const visitor = {
     exit(path: NodePath<t.LogicalExpression>, st: S) {
       let op = path.node.operator;
       let opName = t.stringLiteral(op);
-      opName.loc = path.node.loc;
       path.replaceWith(dynCheck(
         'applyBinaryBooleanOp',
+        path.node.loc,
         opName,
         path.node.left,
         path.node.right, 
@@ -363,10 +357,10 @@ export const visitor = {
       // Original: a + b
       let op = path.node.operator;
       let opName = t.stringLiteral(op);
-      opName.loc = path.node.loc;
       if (numOrStringOperators.includes(op)) {
         // Transformed: applyNumOrStringOp('+', a, b);
         path.replaceWith(dynCheck("applyNumOrStringOp",
+          path.node.loc,
           opName,
           path.node.left,
           path.node.right));
@@ -374,6 +368,7 @@ export const visitor = {
       } else if (numOperators.includes(op)) {
         // Transformed: applyNumOp('+', a, b);
         path.replaceWith(dynCheck("applyNumOp",
+          path.node.loc,
           opName,
           path.node.left,
           path.node.right));
@@ -403,10 +398,10 @@ export const visitor = {
         throw new Error(`not an l-value in update expression`);
       }
       let opName = t.stringLiteral(path.node.operator);
-      opName.loc = path.node.loc;
       if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
         const check = dynCheck('updateOnlyNumbers',
+          path.node.loc,
           opName,
           a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
@@ -414,6 +409,7 @@ export const visitor = {
       } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand',
+          path.node.loc,
           opName,
           a.object,
           propertyAsString(a)));
