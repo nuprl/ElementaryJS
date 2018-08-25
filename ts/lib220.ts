@@ -25,7 +25,7 @@ export class DrawingCanvas {
     this.width = w;
     this.height = h;
     if (typeof document === 'undefined') {
-      return; //  for node
+      return;  // for node
     }
     const canvases = document.getElementById('canvases')!;
     const canvas = document.createElement('canvas');
@@ -38,7 +38,7 @@ export class DrawingCanvas {
   }
   drawLine(x1: number, y1: number, x2: number, y2: number, col: number[]) {
     if (this.ctx === undefined) {
-      throw new Error(`Unable to draw to an uninitialized canvas`);
+      return;  // for node
     }
     if (col.length !== 3 ||
         typeof(col[0]) !== 'number' ||
@@ -54,16 +54,19 @@ export class DrawingCanvas {
   }
   drawArc(x: number, y: number, r: number, a0: number, a1: number, col: number[]) {
     if (this.ctx === undefined) {
-      throw new Error(`Unable to draw to an uninitialized canvas`);
+      return;  // for node
     }
     this.ctx.strokeStyle = rgbToHex(col);
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, a0, a1);
     this.ctx.stroke();
   }
+  drawCircle(x: number, y: number, r: number, col: number[]) {
+    this.drawArc(x, y, r, 0, 2 * Math.PI, col);
+  }
   clear() {
     if (this.ctx === undefined) {
-      throw new Error(`Unable to draw to an uninitialized canvas`);
+      return;  // for node
     }
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(0, 0, this.width, this.height);
