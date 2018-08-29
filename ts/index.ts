@@ -81,7 +81,10 @@ class ElementaryRunner implements CompileOK {
       onDone({
         type: 'exception',
         stack: [], // This is correct
-        value: elementary.errors.toString()
+        value: elementary.errors.map(x => {
+          const l = x.line;
+          return `Line ${l}: ${x.message}`
+        }).join('\n')
       });
       return;
     }
