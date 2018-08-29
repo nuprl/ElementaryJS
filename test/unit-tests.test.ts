@@ -675,6 +675,15 @@ test('Only booleans for logical operators', () => {
   expect(run(`true || false`)).toBe(true);
 });
 
+test('ElementaryJS statically reports const violations', () => {
+  expect(staticError(`
+    const x = 1;
+    x = 2;
+  `)).toEqual(expect.arrayContaining([
+    `variable is 'const'`
+  ]));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
