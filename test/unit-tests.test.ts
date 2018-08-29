@@ -756,6 +756,15 @@ test('ElementaryJS statically reports const violations', () => {
   ]));
 });
 
+test('ElementaryJS statically reports const violations', () => {
+  expect(staticError(`
+    const x = 1;
+    x = 2;
+  `)).toEqual(expect.arrayContaining([
+    `variable is 'const'`
+  ]));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
