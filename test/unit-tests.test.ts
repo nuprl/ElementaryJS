@@ -761,10 +761,17 @@ test('ElementaryJS statically reports const violations', () => {
   ]));
 });
 
+test('string.split produces a Stopify array', async () => {
+  await expect(dynamicError(`
+    'a,b,c'.split(',').map(function(x, y, z) { return 0; })
+  `)).resolves.toMatch(`function (anonymous) expected 3 arguments but received 1 argument`);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
-    runtime.enableTests(true, undefined);
+    runtime.enableTests(true);
+    runtime.setRunner(undefined as any);
   });
 
   test('No tests', () => {
@@ -833,7 +840,7 @@ describe('ElementaryJS Testing', () => {
   });
 
   test('Test not enabled', () => {
-    runtime.enableTests(false, undefined);
+    runtime.enableTests(false);
     runtime.test('Test', () => { runtime.assert(false)});
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
