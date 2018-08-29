@@ -1,4 +1,4 @@
-import { getRunner } from './runtime';
+import { getRunner, stopifyArray } from './runtime';
 
 function hexColorChannel(n: number): string {
   let v = (Math.floor(n * 255)).toString(16);
@@ -172,11 +172,11 @@ function EncapsulatedImage(imageData: any) {
       }
       assertValidCoordinate(x, y);
       let index = 4 * (y * w + x);
-      const p = [
+      const p = stopifyArray([
         data[index] / 255.0,
         data[index + 1] / 255.0,
         data[index + 2] / 255.0
-      ];
+      ]);
       return p;
     }
   });

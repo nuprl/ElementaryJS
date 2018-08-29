@@ -215,6 +215,21 @@ export const visitor = {
       st.elem.error(path, `You must initialize the variable '${x}'.`);
     }
   },
+  CallExpression: {
+    exit(path: NodePath<t.CallExpression>) {
+      const callee = path.node.callee;
+      if (callee.type === 'MemberExpression' &&
+          callee.computed === false &&
+          callee.property.type === 'Identifier' &&
+          callee.property.name === 'split') {
+          path.replaceWith(dynCheck('checkCall', path.node.loc,
+            callee.object,
+            propertyAsString(callee),
+            t.arrayExpression(path.node.arguments)));
+          path.skip();
+      }
+    }
+  },
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
@@ -241,7 +256,8 @@ export const visitor = {
         }
         path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
         path.skip();
-      } else {
+      }
+      else {
         path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
         path.skip();
       }

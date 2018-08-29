@@ -32,13 +32,8 @@ class ArrayStub {
     for (let i = 0; i < a.length; ++i) {
       a[i] = v;
     }
-    const maybeRunner = getRunner();
-    if (maybeRunner.kind === 'error') {
-      return a; // Stopify not loaded
-    }
-    // A very undocumented interface!
-    return (maybeRunner.value as any).higherOrderFunctions.stopifyArray(a);
-  }  
+    return stopifyArray(a);
+  }
 
 }
 
@@ -71,7 +66,36 @@ export function dot(object: any, index: string) {
   if (object[index] === undefined) {
     throw new ElementaryRuntimeError(`object does not have member '${index}'`);
   }
+  if (typeof object === 'string' && index === 'split') {
+    return stopifyStringSplit(object);
+  }
+
   return object[index];
+}
+
+export function checkCall(object: any, field: string, args: any[]) {
+  if (typeof object === 'string' && field === 'split') {
+      return stopifyArray(object.split(args[0]));
+  }
+  else {
+    throw elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
+  }
+}
+
+export function stopifyArray(array: any[]) {
+  const maybeRunner = getRunner();
+  if (maybeRunner.kind === 'error') {
+    throw elementaryJSBug(`Stopify not loaded`);
+  }
+  // A very undocumented interface!
+  return (maybeRunner.value as any).higherOrderFunctions.stopifyArray(array);
+
+}
+
+function stopifyStringSplit(str: string) {
+  return function(sep: string) {
+    return stopifyArray(str.split(sep));
+  };
 }
 
 export function updateOnlyNumbers(opcode: string, object: any) {
@@ -258,9 +282,8 @@ let timeoutMilli: number = 3000;
  * @param {boolean} enable
  * @param {*} runner
  */
-export function enableTests(enable: boolean, runner: any, timeout: number = 3000) {
+export function enableTests(enable: boolean, timeout: number = 3000) {
   testsEnabled = enable;
-  stopifyRunner = runner;
   tests = [];
   timeoutMilli = timeout;
 }
@@ -363,7 +386,7 @@ export function summary(hasStyles: boolean) {
   }
   const styleMark = hasStyles ? '%c' : ''
   if (tests.length === 0) {
-    enableTests(false, undefined);
+    enableTests(false);
     return {
       output: `${styleMark}◈ You don't seem to have any tests written\n◈ To run a test, begin a function name with 'test'`,
       style: hasStyles ? ['color: #e87ce8'] : []
@@ -391,7 +414,7 @@ export function summary(hasStyles: boolean) {
     output.push(`Tests:     ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
     hasStyles && style.push('color: #2ac093; font-weight: bold', 'font-weight: bold');
   }
-  enableTests(false, undefined);
+  enableTests(false);
   return {
     output: output.join('\n'),
     style: style
