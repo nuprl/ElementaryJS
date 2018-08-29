@@ -163,6 +163,16 @@ function propertyAsString(node: t.MemberExpression): t.Expression {
   }
 }
 
+function lvalIds(lval: t.LVal): t.Identifier[]  {
+  if (lval.type === 'Identifier') {
+    return [lval];
+  }
+  else {
+    // TODO(arjun): Not exactly right, but we don't support patterns anyway
+    return [];
+  }
+}
+
 export const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
@@ -483,6 +493,17 @@ export const visitor = {
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
+    }
+    if (path.node.kind === 'const') {
+      const names = path.node.declarations
+        .map(x => lvalIds(x.id))
+        .reduce((arr1, arr2) => arr1.concat(arr2), []);
+      for (const x of names) {
+        const violations = path.scope.bindings[x.name].constantViolations;
+        if (violations.length > 0) {
+          st.elem.error(violations[0], `variable is 'const'`);
+        }
+      }
     }
   },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
