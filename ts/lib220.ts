@@ -199,6 +199,7 @@ export function loadImageFromURL(url: any) {
     img.onerror = () => {
       runner.continueImmediate({
         type: 'exception',
+        stack: [],
         value: new Error(`Could not load ${url}`)
       });
     };
@@ -222,6 +223,7 @@ export function loadImageFromURL(url: any) {
     if (userEmail === null || sessionId === null) {
       runner.continueImmediate({
         type: 'exception',
+        stack: [],
         value: new Error(`User is not logged in`)
       });
     }
@@ -233,6 +235,7 @@ export function loadImageFromURL(url: any) {
       if (response.status !== 200) {
         runner.continueImmediate({
           type: 'exception',
+          stack: [],
           value: new Error(`Could not load image, URL may be invalid or redirected`),
         });
       }
@@ -243,6 +246,7 @@ export function loadImageFromURL(url: any) {
     }).catch(err => {
       runner.continueImmediate({
         type: 'exception',
+        stack: [],
         value: new Error(`Could not load image`),
       });
     });

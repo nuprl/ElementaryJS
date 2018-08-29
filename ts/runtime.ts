@@ -1,6 +1,7 @@
 import { EJSVERSION } from './version';
 import { TestResult } from './types';
 import timeoutTest from './timeout';
+import * as stopify from 'stopify';
 
 export  function version() {
   return EJSVERSION;
@@ -36,7 +37,7 @@ class ArrayStub {
       return a; // Stopify not loaded
     }
     // A very undocumented interface!
-    return maybeRunner.value.continuationsRTS.stopifyArray(a);
+    return (maybeRunner.value as any).higherOrderFunctions.stopifyArray(a);
   }  
 
 }
@@ -236,18 +237,16 @@ let tests: TestResult[] = [];
 
 let testsEnabled = false;
 
-// NOTE(arjun): It seems silly to depend on all of Stopify just to get the type
-// of AsyncRun
-let stopifyRunner: any = undefined;
+let stopifyRunner: stopify.AsyncRun | undefined = undefined;
 
-export function getRunner(): { kind: 'ok', value: any } | { kind: 'error' }  {
+export function getRunner(): { kind: 'ok', value: stopify.AsyncRun } | { kind: 'error' }  {
   if (stopifyRunner === undefined) {
     return { kind: 'error' };
   }
   return { kind: 'ok', value: stopifyRunner };
 }
 
-export function setRunner(runner: any) {
+export function setRunner(runner: stopify.AsyncRun) {
   stopifyRunner = runner;
 }
 
@@ -296,8 +295,9 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   if (typeof stopifyRunner !== 'undefined') {
-    stopifyRunner.externalHOF((complete: any) => {
-      return (stopifyRunner.runStopifiedCode(
+    const runner = stopifyRunner;
+    runner.externalHOF((complete) => {
+      runner.runStopifiedCode(
         testFunction,
         (result: any) => {
           if (result.type === 'normal') {
@@ -315,7 +315,7 @@ export function test(description: string, testFunction: () => void) {
             })
             complete({ type: 'normal', value: result.value });
           }
-        }));
+        });
     });
     return;
   }

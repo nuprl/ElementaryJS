@@ -1,48 +1,81 @@
-import { compile } from '../ts/index';
-import { sandbox } from '../ts/sandbox';
+import { compile, CompileOK } from '../ts/index';
 import * as runtime from '../ts/runtime';
-import { default as generator } from 'babel-generator';
+import * as stopify from 'stopify';
+
+// The compiler produces code that expects Stopify to be a global variable.
+(global as any).stopify = stopify;
+(global as any).elementarjs = runtime;
+
+const compileOpts = {
+  isOnline: true,
+  consoleLog: (message) => console.log(message),
+  version: () => console.log('No version')
+};
 
 // Helps write test cases that expect the program to terminate normally.
 // The result is the final value of the program.
-function run(code: string): any {
-  const result = compile(code, false);
-  if (result.kind === 'error') {
-    throw result;
-  }
-  const compiledCode = generator(result.node, { }).code;
-  const v = sandbox(compiledCode);
-  if (v.kind === 'exception') {
-    throw v.value;
-  }
-  return v.value;
+function run(code: string) {
+  return new Promise((resolve, reject) => {
+    const runner = compile('', compileOpts);
+    if (runner.kind === 'error') {
+      console.log(`Rejecting ` + code);
+      reject(runner);
+      return;
+    }
+    runner.run((result) => {
+      if (result.type === 'exception') {
+        reject(result.value);
+        return;
+      }
+      runner.eval(code, (result) => {
+        if (result.type === 'exception') {
+          reject(result.value);
+          return;
+        }
+        resolve(result.value);
+      });
+    });
+  });
+}
+
+function compileOK(code: string): CompileOK {
+    const result = compile(code, compileOpts);
+    if (result.kind === 'error') {
+      throw result;
+    }
+    return result;
 }
 
 // Helps write test cases for dynamic errors. The returned string is the
 // value of the .message field of any exception that the code raises.
 // A test case should check that the message is reasonable, or it could have
 // been some other kind of failure.
-function dynamicError(code: string): string {
-  const result = compile(code, false);
-  if (result.kind === 'error') {
-    throw result;
-  }
-
-  const compiledCode = generator(result.node, { }).code;
-  const v = sandbox(compiledCode);
-  if (v.kind === 'exception') {
-    if (typeof v.value.message !== 'string') {
-      throw new Error(`no error message`);
+function dynamicError(code: string) {
+  return new Promise((resolve, reject) => {
+    const result = compile(code, compileOpts);
+    if (result.kind === 'error') {
+      reject(result);
+      return;
     }
-    return v.value.message;
-  }
-  throw new Error(`expected dynamic error, got result ${v.value} with sandbox result.kind = '${v.kind}'`);
+
+    return result.run((v) => {
+      if (v.type === 'normal') {
+        reject(`Expected exception, got result ${v.value}`);
+        return;
+      }
+      if (typeof v.value.message !== 'string') {
+        reject(`no error message`);
+        return;
+      }
+      return resolve(v.value.message);
+    });
+  });
 }
 
 // Helps write test cases that check for static errors. The result
 // is the array of error messages produced by ElementaryJS.
 function staticError(code: string): string[] {
-  const result = compile(code, false);
+  const result = compile(code, compileOpts);
   if (result.kind === 'ok') {
     throw new Error(`expected a static error, but none produced`);
   }
@@ -68,7 +101,7 @@ function testSummary(failed: number, passed: number) {
 }
 
 test('duplicate let binding', () => {
-  expect(compile(`let x = 0; let x = 1`, false)).toMatchObject({
+  expect(compile(`let x = 0; let x = 1`, compileOpts)).toMatchObject({
     kind: 'error',
     errors: [ { line: 1, message: `unknown: Duplicate declaration "x"` } ]
   });
@@ -88,36 +121,40 @@ test('cannot use switch', () => {
     ]));
 });
 
-test('can dynamically change types', () => {
-  expect(run(`let x = "foo"; x = 42`)).toBe(42);
-  expect(run(`let x = 42; x = "foo"`)).toBe("foo");
+test('can dynamically change types', async () => {
+  expect.assertions(2);
+  await expect(run(`let x = "foo"; x = 42`)).resolves.toBe(42);
+  await expect(run(`let x = 42; x = "foo"`)).resolves.toBe("foo");
 });
 
-test('invalid array creation', () => {
-  expect(dynamicError(`let a = new Array();`)).toMatch(
-    'use Array.create(length, init)'
+test('invalid array creation', async () => {
+  expect.assertions(3);
+  await expect(dynamicError(`let a = new Array();`)).resolves.toMatch(
+    `Class constructor ArrayStub cannot be invoked without 'new'`
   );
-  expect(dynamicError(`let a = new Array(1, 2, 3);`)).toMatch(
-    'use Array.create(length, init)'
+  await expect(dynamicError(`let a = new Array(1, 2, 3);`)).resolves.toMatch(
+    `Class constructor ArrayStub cannot be invoked without 'new'`
   );
   // expect(dynamicError(`let a = Array(2, 1);`)).toMatch(
   //   'use Array.create(length, init)');
-  expect(dynamicError(`let a = Array.create(3.5, 0); a`)).toMatch(
+  await expect(dynamicError(`let a = Array.create(3.5, 0); a`)).resolves.toMatch(
     'positive integer');
   });
 
-test('valid array creation', () => {
-  expect(run(`let a = Array.create(2, 42); a`)).toEqual([42, 42]);
-  expect(run(`let a = Array.create(3, 0); a`)).toEqual([0, 0, 0]);
+test('valid array creation', async () => {
+  expect.assertions(2);
+  await expect(run(`let a = Array.create(2, 42); a`)).resolves.toEqual([42, 42]);
+  await expect(run(`let a = Array.create(3, 0); a`)).resolves.toEqual([0, 0, 0]);
 });
 
-test('can lookup members', () => {
-  expect(run(`let obj = { x: 100 }; obj.x = 42`))
-    .toBe(42);
-  expect(run(`let obj = { x: 500 }; obj.x`))
-    .toBe(500);
-  expect(run(`let obj = { x: 16 }; Math.sqrt(obj.x)`))
-    .toBe(4);
+test('can lookup members', async() => {
+  expect.assertions(6);
+  await expect(run(`let obj = { x: 100 }; obj.x = 42`))
+    .resolves.toBe(42);
+  await expect(run(`let obj = { x: 500 }; obj.x`))
+    .resolves.toBe(500);
+  await expect(run(`let obj = { x: 16 }; Math.sqrt(obj.x)`))
+    .resolves.toBe(4);
   let code = `
     function incr(x) {
       ++x.y;
@@ -126,134 +163,149 @@ test('can lookup members', () => {
     incr(obj.x);
     obj.x.y
   `;
-  expect(run(code)).toBe(11);
-  expect(run(`function foo() { return { x: 1 }; } ++foo().x`))
-    .toBe(2);
-  expect(run(`function foo() { return { x: 1 }; } foo().x += 1`))
-    .toBe(2);
+  await expect(run(code)).resolves.toBe(11);
+  await expect(run(`function foo() { return { x: 1 }; } ++foo().x`))
+    .resolves.toBe(2);
+  await expect(run(`function foo() { return { x: 1 }; } foo().x += 1`))
+    .resolves.toBe(2);
 });
 
-test('can access array members', () => {
-  expect(run(`let obj = [10]; obj[0] = 42`))
-    .toBe(42);
+test('can access array members', async () => {
+  expect.assertions(1);
+  await expect(run(`let obj = [10]; obj[0] = 42`))
+    .resolves.toBe(42);
 });
 
-test('can assign array members', () => {
-  expect(run(`let obj = [10]; obj[0] += 42`))
-    .toBe(52);
+test('can assign array members', async () => {
+  expect.assertions(1);
+  await expect(run(`let obj = [10]; obj[0] += 42`))
+    .resolves.toBe(52);
 });
 
-test('can update array members', () => {
-  expect(run(`let obj = [10]; ++obj[0]`))
-    .toBe(11);
+test('can update array members', async () => {
+  await expect(run(`let obj = [10]; ++obj[0]`))
+    .resolves.toBe(11);
 });
 
-test('function can return undef if not required', () => {
+test('function can return undef if not required', async () => {
+  expect.assertions(1);
   let code = `
     function foo() {};
     foo();
   `;
-  expect(run(code)).toBe(undefined);
+  await expect(run(code)).resolves.toBe(undefined);
 });
 
-test('updateexpression must not duplicate computation', () => {
+test('updateexpression must not duplicate computation', async () => {
+  expect.assertions(3);
   let code = `
     let x = [ { y: 2 }, { y: 3 }];
     let i = 0;
     x[++i].y += 3;
     x[1].y
   `;
-  expect(run(code)).toBe(6);
+  await expect(run(code)).resolves.toBe(6);
   code = `
     let x = [ { y: 2 }, { y: 3 }];
     let i = 0;
     ++x[i += 1].y;
     x[1].y
   `;
-  expect(run(code)).toBe(4);
+  await expect(run(code)).resolves.toBe(4);
   code = `
     let x = 3;
     let i = 7;
     x+= ++i;
     x
   `;
-  expect(run(code)).toBe(11);
+  await expect(run(code)).resolves.toBe(11);
 });
 
-test('accessing member of string', () => {
+test('accessing member of string', async () => {
   let code = `
     let str = 'test';
     str.length;
   `;
-  expect(run(code)).toBe(4);
+  await  expect(run(code)).resolves.toBe(4);
 });
 
-test('acessing members of anonymous objects', () => {
-  expect(dynamicError(`[].x`))
-    .toMatch(`object does not have member 'x'`);
-  expect(dynamicError(`[0, 1][10]`))
-      .toMatch(`index '10' is out of array bounds`);
-  expect(run(`[3, 4][1]`)).toBe(4);
+test('acessing members of anonymous objects', async () => {
+  expect.assertions(3);
+  await expect(dynamicError(`[].x`))
+    .resolves.toMatch(`object does not have member 'x'`);
+  await expect(dynamicError(`[0, 1][10]`))
+      .resolves.toMatch(`index '10' is out of array bounds`);
+  await expect(run(`[3, 4][1]`)).resolves.toBe(4);
 });
 
-test('cannot access array non-members', () => {
-  expect(dynamicError(`let a = []; let b = a[0];`))
-    .toMatch(`index '0' is out of array bounds`);
-  expect(dynamicError(`let a = []; a[0] = 0;`))
-    .toMatch(`index '0' is out of array bounds`);
+test('cannot access array non-members', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`let a = []; let b = a[0];`))
+    .resolves.toMatch(`index '0' is out of array bounds`);
+  await expect(dynamicError(`let a = []; a[0] = 0;`))
+    .resolves.toMatch(`index '0' is out of array bounds`);
 });
 
 
-test('array index must be a positive integer', () => {
-  expect(dynamicError(`let a = []; let b = a[3.1415]`))
-    .toMatch(`array index '3.1415' is not valid`);
-  expect(dynamicError(`let a = []; let b = a[-1]`))
-      .toMatch(`array index '-1' is not valid`);
+test('array index must be a positive integer', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`let a = []; let b = a[3.1415]`))
+    .resolves.toMatch(`array index '3.1415' is not valid`);
+  await expect(dynamicError(`let a = []; let b = a[-1]`))
+      .resolves.toMatch(`array index '-1' is not valid`);
 });
 
-test('cannot pass array non-members as arguments to function', () => {
-  expect(dynamicError(`let a = []; Math.abs(a[0]);`))
-    .toMatch(`index '0' is out of array bounds`);
+test('cannot pass array non-members as arguments to function', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let a = []; Math.abs(a[0]);`))
+    .resolves.toMatch(`index '0' is out of array bounds`);
 });
 
-test('cannot assign array non-members', () => {
-  expect(dynamicError(`let obj = []; obj[10] += 5`))
-    .toMatch(`index '10' is out of array bounds`);
+test('cannot assign array non-members', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let obj = []; obj[10] += 5`))
+    .resolves.toMatch(`index '10' is out of array bounds`);
 });
 
-test('cannot update array non-members', () => {
-  expect(dynamicError(`let obj = []; ++obj[0]`))
-    .toMatch(`index '0' is out of array bounds`);
+test('cannot update array non-members', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let obj = []; ++obj[0]`))
+    .resolves.toMatch(`index '0' is out of array bounds`);
 });
 
-test('dynamic error when looking up non-member', () => {
-  expect(dynamicError(`let obj = { x: 500 }; obj.y`))
-    .toMatch(`object does not have member 'y'`);
-  expect(dynamicError(`let obj = { x: 500 }; ++obj.y`))
-    .toMatch(`object does not have member 'y'`);
+test('dynamic error when looking up non-member', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`let obj = { x: 500 }; obj.y`))
+    .resolves.toMatch(`object does not have member 'y'`);
+    await expect(dynamicError(`let obj = { x: 500 }; ++obj.y`))
+    .resolves.toMatch(`object does not have member 'y'`);
 });
 
-test('dynamic error when calling non-member function', () => {
-  expect(dynamicError(`let obj = { }; obj.foo(42)`))
-    .toMatch('obj.foo is not a function');
+test('dynamic error when calling non-member function', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let obj = { }; obj.foo(42)`))
+    .resolves.toMatch('obj.foo is not a function');
 });
 
-test('dynamic error when looking up non-member 2', () => {
-  expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
-    .toMatch(`object does not have member 'y'`);
+test('dynamic error when looking up non-member 2', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
+    .resolves.toMatch(`object does not have member 'y'`);
 });
 
-test('dynamic error when incrementing or decrementing non-number', () => {
-  expect(dynamicError(`let a = {}; --a`))
-    .toMatch("argument of operator '--' must be a number");
+test('dynamic error when incrementing or decrementing non-number', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`let a = {}; --a`))
+    .resolves.toMatch("argument of operator '--' must be a number");
 
-  expect(dynamicError(`let a = "foo"; ++a`))
-    .toMatch("argument of operator '++' must be a number");
+  await expect(dynamicError(`let a = "foo"; ++a`))
+    .resolves.toMatch("argument of operator '++' must be a number");
 });
 
-test('dynamic error when assigning a value to a non-member', () => {
-  expect(dynamicError(`let obj = {}; obj.y = 0;`))
-    .toMatch(`object does not have member 'y'`);
+test('dynamic error when assigning a value to a non-member', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`let obj = {}; obj.y = 0;`))
+    .resolves.toMatch(`object does not have member 'y'`);
 });
 
 test('cannot use for-of', () => {
@@ -277,9 +329,10 @@ test('cannot use in', () => {
     ]));
 });
 
-test('can use iterator for loops', () => {
-  expect(run(`let i = 0; for(i = 0; i < 10; ++i) {} i`))
-    .toBe(10);
+test('can use iterator for loops', async () => {
+  expect.assertions(1);
+  await expect(run(`let i = 0; for(i = 0; i < 10; ++i) {} i`))
+    .resolves.toBe(10);
 });
 
 test('cannot use instanceof', () => {
@@ -289,43 +342,47 @@ test('cannot use instanceof', () => {
     ]));
 });
 
-test('preserve operator precedence', () => {
-  expect(run(`3 + 2 * 3`)).toBe(9);
-  expect(run(`4 * 3 + 2 * 3`)).toBe(18);
-  expect(run(`4 + 3 * 2 + 3`)).toBe(13);
-  expect(run(`12 / 3 * 2 + 3`)).toBe(11);
+test('preserve operator precedence', async () => {
+  expect.assertions(4);
+  await expect(run(`3 + 2 * 3`)).resolves.toBe(9);
+  await expect(run(`4 * 3 + 2 * 3`)).resolves.toBe(18);
+  await expect(run(`4 + 3 * 2 + 3`)).resolves.toBe(13);
+  await expect(run(`12 / 3 * 2 + 3`)).resolves.toBe(11);
 });
 
-test('dynamic error when mixing types', () => {
-  expect(dynamicError(`let a = {}, b = 1; a + b`))
-    .toMatch("arguments of operator '+' must both be numbers or strings");
-  expect(dynamicError(`let a = "foo", b = 1; a - b`))
-    .toMatch("arguments of operator '-' must both be numbers");
+test('dynamic error when mixing types', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`let a = {}, b = 1; a + b`))
+    .resolves.toMatch("arguments of operator '+' must both be numbers or strings");
+    await expect(dynamicError(`let a = "foo", b = 1; a - b`))
+    .resolves.toMatch("arguments of operator '-' must both be numbers");
 
 });
 
-test('dynamic num check order', () => {
+test('dynamic num check order', async () => {
+  expect.assertions(2);
   // The * operator has precedence over -, hence should be dyn. checked first.
-  expect(dynamicError(`let a = "", b = 1, c = {}; a * b - c`))
-    .toMatch("arguments of operator '*' must both be numbers");
-  expect(dynamicError(`let a = "", b = 1, c = {}; a / b * c`))
-    .toMatch("arguments of operator '/' must both be numbers");
+  await expect(dynamicError(`let a = "", b = 1, c = {}; a * b - c`))
+    .resolves.toMatch("arguments of operator '*' must both be numbers");
+  await expect(dynamicError(`let a = "", b = 1, c = {}; a / b * c`))
+    .resolves.toMatch("arguments of operator '/' must both be numbers");
 });
 
-test('can use pre-update operator with numbers', () => {
-  expect(run(`let a = { b : 3 }; ++a.b`))
-    .toBe(4);
-  expect(run(`let a = 2; ++a`))
-    .toBe(3);
-  expect(run(`let a = 2; --a`))
-    .toBe(1);
+test('can use pre-update operator with numbers', async () => {
+  expect.assertions(4);
+  await expect(run(`let a = { b : 3 }; ++a.b`))
+    .resolves.toBe(4);
+  await expect(run(`let a = 2; ++a`))
+    .resolves.toBe(3);
+  await expect(run(`let a = 2; --a`))
+    .resolves.toBe(1);
   let code = `
     function foo() {
       return { x: 10 };
     }
     let a = ++foo().x;
     a`
-  expect(run(code)).toBe(11);
+  await expect(run(code)).resolves.toBe(11);
 });
 
 test('cannot use post-update operator', () => {
@@ -353,23 +410,25 @@ test('cannot use throw', () => {
     ]));
 });
 
-test('can use string concatenation and assignment operator', () => {
-  expect(run(`let a = "hello "; a += "world"`))
-    .toBe("hello world");
+test('can use string concatenation and assignment operator', async () => {
+  expect.assertions(1);
+  await expect(run(`let a = "hello "; a += "world"`))
+    .resolves.toBe("hello world");
 });
 
-test('can use arithmetic assignment operators', () => {
-  expect(run(`let a = 1; a += 1`))
-    .toBe(2);
+test('can use arithmetic assignment operators', async () => {
+  expect.assertions(4);
+  await expect(run(`let a = 1; a += 1`))
+    .resolves.toBe(2);
 
-  expect(run(`let a = 1; a -= 1`))
-    .toBe(0);
+  await expect(run(`let a = 1; a -= 1`))
+    .resolves.toBe(0);
 
-  expect(run(`let a = 1; a *= 7`))
-    .toBe(7);
+  await expect(run(`let a = 1; a *= 7`))
+    .resolves.toBe(7);
 
-  expect(run(`let a = 12; a /= 3`))
-    .toBe(4);
+  await expect(run(`let a = 12; a /= 3`))
+    .resolves.toBe(4);
 });
 
 test('cannot use bitmask assignment operators', () => {
@@ -432,23 +491,25 @@ test('disallowed comparison operators', () => {
     ]));
 });
 
-test('allowed comparison operators', () => {
-  expect(run(`let x = 1, y = 1; x === y`)).toBe(true);
-  expect(run(`let x = 2, y = 1; x === y`)).toBe(false);
-  expect(run(`let x = 1, y = 1; x !== y`)).toBe(false);
-  expect(run(`let x = 2, y = 1; x !== y`)).toBe(true);
+test('allowed comparison operators', async () => {
+  expect.assertions(4);
+  await expect(run(`let x = 1, y = 1; x === y`)).resolves.toBe(true);
+  await expect(run(`let x = 2, y = 1; x === y`)).resolves.toBe(false);
+  await expect(run(`let x = 1, y = 1; x !== y`)).resolves.toBe(false);
+  await expect(run(`let x = 2, y = 1; x !== y`)).resolves.toBe(true);
 });
 
-test('call a builtin method', () => {
-  expect(run(`
+test('call a builtin method', async () => {
+  expect.assertions(1);
+  await expect(run(`
     let x = [];
     x.push(100);
-    x[0]`)).toBe(100);
+    x[0]`)).resolves.toBe(100);
 });
 
 
-test('gigantic test case', () => {
-  let source = `
+test('gigantic test case', async () => {
+  await expect(run(`
       // Fibonacci sequence, where fibonacci(0) = 0, 
       function fibonacci(n) {
         if ( (n % 1) !== 0) {
@@ -463,54 +524,67 @@ test('gigantic test case', () => {
         return (fibonacci(n - 1) + fibonacci(n - 2));
       }
       fibonacci(10);
-  `;
-  expect(run(source)).toBe(55);
+  `)).resolves.toBe(55);
 });
 
-test('Run empty program', () => {
-  expect(run('')).toBeUndefined();
+test('Run empty program', async () => {
+  expect.assertions(1);
+  await expect(run('')).resolves.toBeUndefined();
 });
 
-test('Can set fields of this in a constructor', () => {
-  expect(run(`
+test('Can set fields of this in a constructor',  (done) => {
+  expect.assertions(2);
+  const runner = compileOK(`
     class C { constructor() { this.x = 5; } }
-    (new C()).x`)).toBe(5);
+    r = (new C()).x`);
+  runner.run(result => {
+    expect(result.type).toBe('normal');
+    expect(runner.g.r).toBe(5);
+    done();
+  });
 });
 
-test('Dynamic checks when settings fields of other objects in constructor', () => {
-  expect(dynamicError(`
+test('Dynamic checks when settings fields of other objects in constructor', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`
     class C { 
       constructor(o) { 
         o.x = 5;
       }
     }
-    new C({ })`)).toMatch(`object does not have member 'x'`);
+    new C({ })`)).resolves.toMatch(`object does not have member 'x'`);
 });
 
-test('Dynamic check for this.x = y in function nested in constructor', () => {
-  expect(dynamicError(`
+test('Dynamic check for this.x = y in function nested in constructor', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`
     class C { 
       constructor() { 
         (function() { this.x = 5; })();
       }
     }
-    new C()`)).toMatch(`object does not have member 'x'`);
+    new C()`)).resolves.toMatch(`cannot access member of non-object value type`);
 });
 
-test('arity-mismatch: too few arguments', () => {
-  expect(dynamicError(`
+test('arity-mismatch: too few arguments', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`
     function F(x) { }
-    F()`)).toMatch(`function F expected 1 argument but received 0 arguments`);
+    F()`)).resolves
+    .toMatch(`function F expected 1 argument but received 0 arguments`);
 });
 
-test('arity-mismatch: too many arguments', () => {
-  expect(dynamicError(`
+test('arity-mismatch: too many arguments', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`
     function F(x) { }
-    F(1,2,3)`)).toMatch(`function F expected 1 argument but received 3 arguments`);
+    F(1,2,3)`)).resolves
+    .toMatch(`function F expected 1 argument but received 3 arguments`);
 });
 
-test('Classes test', () => {
-  expect(run(`
+test('Classes test', async () => {
+  expect.assertions(1);
+  await expect(run(`
     class Rectangle {
       constructor(w, h) {
         if (w === undefined || h === undefined) {
@@ -553,17 +627,15 @@ test('Classes test', () => {
       new Rectangle(2, 3),
       new Circle(1),
     ];
-    // NOTE(arjun): We are testing without stopify, thus the builtin .forEach
-    // calls us with more arguments. I think the HOFs need to be moved into
-    // ElementaryJS in the future.
-    shapes.forEach(function(s, _, __) {
+    shapes.forEach(function(s) {
       console.log("Area of " + s.name() + 
         " with " + s.properties() + 
         " = " + s.area().toString());
-    });`));
+    });`)).resolves.toBeUndefined();
 });
 
-test('if else must be BlockStatement', () => {
+test('if else must be BlockStatement', async () => {
+  expect.assertions(4);
   expect(staticError(`let s = 1; if (true) ++s;`)).toEqual(
     expect.arrayContaining([
       `if statement body must be enclosed in braces.`
@@ -572,8 +644,8 @@ test('if else must be BlockStatement', () => {
     expect.arrayContaining([
       `Body of if-else statement must be enclosed in braces.`
     ]));
-  expect(run(`let i = 0; if (true) { ++i}; i;`)).toBe(1);
-  expect(run(`
+    await expect(run(`let i = 0; if (true) { ++i}; i;`)).resolves.toBe(1);
+  await expect(run(`
     let i = 0; 
     if (false) { 
       ++i
@@ -581,10 +653,10 @@ test('if else must be BlockStatement', () => {
       i += 2;
     }
     i;
-  `)).toBe(2);
+  `)).resolves.toBe(2);
 });
 
-test('continue statement must not have label', () => {
+test('continue statement must not have label', async () => {
   expect(staticError(`
   loop:
   for (let i = 0; i < 10; ++i) {
@@ -593,7 +665,7 @@ test('continue statement must not have label', () => {
   `)).toEqual(expect.arrayContaining([
     `continue statement must not have label`
   ]));
-  expect(run(`
+  await expect(run(`
   let k = 0;
   for (let i = 0; i < 10; ++i) {
     if (i >= 5) {
@@ -602,10 +674,10 @@ test('continue statement must not have label', () => {
     k += 1;
   }
   k
-  `)).toBe(5);
+  `)).resolves.toBe(5);
 });
 
-test('break statement must not have label', () => {
+test('break statement must not have label', async () => {
   expect(staticError(`
   loop:
   for (let i = 0; i < 10; ++i) {
@@ -614,7 +686,7 @@ test('break statement must not have label', () => {
   `)).toEqual(expect.arrayContaining([
     `break statement must not have label`
   ]));
-  expect(run(`
+  await expect(run(`
   let k = 0;
   for (let i = 0; i < 10; ++i) {
     if (i >= 5) {
@@ -623,10 +695,10 @@ test('break statement must not have label', () => {
     k += 1;
   }
   k
-  `)).toBe(5);
+  `)).resolves.toBe(5);
 });
 
-test('for statement must have three parts present', () => {
+test('for statement must have three parts present', async () => {
   expect(staticError(`
     for (;;) {
       break;
@@ -658,21 +730,30 @@ test('for statement must have three parts present', () => {
   `)).toEqual(expect.arrayContaining([
     `for statement variable initialization must be an assignment or a variable declaration`
   ]));
-  expect(run(`
+  await expect(run(`
     let i = 0;
     for (i = 0; i < 3; ++i) {}
     i;
-  `)).toBe(3);
+  `)).resolves.toBe(3);
 });
 
-test('Only booleans for logical operators', () => {
-  expect(dynamicError(`1 || false`)).toMatch(`arguments of operator '||' must both be booleans`);
-  expect(dynamicError(`false || ''`)).toMatch(`arguments of operator '||' must both be booleans`);
-  expect(dynamicError(`false || 1`)).toMatch(`arguments of operator '||' must both be booleans`);
-  expect(dynamicError(`1 && false`)).toMatch(`arguments of operator '&&' must both be booleans`);
-  expect(dynamicError(`false && ''`)).toMatch(`arguments of operator '&&' must both be booleans`);
-  expect(dynamicError(`false && 1`)).toMatch(`arguments of operator '&&' must both be booleans`);
-  expect(run(`true || false`)).toBe(true);
+test('Only booleans for logical operators', async  () => {
+  await expect(dynamicError(`1 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`false || ''`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`false || 1`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`1 && false`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(dynamicError(`false && ''`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(dynamicError(`false && 1`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(run(`true || false`)).resolves.toBe(true);
+});
+
+test('ElementaryJS statically reports const violations', () => {
+  expect(staticError(`
+    const x = 1;
+    x = 2;
+  `)).toEqual(expect.arrayContaining([
+    `variable is 'const'`
+  ]));
 });
 
 test('ElementaryJS statically reports const violations', () => {

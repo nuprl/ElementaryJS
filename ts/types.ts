@@ -1,8 +1,5 @@
 // This module defines all the public types that the ElementaryJS package
 // exports.
-
-import * as t from 'babel-types';
-
 export type ElementarySyntaxError = {
   line: number,
   message: string
@@ -13,9 +10,16 @@ export type CompileError = {
   errors: ElementarySyntaxError[]
 }
 
+export  type Result =
+   {type: 'normal', value: any }
+ | { type: 'exception', value: any, stack: string[] }
+
 export type CompileOK = {
   kind: 'ok';
-  node: t.Program
+  g: { [key: string]: any},
+  run(onDone: (result: Result) => void): void;
+  eval(code: string, onDone: (result: Result) => void): void;
+  stop(onStopped: () => void): void;
 };
 
 export type CompilerResult = CompileOK | CompileError;
@@ -25,3 +29,8 @@ export type TestResult = {
   description: string,
   error?: string
 };
+
+export type CompilerOpts = {
+  consoleLog: (message: string) => void,
+  version: () => void
+}

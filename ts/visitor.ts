@@ -79,8 +79,7 @@ export class State implements CompileError {
       return 'class State in ElementaryJS with no errors';
     }
     else {
-      return 'class State in ElementaryJS With the following errors:\n' +
-        this.errors.map(x => {
+      return this.errors.map(x => {
           const l = x.line;
           return `- ${x.message} (line ${l})`
         }).join('\n');
@@ -96,22 +95,7 @@ function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]):
 }
 
 interface S {
-  elem: State,
-  opts: {
-    isOnline: boolean,
-    runTests: boolean,
-  }
-}
-
-// The expression that loads the runtime system.
-function rtsExpression(st: S): t.Expression {
-  if (st.opts.isOnline) {
-    return t.identifier('elementaryjs');
-  }
-  else {
-    return t.callExpression(t.identifier('require'),
-      [t.stringLiteral('./runtime')]);
-  }
+  elem: State
 }
 
 function unassign(op: string) {
@@ -182,7 +166,8 @@ export const visitor = {
       if (path.node.body.length !== 0) {
         path.get('body.0').insertBefore(
           t.variableDeclaration('var', [
-            t.variableDeclarator(t.identifier('rts'), rtsExpression(st))
+            t.variableDeclarator(t.identifier('rts'),
+              t.identifier('elementaryjs'))
           ]));
       }
       path.stop();
