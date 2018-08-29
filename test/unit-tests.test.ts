@@ -2,10 +2,6 @@ import { compile, CompileOK } from '../ts/index';
 import * as runtime from '../ts/runtime';
 import * as stopify from 'stopify';
 
-// The compiler produces code that expects Stopify to be a global variable.
-(global as any).stopify = stopify;
-(global as any).elementarjs = runtime;
-
 const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
