@@ -22,7 +22,6 @@
   "scripts": {
     "build": "echo \"let EJSVERSION = '$(git rev-parse --short HEAD)';\nexport { EJSVERSION };\" > ts/version.ts && tsc",
     "test": "jest",
-    "run": "node ./dist/bin.js",
     "clean": "rm -f dist/*"
   },
   "jest": {
@@ -53,6 +52,8 @@
     "@types/babel-types": "^6.7.16",
     "babel-core": "^6.26.3",
     "babel-plugin-transform-es2015-classes": "^6.24.1",
-    "babel-types": "^6.26.0"
+    "babel-types": "^6.26.0",
+    "stopify": "0.5.1-elementaryJS",
+    "stopify-continuations": "0.5.0-elementaryJS"
   }
 }
