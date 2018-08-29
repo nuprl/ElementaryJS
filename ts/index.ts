@@ -11,6 +11,22 @@ export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
 
+function getGlobal(): any {
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+  else {
+    return global;
+  }
+}
+
+// TODO(arjun): I think these hacks are necessary for eval to work. We either
+// do them here or we do them within the implementation of Stopify. I want
+// them here for now until I'm certain there isn't a cleaner way.
+const theGlobal = getGlobal();
+theGlobal.elementaryJS = runtime;
+theGlobal.stopify = stopify;
+
 // NOTE(arjun): This may not be needed, but I am using require instead of the
 // name so that Webpack can statically link.
 const transformClasses = require('babel-plugin-transform-es2015-classes');
