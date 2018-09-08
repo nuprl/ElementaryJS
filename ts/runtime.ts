@@ -41,7 +41,7 @@ export { ArrayStub as Array };
 
 
 export function arrayBoundsCheck(object: any, index: string) {
-  if (typeof object !== 'object') {
+  if (object instanceof Array === false) {
     throw new ElementaryRuntimeError('array indexing called on a non-array value type');
   }
   if (typeof index !== 'number' ||

@@ -772,6 +772,11 @@ test('cannot set .length of arrays', async () => {
   .resolves.toMatch(`cannot set .length of an array`);
 });
 
+test('cannot use computed member expressions on objects', async () => {
+  await expect(dynamicError(`let r = {10: 5}[10]`,))
+  .resolves.toMatch(`array indexing called on a non-array value type`);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
