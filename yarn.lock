@@ -3592,9 +3592,9 @@ stealthy-require@^1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/stealthy-require/-/stealthy-require-1.1.1.tgz#35b09875b4ff49f26a777e509b3090a3226bf24b"
 
-stopify-continuations@0.5.0-elementaryJS:
-  version "0.5.0-elementaryJS"
-  resolved "https://registry.yarnpkg.com/stopify-continuations/-/stopify-continuations-0.5.0-elementaryJS.tgz#fed47bef076a6bf986ca523085fa24cbd7018d8a"
+stopify-continuations@0.5.2-elementaryJS:
+  version "0.5.2-elementaryJS"
+  resolved "https://registry.yarnpkg.com/stopify-continuations/-/stopify-continuations-0.5.2-elementaryJS.tgz#ce0d1e8ea61ea1ed79d9b8a65a48efe517208ae9"
   dependencies:
     babel-core "^6.26.3"
     babel-plugin-transform-es2015-arrow-functions "^6.22.0"
@@ -3613,9 +3613,9 @@ stopify-estimators@^0.5.0:
   dependencies:
     detect-browser "^1.12.0"
 
-stopify@0.5.1-elementaryJS:
-  version "0.5.1-elementaryJS"
-  resolved "https://registry.yarnpkg.com/stopify/-/stopify-0.5.1-elementaryJS.tgz#c52fdbe7c8a4d603a427702f94ba1c86a461ca90"
+stopify@0.5.2-elementaryJS:
+  version "0.5.2-elementaryJS"
+  resolved "https://registry.yarnpkg.com/stopify/-/stopify-0.5.2-elementaryJS.tgz#4aeca992d861addd2f353f015ee977a7bed216ec"
   dependencies:
     babel-core "^6.26.3"
     babel-loader "^7.1.2"
@@ -3631,7 +3631,7 @@ stopify@0.5.1-elementaryJS:
     source-map "^0.6.0"
     source-map-support "^0.5.6"
     sprintf "^0.1.5"
-    stopify-continuations "0.5.0-elementaryJS"
+    stopify-continuations "0.5.2-elementaryJS"
     stopify-estimators "^0.5.0"
     tmp "0.0.31"
     trie "^0.2.1"
