@@ -32,5 +32,6 @@ export type TestResult = {
 
 export type CompilerOpts = {
   consoleLog: (message: string) => void,
-  version: () => void
+  version: () => void,
+  sudo: boolean
 }

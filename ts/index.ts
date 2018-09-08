@@ -10,6 +10,7 @@ import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
+import * as useGlobalObject from 'stopify/dist/src/compiler/useGlobalObject';
 
 function getGlobal(): any {
   if (typeof window !== 'undefined') {
@@ -76,7 +77,7 @@ class ElementaryRunner implements CompileOK {
   }
 
   eval(code: string, onDone: (result: Result) => void) {
-    const elementary = applyElementaryJS(code);
+    const elementary = applyElementaryJS(code, this.opts);
     if (elementary.kind === 'error') {
       onDone({
         type: 'exception',
@@ -98,20 +99,24 @@ class ElementaryRunner implements CompileOK {
 }
 
 function applyElementaryJS(
-  code: string | Node): CompileError | { kind: 'ok', ast: Program }  {
+  code: string | Node,
+  opts: CompilerOpts): CompileError | { kind: 'ok', ast: Program }  {
 
   try {
-    // Babylon is the parser that Babel uses internally.
-    const ast = typeof code === 'string' ?
-      babylon.parse(code).program : code;
-    const result1 = babel.transformFromAst(ast,
-      typeof code === 'string' && code || undefined, {
+    let result : babel.BabelFileResult = { 
+      ast: typeof code === 'string' ? babylon.parse(code).program : code
+    };
+    if (typeof code === 'string') {
+      result.code = code;
+    }
+
+    result = babel.transformFromAst(result.ast!, result.code!, {
       plugins: [ [visitor.plugin] ],
       ast: true,
       code: true
     });
-    const result2 = babel.transformFromAst(result1.ast!,
-      result1.code!, {
+
+    result = babel.transformFromAst(result.ast!, result.code!, {
         plugins: [transformClasses],
         ast: true,
         code: false
@@ -119,7 +124,7 @@ function applyElementaryJS(
     // NOTE(arjun): There is some imprecision in the type produced by Babel.
     // I have verified that this cast is safe.
     return {
-      ast: (result2.ast! as babel.types.File).program,
+      ast: (result.ast! as babel.types.File).program,
       kind: 'ok'
     };
   }
@@ -127,8 +132,12 @@ function applyElementaryJS(
     if (exn instanceof visitor.State) {
       return exn;
     }
+    return wrapException(exn);
+  }
+}
 
-    let line: number = 0;
+function wrapException(exn: any): CompileError {
+  let line: number = 0;
     let message: string = '';
 
     if (exn instanceof SyntaxError) {
@@ -156,6 +165,33 @@ function applyElementaryJS(
       kind: 'error',
       errors: [ { line, message } ]
     };
+}
+
+class SudoRunner implements CompileOK {
+  public kind: 'ok' = 'ok';
+  public g: { [key: string]: any} = { };
+  constructor(private code: string) { }
+
+  run(onDone: (result: Result) => void): void {
+    try {
+      theGlobal.$S = this;
+      eval(this.code);
+      onDone({ type: 'normal', value: undefined });
+    }
+    catch (exn) {
+      onDone({ type: 'exception', value: exn, stack: [] });
+    }
+  }
+  eval(code: string, onDone: (result: Result) => void): void {
+    try {
+      onDone({ type: 'normal', value: eval(code) });
+    }
+    catch (exn) {
+      onDone({ type: 'exception', value: exn, stack: [] });
+    }
+  }
+
+  stop(onStopped: () => void): void {
   }
 }
 
@@ -163,11 +199,33 @@ export function compile(
   code: string | Node,
   opts: CompilerOpts): CompileOK | CompileError {
 
-  const elementary = applyElementaryJS(code);
+  if (opts.sudo) {
+    // In sudo mode, we simply eval code instead of Stopifying it. However, we
+    // are using eval in a mode where eval('var x = 1') does not create a global
+    // variable x. Therefore, we use the useGlobalObjects transformation from
+    // Stopify. This also helps with IDE stability.
+    try {
+      let result: babel.BabelFileResult =
+        typeof code === 'string' ?
+        { ast: babylon.parse(code).program } :
+        { ast: code };
+      result = babel.transformFromAst(result.ast!, result.code!, {
+        plugins: [[useGlobalObject.plugin, {}]],
+        babelrc: false,
+        code: true
+      });
+      return new SudoRunner(result.code!);
+    }
+    catch (exn) {
+      return wrapException(exn);
+    }
+  }
+
+  const elementary = applyElementaryJS(code, opts);
   if (elementary.kind === 'error') {
     return elementary;
   }
-
+ 
   const stopified = stopify.stopifyLocallyFromAst(
     elementary.ast,
     undefined, { hofs: 'fill' });

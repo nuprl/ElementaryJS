@@ -1,12 +1,26 @@
-import { compile, CompileOK } from '../ts/index';
+import { compile, CompileOK, Result } from '../ts/index';
 import * as runtime from '../ts/runtime';
-import * as stopify from 'stopify';
+
 
 const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
-  version: () => console.log('No version')
+  version: () => console.log('No version'),
+  sudo: false
 };
+
+const sudoCompileOpts = {
+  isOnline: true,
+  consoleLog: (message) => console.log(message),
+  version: () => console.log('No version'),
+  sudo: true
+};
+
+function runPromise(runner: CompileOK): Promise<Result> {
+  return new Promise((resolve, reject) => {
+    runner.run(result => resolve(result));
+  });
+}
 
 // Helps write test cases that expect the program to terminate normally.
 // The result is the final value of the program.
@@ -33,6 +47,7 @@ function run(code: string) {
     });
   });
 }
+
 
 function compileOK(code: string): CompileOK {
     const result = compile(code, compileOpts);
@@ -765,6 +780,23 @@ test('string.split produces a Stopify array', async () => {
   await expect(dynamicError(`
     'a,b,c'.split(',').map(function(x, y, z) { return 0; })
   `)).resolves.toMatch(`function (anonymous) expected 3 arguments but received 1 argument`);
+});
+
+test('sudo allows var', () => {
+  expect(compile(`var x = 10`, sudoCompileOpts))
+    .toMatchObject({ kind: 'ok' });
+});
+
+test('sudo allows arity-mismatch', async () => {
+  const runner = compile(`function F(x) { return x }; result = F(1337, 2)`,
+    sudoCompileOpts);
+  if (runner.kind !== 'ok') {
+    console.error(runner.errors);
+    throw new Error('Compile error');
+  }
+  const result = runPromise(runner);
+  await expect(result).resolves.toMatchObject({ type: 'normal' });
+  expect(runner.g.result).toBe(1337);
 });
 
 describe('ElementaryJS Testing', () => {
