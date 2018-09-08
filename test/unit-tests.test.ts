@@ -767,6 +767,11 @@ test('string.split produces a Stopify array', async () => {
   `)).resolves.toMatch(`function (anonymous) expected 3 arguments but received 1 argument`);
 });
 
+test('cannot set .length of arrays', async () => {
+  await expect(dynamicError(`[1,2,3].length = 5`,))
+  .resolves.toMatch(`cannot set .length of an array`);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
