@@ -123,6 +123,9 @@ export function elementaryJSBug(what: string) {
 }
 
 export function checkMember(o: any, k: any, v: any) {
+  if (o instanceof Array) {
+    throw new ElementaryRuntimeError(`cannot set .${k} of an array`);
+  }
   dot(o, k);
   return (o[k] = v);
 }
