@@ -79,7 +79,7 @@ function staticError(code: string): string[] {
 }
 
 // Returns the expected failure message from testing
-function testFailure(description: string, errorMsg: string = 'assertion failed') {
+function testFailure(description: string, errorMsg: string = 'Error: assertion failed') {
   return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
@@ -832,49 +832,49 @@ describe('ElementaryJS Testing', () => {
     }).toThrow('not a boolean');
   });
 
-  test('One OK test', () => {
-    const description = 'Test 1'
-    runtime.test(description, () => {
-      return 1;
-    });
+  test('One OK test', async () => {
+    expect(await run(`test('Test 1', function() {})`)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testOk(description),
+      testOk('Test 1'),
       testSummary(0, 1)
     ].join('\n'));
   });
 
-  test('One failed Test', () => {
-    const description = 'Failed Test';
-    runtime.test(description, () => {
-      runtime.assert(false);
-    });
+  test('One failed Test', async () => {
+    expect(await run(`test('Failed Test', function() { assert(false) })`)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testFailure(description),
+      testFailure('Failed Test', 'Error: assertion failed'),
       testSummary(1, 0)
     ].join('\n'));
   });
 
-  test('One Ok, One failed', () => {
-    const okDesc = 'Ok test';
-    const failDesc = 'Failed';
-    runtime.test(okDesc, () => { return 1; });
-    runtime.test(failDesc, () => { runtime.assert(false) });
+  test('One Ok, One failed', async () => {
+    expect(await run(`
+      test('Ok test', function() {return 1});
+      test('Failed', function() { assert(false)});
+    `)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testOk(okDesc),
-      testFailure(failDesc),
+      testOk('Ok test'),
+      testFailure('Failed', 'Error: assertion failed'),
       testSummary(1, 1),
     ].join('\n'));
   });
 
-  test('20 tests', () => {
+  test('20 tests', async () => {
+    expect(await run(`
+      for (let i = 0; i < 10; ++i) {
+        test(i.toString(), function() { return 1});
+      }
+      for (let i = 10; i < 20; ++i) {
+        test(i.toString(), function() { assert(false)});
+      }
+    `)).toBe(undefined);
     let output: string[] = [];
     for (let i = 0; i < 10; i++) {
-      runtime.test(i.toString(), () => { runtime.assert(true); });
       output.push(testOk(i.toString()));
     }
     for (let i = 10; i < 20; i++) {
-      runtime.test(i.toString(), () => { runtime.assert(false); });
-      output.push(testFailure(i.toString()));
+      output.push(testFailure(i.toString(), 'Error: assertion failed'));
     }
     output.push(testSummary(10, 10));
     expect(runtime.summary(false).output).toBe(output.join('\n'));
@@ -891,15 +891,13 @@ describe('ElementaryJS Testing', () => {
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
 
-  test('Timing out', () => {
-    runtime.test('infinite loop', () => {
-      while (true) {
-        1;
-      }
-    });
+  test('Timing out', async () => {
+    expect(await run(`test('infinite loop', function() {
+      while (true) { 1; }
+    })`)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testFailure('infinite loop', 'Timed out'),
+      testFailure('infinite loop', 'time limit exceeded'),
       testSummary(1,0),
     ].join('\n'));
-  })
+  });
 });
