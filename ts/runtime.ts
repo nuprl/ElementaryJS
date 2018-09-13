@@ -320,55 +320,29 @@ export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
   }
-  if (typeof stopifyRunner !== 'undefined') {
-    const runner = stopifyRunner;
-    runner.externalHOF((complete) => {
-      runner.runStopifiedCode(
-        testFunction,
-        (result: any) => {
-          if (result.type === 'normal') {
-            tests.push({
-              failed: false,
-              description: description,
-            });
-            complete({ type: 'normal', value: result.value });
-          }
-          else {
-            tests.push({
-              failed: true,
-              description: description,
-              error: result.value,
-            })
-            complete({ type: 'normal', value: result.value });
-          }
-        });
-    });
-    return;
-  }
-  try {
-    timeoutTest(testFunction, timeoutMilli);
-    
-    tests.push({
-      failed: false,
-      description: description,
-    });
-
-  } catch (e) {
-    if (e.message.includes('timed out')) {
-      tests.push({
-        failed: true,
-        description: description,
-        error: 'Timed out',
+  const runner = stopifyRunner!;
+  runner.externalHOF((complete) => {
+    runner.runStopifiedCode(
+      testFunction,
+      (result: any) => {
+        if (result.type === 'normal') {
+          tests.push({
+            failed: false,
+            description: description,
+          });
+          complete({ type: 'normal', value: result.value });
+        }
+        else {
+          tests.push({
+            failed: true,
+            description: description,
+            error: result.value,
+          })
+          complete({ type: 'normal', value: result.value });
+        }
       });
-      return;
-    }
-    tests.push({
-      failed: true,
-      description: description,
-      error: e.message,
-    });
-
-  }
+  });
+  return;
 }
 /**
  * To be used after all tests are run to get the summary of all tests.
