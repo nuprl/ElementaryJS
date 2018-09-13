@@ -791,7 +791,7 @@ test(`test(...) can break out of an infinite loop`, async () => {
 });
 
 test(`test(...) can break out of an infinite loop and run next test`, async () => {
-  runtime.enableTests(true);
+  runtime.enableTests(true, 2000);
   await expect(run(`
     test('loop forever', function() {
       while(true) {};
@@ -806,7 +806,7 @@ test(`test(...) can break out of an infinite loop and run next test`, async () =
     testOk('succeeds'),
     testSummary(1, 1)
   ].join('\n'));
-});
+}, 3000);
 
 test('test(...) with higher order functions with infinite loop', async () => {
   runtime.enableTests(true, 3000); // time out of 3 seconds
@@ -933,15 +933,4 @@ describe('ElementaryJS Testing', () => {
     runtime.summary(false);
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
-
-  test('Timing out', async () => {
-    runtime.enableTests(true, 1000); // timeout of 1 second
-    expect(await run(`test('infinite loop', function() {
-      while (true) { 1; }
-    })`)).toBe(undefined);
-    expect(runtime.summary(false).output).toBe([
-      testFailure('infinite loop', 'time limit exceeded'),
-      testSummary(1,0),
-    ].join('\n'));
-  }, 2000); // should take no more than 2 seconds
 });
