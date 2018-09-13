@@ -1,4 +1,4 @@
-import { compile, CompileOK } from '../ts/index';
+import { compile, CompileOK, Result } from '../ts/index';
 import * as runtime from '../ts/runtime';
 import * as stopify from 'stopify';
 
@@ -775,6 +775,37 @@ test('cannot set .length of arrays', async () => {
 test('cannot use computed member expressions on objects', async () => {
   await expect(dynamicError(`let r = {10: 5}[10]`,))
   .resolves.toMatch(`array indexing called on a non-array value type`);
+});
+
+test(`test(...) can break out of an infinite loop`, async () => {
+  runtime.enableTests(true);
+  await expect(run(`
+    test('loop forever', function() {
+      while(true) {};
+    })`))
+    .resolves.toBe(undefined);
+  expect(runtime.summary(false).output).toBe([
+    testFailure('loop forever', 'time limit exceeded'),
+    testSummary(1, 0)
+  ].join('\n'));
+});
+
+test(`test(...) can break out of an infinite loop and run next test`, async () => {
+  runtime.enableTests(true);
+  await expect(run(`
+    test('loop forever', function() {
+      while(true) {};
+    });
+    test('succeeds', function() {
+    });
+
+    `))
+    .resolves.toBe(undefined);
+  expect(runtime.summary(false).output).toBe([
+    testFailure(`loop forever`, 'time limit exceeded'),
+    testOk('succeeds'),
+    testSummary(1, 1)
+  ].join('\n'));
 });
 
 describe('ElementaryJS Testing', () => {

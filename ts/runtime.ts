@@ -321,29 +321,47 @@ export function test(description: string, testFunction: () => void) {
     return;
   }
   const runner = stopifyRunner!;
-  runner.externalHOF((complete) => {
-    runner.runStopifiedCode(
-      testFunction,
-      (result: any) => {
-        if (result.type === 'normal') {
+  // NOTE(arjun): Using Stopify internals
+  const runtime = (runner as any).continuationsRTS;
+  const suspend = (runner as any).suspendRTS;
+  return runtime.captureCC((k: any) => {
+    return runtime.endTurn((onDone: any) => {
+      let done = false;
+      const timerID = setTimeout(() => {
+        runner.pause(() => {
+          if (done) { return; }
+          suspend.continuation = k;
+          suspend.onDone = onDone;
           tests.push({
+            failed: true,
+            error: 'time limit exceeded',
+            description: description
+          });
+          runner.resume();
+        });
+      }, timeoutMilli);
+      return runner.runStopifiedCode(testFunction, (result: any) => {
+        if (result.type === 'normal') {
+            tests.push({
             failed: false,
             description: description,
           });
-          complete({ type: 'normal', value: result.value });
         }
         else {
           tests.push({
             failed: true,
             description: description,
             error: result.value,
-          })
-          complete({ type: 'normal', value: result.value });
+          });
         }
+          clearTimeout(timerID);
+          done = true;
+          runtime.runtime(() => k({ type: 'normal', value: undefined }), onDone);
       });
+    });
   });
-  return;
 }
+
 /**
  * To be used after all tests are run to get the summary of all tests.
  * Output can be styled with the hasStyles argumnet.
