@@ -96,6 +96,13 @@ function testSummary(failed: number, passed: number) {
   return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
 
+test('must declare variables', () => {
+  expect(staticError(`x = 10`)).toEqual(
+    expect.arrayContaining([
+      `You must declare variable 'x' before assigning a value to it.`
+    ]));
+});
+
 test('duplicate let binding', () => {
   expect(compile(`let x = 0; let x = 1`, compileOpts)).toMatchObject({
     kind: 'error',
@@ -532,7 +539,7 @@ test('Can set fields of this in a constructor',  (done) => {
   expect.assertions(2);
   const runner = compileOK(`
     class C { constructor() { this.x = 5; } }
-    r = (new C()).x`);
+    let r = (new C()).x`);
   runner.run(result => {
     expect(result.type).toBe('normal');
     expect(runner.g.r).toBe(5);
