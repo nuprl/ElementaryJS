@@ -777,87 +777,86 @@ test('cannot use computed member expressions on objects', async () => {
   .resolves.toMatch(`array indexing called on a non-array value type`);
 });
 
-test(`test(...) can break out of an infinite loop`, async () => {
-  runtime.enableTests(true);
-  await expect(run(`
-    test('loop forever', function() {
-      while(true) {};
-    })`))
-    .resolves.toBe(undefined);
-  expect(runtime.summary(false).output).toBe([
-    testFailure('loop forever', 'time limit exceeded'),
-    testSummary(1, 0)
-  ].join('\n'));
-});
-
-test(`test(...) can break out of an infinite loop and run next test`, async () => {
-  runtime.enableTests(true, 2000);
-  await expect(run(`
-    test('loop forever', function() {
-      while(true) {};
-    });
-    test('succeeds', function() {
-    });
-
-    `))
-    .resolves.toBe(undefined);
-  expect(runtime.summary(false).output).toBe([
-    testFailure(`loop forever`, 'time limit exceeded'),
-    testOk('succeeds'),
-    testSummary(1, 1)
-  ].join('\n'));
-}, 3000);
-
-test('test(...) with higher order functions with infinite loop', async () => {
-  runtime.enableTests(true, 3000); // time out of 3 seconds
-  expect(await run(`
-    function takeInFunc(func, arr) {
-      let val = func(arr);
-      while (true) {1; }
-      return val
-    }
-    function adder(num) {
-      while (true) {1;}
-      return function(x) { return x + num };
-    }
-    test('higher order', function() {
-      takeInFunc(function(x) {return 1}, 1);
-    });
-    test('adder', function() { adder(1)(2) });
-  `)).toBe(undefined);
-  expect(runtime.summary(false).output).toBe([
-    testFailure('higher order', 'time limit exceeded'),
-    testFailure('adder', 'time limit exceeded'),
-    testSummary(2, 0)
-  ].join('\n'));
-}, 7000); // should take no more than 7 seconds (running two tests)
-
-test('test(...) with HOFs running a while', async () => {
-  runtime.enableTests(true, 3000); // timeout of 3 seconds
-  expect(await run(`
-    function hof(func) {
-      let newFunc = function(x) { return 2 + func(x) };
-      let x = -9999999;
-      while (x !== 9999999) {
-        x += 1;
-      }
-      return newFunc;
-    }
-    test('run a while', function() {hof(function(x) {return x + 1})});
-  `)).toBeUndefined();
-  expect(runtime.summary(false).output).toBe([
-    testFailure('run a while', 'time limit exceeded'),
-    testSummary(1, 0),
-  ].join('\n'));
-}, 4000); // should take no more than 4 seconds
-
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
     runtime.enableTests(true);
-    runtime.setRunner(undefined as any);
   });
 
+  test(`test can break out of an infinite loop`, async () => {
+    runtime.enableTests(true);
+    await expect(run(`
+      test('loop forever', function() {
+        while(true) {};
+      })`))
+      .resolves.toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure('loop forever', 'time limit exceeded'),
+      testSummary(1, 0)
+    ].join('\n'));
+  });
+  
+  test(`test can break out of an infinite loop and run next test`, async () => {
+    runtime.enableTests(true, 2000);
+    await expect(run(`
+      test('loop forever', function() {
+        while(true) {};
+      });
+      test('succeeds', function() {
+      });
+  
+      `))
+      .resolves.toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure(`loop forever`, 'time limit exceeded'),
+      testOk('succeeds'),
+      testSummary(1, 1)
+    ].join('\n'));
+  }, 3000);
+  
+  test('test with higher order functions with infinite loop', async () => {
+    runtime.enableTests(true, 3000); // time out of 3 seconds
+    expect(await run(`
+      function takeInFunc(func, arr) {
+        let val = func(arr);
+        while (true) {1; }
+        return val
+      }
+      function adder(num) {
+        while (true) {1;}
+        return function(x) { return x + num };
+      }
+      test('higher order', function() {
+        takeInFunc(function(x) {return 1}, 1);
+      });
+      test('adder', function() { adder(1)(2) });
+    `)).toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure('higher order', 'time limit exceeded'),
+      testFailure('adder', 'time limit exceeded'),
+      testSummary(2, 0)
+    ].join('\n'));
+  }, 7000); // should take no more than 7 seconds (running two tests)
+
+  test('test with HOFs running a while', async () => {
+    runtime.enableTests(true, 3000); // timeout of 3 seconds
+    expect(await run(`
+      function hof(func) {
+        let newFunc = function(x) { return 2 + func(x) };
+        let x = -9999999;
+        while (x !== 9999999) {
+          x += 1;
+        }
+        return newFunc;
+      }
+      test('run a while', function() {hof(function(x) {return x + 1})});
+    `)).toBeUndefined();
+    expect(runtime.summary(false).output).toBe([
+      testFailure('run a while', 'time limit exceeded'),
+      testSummary(1, 0),
+    ].join('\n'));
+  }, 4000); // should take no more than 4 seconds
+  
   test('No tests', () => {
     expect(runtime.summary(false).output).toBe([
       `◈ You don't seem to have any tests written`,
