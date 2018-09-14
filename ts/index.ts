@@ -56,13 +56,20 @@ class ElementaryRunner implements CompileOK {
     // We can use .get and .set traps to intercept reads and writes to
     // global variables. Any other trap is useless (I think), since Stopify
     // does not use the global object in any other way.
-    const globalProxy = new Proxy(globals, {
+    const globalProxy = new Proxy(Object.assign({}, globals), { // prevent Proxy from altering globals
         get: (o, k) => {
             if (!Object.hasOwnProperty.call(o, k)) {
                 const msg = `${String(k)} is not defined`;
                 throw new runtime.ElementaryRuntimeError(msg);
             }
             return (o as any)[k];
+        },
+        set: (obj, prop, value) => {
+          if (typeof prop === 'string' && globals.hasOwnProperty(prop)) { // if it's a global variable
+            throw new runtime.ElementaryRuntimeError(`${prop} is part of the global library. Cannot be rewritten`);
+          } else { // if not
+            return Reflect.set(obj, prop, value); // set value
+          }
         }
     });
 

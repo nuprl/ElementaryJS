@@ -777,6 +777,13 @@ test('cannot use computed member expressions on objects', async () => {
   .resolves.toMatch(`array indexing called on a non-array value type`);
 });
 
+test('Overwriting globals cause runtime error', async () => {
+  // using top level lets
+  expect(await dynamicError(`let test = 1`)).toMatch(`test is part of the global library. Cannot be rewritten`);
+  expect(await dynamicError(`let lib220 = 1`)).toMatch(`test is part of the global library. Cannot be rewritten`);
+  // More tests to be written in a bit
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
