@@ -53,7 +53,6 @@
     "babel-core": "^6.26.3",
     "babel-plugin-transform-es2015-classes": "^6.24.1",
     "babel-types": "^6.26.0",
-    "stopify": "0.5.1-elementaryJS",
-    "stopify-continuations": "0.5.0-elementaryJS"
+    "stopify": "0.5.2-elementaryJS"
   }
 }

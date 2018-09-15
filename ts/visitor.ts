@@ -268,6 +268,14 @@ export const visitor = {
       // Disallow certain operators and patterns
       const allowed = ['=', '+=', '-=', '*=', '/=', '%='];
       const { operator: op, left, right } = path.node;
+      if (left.type === 'Identifier') {
+        if (path.scope.hasBinding(left.name) === false) {
+          st.elem.error(path, 
+            `You must declare variable '${left.name}' before assigning a value to it.`);
+          path.skip();
+          return;
+        }
+      }
       if (allowed.includes(op) === false) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
         path.skip();

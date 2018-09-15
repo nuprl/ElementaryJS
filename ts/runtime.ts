@@ -41,7 +41,7 @@ export { ArrayStub as Array };
 
 
 export function arrayBoundsCheck(object: any, index: string) {
-  if (typeof object !== 'object') {
+  if (object instanceof Array === false) {
     throw new ElementaryRuntimeError('array indexing called on a non-array value type');
   }
   if (typeof index !== 'number' ||
@@ -123,6 +123,9 @@ export function elementaryJSBug(what: string) {
 }
 
 export function checkMember(o: any, k: any, v: any) {
+  if (o instanceof Array) {
+    throw new ElementaryRuntimeError(`cannot set .${k} of an array`);
+  }
   dot(o, k);
   return (o[k] = v);
 }
@@ -317,56 +320,48 @@ export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
   }
-  if (typeof stopifyRunner !== 'undefined') {
-    const runner = stopifyRunner;
-    runner.externalHOF((complete) => {
-      runner.runStopifiedCode(
-        testFunction,
-        (result: any) => {
-          if (result.type === 'normal') {
-            tests.push({
-              failed: false,
-              description: description,
-            });
-            complete({ type: 'normal', value: result.value });
-          }
-          else {
-            tests.push({
-              failed: true,
-              description: description,
-              error: result.value,
-            })
-            complete({ type: 'normal', value: result.value });
-          }
+  const runner = stopifyRunner!;
+  // NOTE(arjun): Using Stopify internals
+  const runtime = (runner as any).continuationsRTS;
+  const suspend = (runner as any).suspendRTS;
+  return runtime.captureCC((k: any) => {
+    return runtime.endTurn((onDone: any) => {
+      let done = false;
+      const timerID = setTimeout(() => {
+        runner.pause(() => {
+          if (done) { return; }
+          suspend.continuation = k;
+          suspend.onDone = onDone;
+          tests.push({
+            failed: true,
+            error: 'time limit exceeded',
+            description: description
+          });
+          runner.resume();
         });
-    });
-    return;
-  }
-  try {
-    timeoutTest(testFunction, timeoutMilli);
-    
-    tests.push({
-      failed: false,
-      description: description,
-    });
-
-  } catch (e) {
-    if (e.message.includes('timed out')) {
-      tests.push({
-        failed: true,
-        description: description,
-        error: 'Timed out',
+      }, timeoutMilli);
+      return runner.runStopifiedCode(testFunction, (result: any) => {
+        if (result.type === 'normal') {
+            tests.push({
+            failed: false,
+            description: description,
+          });
+        }
+        else {
+          tests.push({
+            failed: true,
+            description: description,
+            error: result.value,
+          });
+        }
+          clearTimeout(timerID);
+          done = true;
+          runtime.runtime(() => k({ type: 'normal', value: undefined }), onDone);
       });
-      return;
-    }
-    tests.push({
-      failed: true,
-      description: description,
-      error: e.message,
     });
-
-  }
+  });
 }
+
 /**
  * To be used after all tests are run to get the summary of all tests.
  * Output can be styled with the hasStyles argumnet.
