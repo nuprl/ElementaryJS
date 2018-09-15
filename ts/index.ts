@@ -65,8 +65,8 @@ class ElementaryRunner implements CompileOK {
             return (o as any)[k];
         },
         set: (obj, prop, value) => {
-          if (typeof prop === 'string' && globals.hasOwnProperty(prop)) { // if it's a global variable
-            throw new runtime.ElementaryRuntimeError(`${prop} is part of the global library, and cannot be overwritten.`);
+          if (globals.hasOwnProperty(prop)) { // if it's a global variable
+            throw new runtime.ElementaryRuntimeError(`${prop as string} is part of the global library, and cannot be overwritten.`);
           } else { // if not
             return Reflect.set(obj, prop, value); // set value
           }
