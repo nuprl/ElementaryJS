@@ -778,10 +778,15 @@ test('cannot use computed member expressions on objects', async () => {
 });
 
 test('Overwriting globals cause runtime error', async () => {
-  // using top level lets
-  expect(await dynamicError(`let test = 1`)).toMatch(`test is part of the global library. Cannot be rewritten`);
-  expect(await dynamicError(`let lib220 = 1`)).toMatch(`test is part of the global library. Cannot be rewritten`);
-  // More tests to be written in a bit
+  await expect(dynamicError(`let test = 1`)).resolves.toMatch(`test is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let lib220 = 1`)).resolves.toMatch(`lib220 is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let assert = 1`)).resolves.toMatch(`assert is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let console = 1`)).resolves.toMatch(`console is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let version = 1`)).resolves.toMatch(`version is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let elementaryjs = 1`)).resolves.toMatch(`elementaryjs is part of the global library. Cannot be rewritten`);
+  await expect(dynamicError(`let undefined = 1`)).resolves.toMatch(`undefined is part of the global library. Cannot be rewritten`);
+  // Array, Object and Math cannot be rewritten and does not throw dynamic error.
+  await expect(run(`function rewrite() { let test = 1; return test } rewrite();`)).resolves.toBe(1);
 });
 
 describe('ElementaryJS Testing', () => {
