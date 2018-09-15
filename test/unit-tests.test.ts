@@ -1,4 +1,4 @@
-import { compile, CompileOK } from '../ts/index';
+import { compile, CompileOK, Result } from '../ts/index';
 import * as runtime from '../ts/runtime';
 import * as stopify from 'stopify';
 
@@ -79,7 +79,7 @@ function staticError(code: string): string[] {
 }
 
 // Returns the expected failure message from testing
-function testFailure(description: string, errorMsg: string = 'assertion failed') {
+function testFailure(description: string, errorMsg: string = 'Error: assertion failed') {
   return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
@@ -95,6 +95,13 @@ function testSummary(failed: number, passed: number) {
   }
   return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
+
+test('must declare variables', () => {
+  expect(staticError(`x = 10`)).toEqual(
+    expect.arrayContaining([
+      `You must declare variable 'x' before assigning a value to it.`
+    ]));
+});
 
 test('duplicate let binding', () => {
   expect(compile(`let x = 0; let x = 1`, compileOpts)).toMatchObject({
@@ -532,7 +539,7 @@ test('Can set fields of this in a constructor',  (done) => {
   expect.assertions(2);
   const runner = compileOK(`
     class C { constructor() { this.x = 5; } }
-    r = (new C()).x`);
+    let r = (new C()).x`);
   runner.run(result => {
     expect(result.type).toBe('normal');
     expect(runner.g.r).toBe(5);
@@ -793,9 +800,82 @@ describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
     runtime.enableTests(true);
-    runtime.setRunner(undefined as any);
   });
 
+  test(`test can break out of an infinite loop`, async () => {
+    runtime.enableTests(true);
+    await expect(run(`
+      test('loop forever', function() {
+        while(true) {};
+      })`))
+      .resolves.toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure('loop forever', 'time limit exceeded'),
+      testSummary(1, 0)
+    ].join('\n'));
+  });
+  
+  test(`test can break out of an infinite loop and run next test`, async () => {
+    runtime.enableTests(true, 2000);
+    await expect(run(`
+      test('loop forever', function() {
+        while(true) {};
+      });
+      test('succeeds', function() {
+      });
+  
+      `))
+      .resolves.toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure(`loop forever`, 'time limit exceeded'),
+      testOk('succeeds'),
+      testSummary(1, 1)
+    ].join('\n'));
+  }, 3000);
+  
+  test('test with higher order functions with infinite loop', async () => {
+    runtime.enableTests(true, 3000); // time out of 3 seconds
+    expect(await run(`
+      function takeInFunc(func, arr) {
+        let val = func(arr);
+        while (true) {1; }
+        return val
+      }
+      function adder(num) {
+        while (true) {1;}
+        return function(x) { return x + num };
+      }
+      test('higher order', function() {
+        takeInFunc(function(x) {return 1}, 1);
+      });
+      test('adder', function() { adder(1)(2) });
+    `)).toBe(undefined);
+    expect(runtime.summary(false).output).toBe([
+      testFailure('higher order', 'time limit exceeded'),
+      testFailure('adder', 'time limit exceeded'),
+      testSummary(2, 0)
+    ].join('\n'));
+  }, 7000); // should take no more than 7 seconds (running two tests)
+
+  test('test with HOFs running a while', async () => {
+    runtime.enableTests(true, 3000); // timeout of 3 seconds
+    expect(await run(`
+      function hof(func) {
+        let newFunc = function(x) { return 2 + func(x) };
+        let x = -9999999;
+        while (x !== 9999999) {
+          x += 1;
+        }
+        return newFunc;
+      }
+      test('run a while', function() {hof(function(x) {return x + 1})});
+    `)).toBeUndefined();
+    expect(runtime.summary(false).output).toBe([
+      testFailure('run a while', 'time limit exceeded'),
+      testSummary(1, 0),
+    ].join('\n'));
+  }, 4000); // should take no more than 4 seconds
+  
   test('No tests', () => {
     expect(runtime.summary(false).output).toBe([
       `◈ You don't seem to have any tests written`,
@@ -813,49 +893,49 @@ describe('ElementaryJS Testing', () => {
     }).toThrow('not a boolean');
   });
 
-  test('One OK test', () => {
-    const description = 'Test 1'
-    runtime.test(description, () => {
-      return 1;
-    });
+  test('One OK test', async () => {
+    expect(await run(`test('Test 1', function() {})`)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testOk(description),
+      testOk('Test 1'),
       testSummary(0, 1)
     ].join('\n'));
   });
 
-  test('One failed Test', () => {
-    const description = 'Failed Test';
-    runtime.test(description, () => {
-      runtime.assert(false);
-    });
+  test('One failed Test', async () => {
+    expect(await run(`test('Failed Test', function() { assert(false) })`)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testFailure(description),
+      testFailure('Failed Test', 'Error: assertion failed'),
       testSummary(1, 0)
     ].join('\n'));
   });
 
-  test('One Ok, One failed', () => {
-    const okDesc = 'Ok test';
-    const failDesc = 'Failed';
-    runtime.test(okDesc, () => { return 1; });
-    runtime.test(failDesc, () => { runtime.assert(false) });
+  test('One Ok, One failed', async () => {
+    expect(await run(`
+      test('Ok test', function() {return 1});
+      test('Failed', function() { assert(false)});
+    `)).toBe(undefined);
     expect(runtime.summary(false).output).toBe([
-      testOk(okDesc),
-      testFailure(failDesc),
+      testOk('Ok test'),
+      testFailure('Failed', 'Error: assertion failed'),
       testSummary(1, 1),
     ].join('\n'));
   });
 
-  test('20 tests', () => {
+  test('20 tests', async () => {
+    expect(await run(`
+      for (let i = 0; i < 10; ++i) {
+        test(i.toString(), function() { return 1});
+      }
+      for (let i = 10; i < 20; ++i) {
+        test(i.toString(), function() { assert(false)});
+      }
+    `)).toBe(undefined);
     let output: string[] = [];
     for (let i = 0; i < 10; i++) {
-      runtime.test(i.toString(), () => { runtime.assert(true); });
       output.push(testOk(i.toString()));
     }
     for (let i = 10; i < 20; i++) {
-      runtime.test(i.toString(), () => { runtime.assert(false); });
-      output.push(testFailure(i.toString()));
+      output.push(testFailure(i.toString(), 'Error: assertion failed'));
     }
     output.push(testSummary(10, 10));
     expect(runtime.summary(false).output).toBe(output.join('\n'));
@@ -871,16 +951,4 @@ describe('ElementaryJS Testing', () => {
     runtime.summary(false);
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
-
-  test('Timing out', () => {
-    runtime.test('infinite loop', () => {
-      while (true) {
-        1;
-      }
-    });
-    expect(runtime.summary(false).output).toBe([
-      testFailure('infinite loop', 'Timed out'),
-      testSummary(1,0),
-    ].join('\n'));
-  })
 });
