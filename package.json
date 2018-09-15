@@ -1,5 +1,5 @@
 {
-  "name": "elementary-js",
+  "name": "@stopify/elementary-js",
   "version": "1.0.0",
   "description": "JavaScript without sharp edges",
   "main": "dist/index.js",
