@@ -784,6 +784,18 @@ test('cannot use computed member expressions on objects', async () => {
   .resolves.toMatch(`array indexing called on a non-array value type`);
 });
 
+test('Overwriting globals cause runtime error', async () => {
+  await expect(dynamicError(`let test = 1`)).resolves.toMatch(`test is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let lib220 = 1`)).resolves.toMatch(`lib220 is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let assert = 1`)).resolves.toMatch(`assert is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let console = 1`)).resolves.toMatch(`console is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let version = 1`)).resolves.toMatch(`version is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let elementaryjs = 1`)).resolves.toMatch(`elementaryjs is part of the global library, and cannot be overwritten.`);
+  await expect(dynamicError(`let undefined = 1`)).resolves.toMatch(`undefined is part of the global library, and cannot be overwritten.`);
+  // Array, Object and Math cannot be overwrriten and does not throw dynamic error.
+  await expect(run(`function rewrite() { let test = 1; return test } rewrite();`)).resolves.toBe(1);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
