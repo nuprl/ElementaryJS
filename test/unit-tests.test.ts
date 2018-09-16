@@ -311,6 +311,12 @@ test('dynamic error when assigning a value to a non-member', async () => {
     .resolves.toMatch(`object does not have member 'y'`);
 });
 
+test('dynamic error when using non-boolean in if statement', async () => {
+  expect.assertions(1);
+  await expect(dynamicError('let x = 0; if (x = 42) { }'))
+    .resolves.toMatch(`expected a boolean expression, instead received '42'`);
+});
+
 test('cannot use for-of', () => {
   expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
     expect.arrayContaining([
