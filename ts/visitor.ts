@@ -480,13 +480,29 @@ export const visitor = {
       st.elem.error(path, `Loop body must be enclosed in braces.`);
     }
   },
-  IfStatement(path: NodePath<t.IfStatement>, st: S) {
-    if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
-      st.elem.error(path, `if statement body must be enclosed in braces.`);
-      return;
-    }
-    if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
-      st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
+  IfStatement: {
+    enter(path: NodePath<t.IfStatement>, st: S) {
+      if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
+        st.elem.error(path, `if statement body must be enclosed in braces.`);
+        return;
+      }
+      if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
+        st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
+      }
+    },
+    exit(path: NodePath<t.IfStatement>, st: S) {
+      // if (a) => if (checkIfBoolean(a))
+      const a = path.node.test;
+      const check = dynCheck('checkIfBoolean',
+          path.node.loc,
+          a);
+      const consequent = path.node.consequent;
+      const alternate = path.node.alternate;
+      const replacement = t.ifStatement(
+          check, consequent, alternate);
+      replacement.loc = path.node.loc;
+      path.replaceWith(replacement);
+      path.skip();
     }
   },
   BreakStatement(path: NodePath<t.BreakStatement>, st: S) {

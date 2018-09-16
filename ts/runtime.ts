@@ -39,6 +39,12 @@ class ArrayStub {
 
 export { ArrayStub as Array };
 
+export function checkIfBoolean(value: any) {
+  if (typeof(value) === 'boolean') {
+    return value;
+  }
+  throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
+}
 
 export function arrayBoundsCheck(object: any, index: string) {
   if (object instanceof Array === false) {
