@@ -230,6 +230,17 @@ export const visitor = {
       }
     }
   },
+  ObjectExpression(path: NodePath<t.ObjectExpression>, st: S) {
+    for (let i = 0; i < path.node.properties.length; ++i) {
+      const prop = path.node.properties[i];
+      if (prop.type === 'ObjectProperty') {
+        if (prop.key.type !== 'Identifier') {
+          st.elem.error(path, 
+            `Object member name must be a literal.`);
+        }
+      }
+    }
+  },
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;

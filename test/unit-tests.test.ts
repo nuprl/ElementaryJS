@@ -388,6 +388,17 @@ test('can use pre-update operator with numbers', async () => {
   await expect(run(code)).resolves.toBe(11);
 });
 
+test('cannot have non-literal object members', () => {
+  expect(staticError(`let myObj = { 0: 0 };`)).toEqual(
+    expect.arrayContaining([
+      `Object member name must be a literal.`
+    ]));
+  expect(staticError(`let myObj = { 'Foo': 0 };`)).toEqual(
+    expect.arrayContaining([
+      `Object member name must be a literal.`
+    ]));
+});
+
 test('cannot use post-update operator', () => {
   expect(staticError(`let a = 2; let b = a++;`)).toEqual(
     expect.arrayContaining([
@@ -780,7 +791,7 @@ test('cannot set .length of arrays', async () => {
 });
 
 test('cannot use computed member expressions on objects', async () => {
-  await expect(dynamicError(`let r = {10: 5}[10]`,))
+  await expect(dynamicError(`let r = {a: 5}[10]`,))
   .resolves.toMatch(`array indexing called on a non-array value type`);
 });
 
