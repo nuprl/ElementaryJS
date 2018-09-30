@@ -968,4 +968,33 @@ describe('ElementaryJS Testing', () => {
     runtime.summary(false);
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
+
+  test('Stopify bug: arguments array materialization and boxing interacts poorly', (done) => {
+    const runner = compileOK(`
+      let r1 = false;
+      let r2 = false;
+      let r3 = false;
+      let r4 = false;
+      function oracle(x) {
+        let b = true;
+        test("Test 1", function() {
+          r1 = x === 900;
+        });
+        r2 = x === 900;
+        test("Test 2", function() {
+          r3 = x === 900;
+        });
+        r4 = x === 900;
+      }
+      oracle(900)
+    `);
+    runner.run((result) => {
+      expect(runner.g.r1).toBe(true);
+      expect(runner.g.r2).toBe(true);
+      expect(runner.g.r3).toBe(true);
+      expect(runner.g.r4).toBe(true);
+      done();
+    });
+  });
+
 });
