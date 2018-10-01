@@ -2,7 +2,7 @@ language: javascript
 node_js:
   - "8"
 install:
-  - yarn install
+  - yarn install --no-lockfile --force
   - yarn run build
 script:
   - yarn run test
