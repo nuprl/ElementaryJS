@@ -265,6 +265,5 @@ export function createImage(width: number, height: number, fill: [number, number
       img.setPixel(i, j, fill)
     }
   }
-
   return img;
 }
