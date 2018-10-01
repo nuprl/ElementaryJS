@@ -10,6 +10,7 @@ import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
+import { wheat1, chaff1, hire} from './oracle';
 
 function getGlobal(): any {
   if (typeof window !== 'undefined') {
@@ -50,7 +51,10 @@ class ElementaryRunner implements CompileOK {
       Array: runtime.Array,
       Math: Math,
       undefined: undefined,
-      Object: Object // Needed for classes
+      Object: Object, // Needed for classes
+      hire: hire,
+      wheat1: wheat1,
+      chaff1: chaff1      
     };
 
     // We can use .get and .set traps to intercept reads and writes to
