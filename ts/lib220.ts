@@ -268,3 +268,11 @@ export function createImage(width: number, height: number, fill: [number, number
 
   return img;
 }
+
+export function makeArray(n: number, value: any) {
+  let arr = [];
+  for (let i = 0; i < n; ++i) {
+    arr.push(value);
+  }
+  return arr;
+}
