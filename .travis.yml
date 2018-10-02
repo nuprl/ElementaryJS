@@ -1,9 +1,11 @@
 language: javascript
 node_js:
+  - "node"
   - "8"
-cache: yarn
 install:
-  - yarn install
+  - yarn install --no-lockfile --force
   - yarn run build
 script:
   - yarn run test
+cache:
+  yarn: true
