@@ -820,7 +820,7 @@ describe('ElementaryJS Testing', () => {
   });
 
   test(`test can break out of an infinite loop`, async () => {
-    runtime.enableTests(true);
+    runtime.enableTests(true, 2000);
     await expect(run(`
       test('loop forever', function() {
         while(true) {};
