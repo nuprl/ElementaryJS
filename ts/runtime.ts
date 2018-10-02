@@ -283,7 +283,7 @@ export function setRunner(runner: stopify.AsyncRun) {
   stopifyRunner = runner;
 }
 
-let timeoutMilli: number = 3000;
+let timeoutMilli: number = 5000;
 /**
  * Enable/Disable testing and sets a stopify runner if needed
  * It clears out previous tests and starts anew
@@ -291,7 +291,7 @@ let timeoutMilli: number = 3000;
  * @param {boolean} enable
  * @param {*} runner
  */
-export function enableTests(enable: boolean, timeout: number = 3000) {
+export function enableTests(enable: boolean, timeout: number = 5000) {
   testsEnabled = enable;
   tests = [];
   timeoutMilli = timeout;
