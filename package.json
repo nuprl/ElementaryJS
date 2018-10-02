@@ -50,9 +50,11 @@
   },
   "dependencies": {
     "@types/babel-types": "^6.7.16",
+    "@types/parsimmon": "^1.10.0",
     "babel-core": "^6.26.3",
     "babel-plugin-transform-es2015-classes": "^6.24.1",
     "babel-types": "^6.26.0",
+    "parsimmon": "^1.12.0",
     "stopify": "0.5.3-elementaryJS"
   }
 }
