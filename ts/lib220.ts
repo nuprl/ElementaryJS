@@ -274,5 +274,5 @@ export function makeArray(n: number, value: any) {
   for (let i = 0; i < n; ++i) {
     arr.push(value);
   }
-  return arr;
+  return stopifyArray(arr);
 }
