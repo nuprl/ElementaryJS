@@ -1,4 +1,4 @@
-import * as lib220 from './lib220';
+import { stopifyArray } from './runtime'
 
 export function hire(comp: any, cand: any) {
   return {company: comp, candidate: cand};
@@ -44,10 +44,10 @@ export function wheat1(companies: any[], candidates: any[]) {
   const n = companies.length;
   let hires = [];
   // True in this array implies that there is a provisional hiring
-  let hasHired = lib220.makeArray(n, false);  // Company List
-  let wasHired = lib220.makeArray(n, false);  // Candidate List
+  let hasHired = Array(n).fill(false);  // Company List
+  let wasHired = Array(n).fill(false);  // Candidate List
   // The number of times each company has attempted to hire a candidate
-  let proposalCounts = lib220.makeArray(n, 0);
+  let proposalCounts = Array(n).fill(0);
 
   let nextCompany = hasHired.indexOf(false);
   while(nextCompany !== -1) {
@@ -70,11 +70,11 @@ export function wheat1(companies: any[], candidates: any[]) {
     nextCompany = hasHired.indexOf(false);
   }
 
-  return hires;
+  return stopifyArray(hires);
 }
 
 export function chaff1(companies: any, candidates: any) {
-  return companies.reduce(function(acc: any, x: any) {acc.hires.push(hire(acc.n, acc.n)); ++acc.n; return acc;}, {hires: [], n: 0}).hires;
+  return companies.reduce(function(acc: any, x: any) {acc.hires.push(hire(acc.n, acc.n)); ++acc.n; return acc;}, {hires: stopifyArray([]), n: 0}).hires;
 }
 
 
