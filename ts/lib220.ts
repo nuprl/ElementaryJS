@@ -111,6 +111,9 @@ function assertValidPixel(pixel: any) {
     throw new Error(`A pixel value must be a 3-element array`);
   }
   for (let i = 0; i < 3; i++) {
+    if (typeof pixel[i] !== 'number') {
+      throw new Error(`Pixel channel value must be a number`);
+    }
     if (pixel[i] < 0.0 || pixel[i] > 1.0) {
       throw new Error(`Pixel channel value ${pixel[i]} is invalid`);
     }
