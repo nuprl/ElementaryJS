@@ -191,7 +191,7 @@ function EncapsulatedImage(imageData: any) {
  * @param {(runner: any, response: any, ...args: any[]) => void} loadFunction - the function that loads the correct file format
  * (Must have runner.continueImmediate)
  */
-function loadXFromURL(defaultOutput: any, loadFunction: (runner: any, response: any) => any) {
+function loadURLHandler(defaultOutput: any, loadFunction: (runner: any, response: any) => any) {
   return function(url: any) {
     if (typeof document === 'undefined') {
       return defaultOutput;
@@ -236,7 +236,7 @@ function loadXFromURL(defaultOutput: any, loadFunction: (runner: any, response: 
   };
 }
 
-export const loadImageFromURL = loadXFromURL(
+export const loadImageFromURL = loadURLHandler(
   EncapsulatedImage(createImageData(50, 50)),
   function(runner : any, response: any) {
     const img = new Image();
@@ -286,7 +286,7 @@ export function createImage(width: number, height: number, fill: [number, number
   return img;
 }
 
-export const loadJSONFromURL = loadXFromURL(
+export const loadJSONFromURL = loadURLHandler(
   {},
   function(runner: any, response: any) {
     response.json().then((jsonObj : any) => {
