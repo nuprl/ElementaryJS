@@ -244,7 +244,7 @@ export const loadImageFromURL = loadURLHandler(
       runner.continueImmediate({
         type: 'exception',
         stack: [],
-        value: new Error(`Image cannot be loaded`)
+        value: new Error(`Image could not be loaded`)
       });
     };
 
@@ -270,7 +270,7 @@ export const loadImageFromURL = loadURLHandler(
       runner.continueImmediate({
         type: 'exception',
         stack: [],
-        value: new Error(`Image URL cannot be loaded`)
+        value: new Error(`Image URL could not be loaded`)
       });
     });
   }
@@ -304,7 +304,7 @@ export const loadJSONFromURL = loadURLHandler(
       runner.continueImmediate({
         type: 'exception',
         stack: [],
-        value: new Error(`JSON cannot be loaded`)
+        value: new Error(`JSON file could not be loaded`)
       });
     });
   }
