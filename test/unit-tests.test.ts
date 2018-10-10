@@ -813,6 +813,14 @@ test('Overwriting globals cause runtime error', async () => {
   await expect(run(`function rewrite() { let test = 1; return test } rewrite();`)).resolves.toBe(1);
 });
 
+test('parseInt is available', async () => {
+  await expect(run(`parseInt("100")`)).resolves.toBe(100);
+});
+
+test('parseFloat is available', async () => {
+  await expect(run(`parseFloat("3.14159")`)).resolves.toBe(3.14159);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {

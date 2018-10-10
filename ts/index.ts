@@ -52,6 +52,8 @@ class ElementaryRunner implements CompileOK {
       Math: Math,
       undefined: undefined,
       Object: Object, // Needed for classes
+      parseInt: parseInt,
+      parseFloat: parseFloat,
       hire: hire,
       wheat1: wheat1,
       chaff1: chaff1      
