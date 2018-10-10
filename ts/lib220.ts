@@ -266,6 +266,12 @@ export const loadImageFromURL = loadURLHandler(
     response.blob().then((blob : any) => {
       let objectURL = URL.createObjectURL(blob);
       img.src = objectURL;
+    }).catch(() => {
+      runner.continueImmediate({
+        type: 'exception',
+        stack: [],
+        value: new Error(`Image URL cannot be loaded`)
+      });
     });
   }
 );
@@ -293,6 +299,12 @@ export const loadJSONFromURL = loadURLHandler(
       runner.continueImmediate({
         type: 'normal',
         value: jsonObj
+      });
+    }).catch(() => {
+      runner.continueImmediate({
+        type: 'exception',
+        stack: [],
+        value: new Error(`JSON cannot be loaded`)
       });
     });
   }
