@@ -184,26 +184,67 @@ function EncapsulatedImage(imageData: any) {
     }
   });
 }
+/**
+ * A handler for loading files
+ *
+ * @param {*} defaultOutput - the default object to return when function is not called on browser
+ * @param {(runner: any, response: any, ...args: any[]) => void} loadFunction - the function that loads the correct file format
+ * (Must have runner.continueImmediate)
+ */
+function loadURLHandler(defaultOutput: any, loadFunction: (runner: any, response: any) => any) {
+  return function(url: any) {
+    if (typeof document === 'undefined') {
+      return defaultOutput;
+    }
+    const runnerResult = getRunner();
+    if (runnerResult.kind === 'error') {
+      throw new Error('Program is not running');
+    }
+    const runner = runnerResult.value;
+    return runner.pauseImmediate(() => {
+      const userEmail = localStorage.getItem('userEmail');
+      const sessionId = localStorage.getItem('sessionId');
+      if (userEmail === null || sessionId === null) {
+        runner.continueImmediate({
+          type: 'exception',
+          stack: [],
+          value: new Error(`User is not logged in`)
+        });
+      }
+      const encodedURL = encodeURIComponent(url);
+      const getUrlLink = ` https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/geturl?`
+      const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
+      fetch(queryURL).then(response => {
+        if (response.status !== 200) {
+          runner.continueImmediate({
+            type: 'exception',
+            stack: [],
+            value: new Error(`Could not load from URL, URL may be invalid or redirected`),
+          });
+        }
+        return response;
+      }).then(response => {
+        loadFunction(runner, response);
+      }).catch(err => {
+        runner.continueImmediate({
+          type: 'exception',
+          stack: [],
+          value: new Error(`Could not load from URL`),
+        });
+      });
+    });
+  };
+}
 
-export function loadImageFromURL(url: any) {
-  if (typeof document === 'undefined') {
-    return EncapsulatedImage(createImageData(50, 50));
-    // TODO (Sam): student can get a pixel that is out of bound.
-  }
-  const runnerResult = getRunner();
-  if (runnerResult.kind === 'error') {
-    throw new Error('Program is not running');
-  }
-  const runner = runnerResult.value;
-
-  return runner.pauseImmediate(() => {
+export const loadImageFromURL = loadURLHandler(
+  EncapsulatedImage(createImageData(50, 50)),
+  function(runner : any, response: any) {
     const img = new Image();
-
     img.onerror = () => {
       runner.continueImmediate({
         type: 'exception',
         stack: [],
-        value: new Error(`Could not load ${url}`)
+        value: new Error(`Image could not be loaded`)
       });
     };
 
@@ -221,40 +262,19 @@ export function loadImageFromURL(url: any) {
     };
 
     img.setAttribute('crossOrigin', 'Anonymous');
-    const userEmail = localStorage.getItem('userEmail');
-    const sessionId = localStorage.getItem('sessionId');
-    if (userEmail === null || sessionId === null) {
-      runner.continueImmediate({
-        type: 'exception',
-        stack: [],
-        value: new Error(`User is not logged in`)
-      });
-    }
-    const encodedURL = encodeURIComponent(url);
-    const getUrlLink = ` https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/geturl?`
-    const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
-    console.log(queryURL);
-    fetch(queryURL).then(response => {
-      if (response.status !== 200) {
-        runner.continueImmediate({
-          type: 'exception',
-          stack: [],
-          value: new Error(`Could not load image, URL may be invalid or redirected`),
-        });
-      }
-      return response.blob();
-    }).then(blob => {
+
+    response.blob().then((blob : any) => {
       let objectURL = URL.createObjectURL(blob);
       img.src = objectURL;
-    }).catch(err => {
+    }).catch(() => {
       runner.continueImmediate({
         type: 'exception',
         stack: [],
-        value: new Error(`Could not load image`),
+        value: new Error(`Image URL could not be loaded`)
       });
     });
-  });
-}
+  }
+);
 
 export function createImage(width: number, height: number, fill: [number, number, number]) {
   if (arguments.length !== 3) {
@@ -271,3 +291,21 @@ export function createImage(width: number, height: number, fill: [number, number
 
   return img;
 }
+
+export const loadJSONFromURL = loadURLHandler(
+  {},
+  function(runner: any, response: any) {
+    response.json().then((jsonObj : any) => {
+      runner.continueImmediate({
+        type: 'normal',
+        value: jsonObj
+      });
+    }).catch(() => {
+      runner.continueImmediate({
+        type: 'exception',
+        stack: [],
+        value: new Error(`JSON file could not be loaded`)
+      });
+    });
+  }
+);
