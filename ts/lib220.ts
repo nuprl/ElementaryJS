@@ -74,6 +74,9 @@ export class DrawingCanvas {
 }
 
 export function newCanvas(w: number, h: number) {
+  if (arguments.length !== 2) {
+    throw new TypeError(`Failed to construct Node 'DrawingCanvas': 2 arguments required but ${arguments.length} given`);
+  }
   return new DrawingCanvas(w, h);
 }
 
