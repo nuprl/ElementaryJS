@@ -61,6 +61,7 @@ export class DrawingCanvas {
     canvas.setAttribute('width', this.width.toString());
     canvas.setAttribute('height', this.height.toString());
     this.ctx = canvas.getContext('2d')!;
+    canvases.appendChild(document.createElement('br'));
     canvases.appendChild(canvas);
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(0, 0, this.width, this.height);
