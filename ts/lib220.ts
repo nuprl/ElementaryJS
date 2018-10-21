@@ -1,5 +1,4 @@
 import { getRunner, stopifyArray } from './runtime';
-import { catchClause } from 'babel-types';
 
 function hexColorChannel(n: number): string {
   let v = (Math.floor(n * 255)).toString(16);
