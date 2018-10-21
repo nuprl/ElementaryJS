@@ -96,6 +96,29 @@ function testSummary(failed: number, passed: number) {
   return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
 
+test('can use getters', async () => {
+  expect.assertions(1);
+  await expect(run(`let obj = {get x() { return 42; }}; obj.x`))
+    .resolves.toBe(42);
+});
+
+test('can use setters', async () => {
+  expect.assertions(2);
+  await expect(run(`let obj = { x: 0, set y(a) { this.x = a; }}; obj.y = 42; obj.x`))
+    .resolves.toBe(42);
+
+  await expect(run(`
+  let circle = { 
+    radius: 0,
+    set area(a) {
+      this.radius = Math.sqrt(a / Math.PI);
+    }
+  };
+  circle.area = Math.PI * 16;
+  circle.radius
+  `)).resolves.toBe(4);
+});
+
 test('must declare variables', () => {
   expect(staticError(`x = 10`)).toEqual(
     expect.arrayContaining([
