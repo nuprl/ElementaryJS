@@ -1,4 +1,5 @@
 import { getRunner, stopifyArray } from './runtime';
+import { catchClause } from 'babel-types';
 
 function hexColorChannel(n: number): string {
   let v = (Math.floor(n * 255)).toString(16);
@@ -14,14 +15,43 @@ function rgbToHex(rgb: number[]): string {
   return hex;
 }
 
+function argCheck(func: string, p: any, paramTypes: string[]) {
+  try {
+    const n = paramTypes.length;
+    if (p.length !== n) {
+      throw new TypeError(`Invalid call to ${func}: ${n} arguments required but ${p.length} given`);
+    }
+    for (let i = 0; i < n; ++i) {
+      const t = typeof(p[i]);
+      if (t !== paramTypes[i]) {
+        throw new TypeError(`Invalid call to ${func}: argument ${i} expected ${paramTypes[i]} but ${t} given`);
+      }
+    }
+  } catch (e) {
+    throw new Error(`Invalid call to ${func}`);
+  }
+}
+
+function validateColor(col: any) {
+  try {
+    if (
+      col.length !== 3 ||
+      typeof(col[0]) !== 'number' ||
+      typeof(col[1]) !== 'number' ||
+      typeof(col[2]) !== 'number') {
+      throw new TypeError(`Invalid color value`);
+    }
+  } catch(e) {
+    throw new TypeError(`Invalid color value`);
+  }
+}
+
 export class DrawingCanvas {
   width: number = 1;
   height: number = 1;
   ctx: CanvasRenderingContext2D | undefined = undefined;
   constructor(w: number, h: number) {
-    if (arguments.length !== 2) {
-      throw new TypeError(`Failed to construct Node 'DrawingCanvas': 2 arguments required but ${arguments.length} given`);
-    }
+    argCheck('DrawingCanvas constructor', arguments, ['number', 'number']);
     this.width = w;
     this.height = h;
     if (typeof document === 'undefined') {
@@ -37,14 +67,10 @@ export class DrawingCanvas {
     this.ctx.fillRect(0, 0, this.width, this.height);
   }
   drawLine(x1: number, y1: number, x2: number, y2: number, col: number[]) {
+    argCheck('drawLine', arguments, ['number', 'number', 'number', 'number', 'object']);
+    validateColor(col);
     if (this.ctx === undefined) {
       return;  // for node
-    }
-    if (col.length !== 3 ||
-        typeof(col[0]) !== 'number' ||
-        typeof(col[1]) !== 'number' ||
-        typeof(col[2]) !== 'number') {
-        throw new Error(`Invalid color value`);
     }
     this.ctx.strokeStyle = rgbToHex(col);
     this.ctx.beginPath();
@@ -53,6 +79,8 @@ export class DrawingCanvas {
     this.ctx.stroke();
   }
   drawArc(x: number, y: number, r: number, a0: number, a1: number, col: number[]) {
+    argCheck('drawArc', arguments, ['number', 'number', 'number', 'number', 'number', 'object']);
+    validateColor(col);
     if (this.ctx === undefined) {
       return;  // for node
     }
@@ -62,9 +90,12 @@ export class DrawingCanvas {
     this.ctx.stroke();
   }
   drawCircle(x: number, y: number, r: number, col: number[]) {
+    argCheck('drawCircle', arguments, ['number', 'number', 'number', 'object']);
+    validateColor(col);
     this.drawArc(x, y, r, 0, 2 * Math.PI, col);
   }
   clear() {
+    argCheck('clear', arguments, []);
     if (this.ctx === undefined) {
       return;  // for node
     }
@@ -74,9 +105,7 @@ export class DrawingCanvas {
 }
 
 export function newCanvas(w: number, h: number) {
-  if (arguments.length !== 2) {
-    throw new TypeError(`Failed to construct Node 'DrawingCanvas': 2 arguments required but ${arguments.length} given`);
-  }
+  argCheck('newCanvas', arguments, ['number', 'number']);
   return new DrawingCanvas(w, h);
 }
 
@@ -280,6 +309,7 @@ export const loadImageFromURL = loadURLHandler(
 );
 
 export function createImage(width: number, height: number, fill: [number, number, number]) {
+  argCheck('createImage', arguments, ['number', 'number', 'object']);
   if (arguments.length !== 3) {
     throw new Error(`createImage expects 3 arguments, received ${arguments.length}`);
   }
