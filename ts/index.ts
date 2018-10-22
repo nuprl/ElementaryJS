@@ -56,7 +56,8 @@ class ElementaryRunner implements CompileOK {
       parseFloat: parseFloat,
       hire: hire,
       wheat1: wheat1,
-      chaff1: chaff1      
+      chaff1: chaff1,
+      JSON: JSON
     };
 
     // We can use .get and .set traps to intercept reads and writes to
