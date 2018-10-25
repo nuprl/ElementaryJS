@@ -39,6 +39,8 @@ class ElementaryRunner implements CompileOK {
   constructor(
     private runner: stopify.AsyncRun & stopify.AsyncEval,
     opts: CompilerOpts) {
+    let JSONStopfied = Object.assign({}, JSON);
+    JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
     const globals = {
       elementaryjs: runtime,
       console: Object.freeze({
@@ -57,7 +59,7 @@ class ElementaryRunner implements CompileOK {
       hire: hire,
       wheat1: wheat1,
       chaff1: chaff1,
-      JSON: JSON
+      JSON: JSONStopfied
     };
 
     // We can use .get and .set traps to intercept reads and writes to

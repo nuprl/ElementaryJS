@@ -1,4 +1,4 @@
-import { getRunner, stopifyArray } from './runtime';
+import { getRunner, stopifyArray, stopifyObjectArrayRecur } from './runtime';
 
 function hexColorChannel(n: number): string {
   let v = (Math.floor(n * 255)).toString(16);
@@ -331,7 +331,7 @@ export const loadJSONFromURL = loadURLHandler(
     response.json().then((jsonObj : any) => {
       runner.continueImmediate({
         type: 'normal',
-        value: jsonObj
+        value: stopifyObjectArrayRecur(jsonObj)
       });
     }).catch(() => {
       runner.continueImmediate({
