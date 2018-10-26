@@ -284,6 +284,35 @@ export class ElementaryTestingError extends Error {
     super(message);
   }
 }
+/**
+ * Returns the default JSON object with the parse function modified to
+ * return a 'stopified' array
+ *
+ * @returns modified JSON object
+ */
+function getStopifiedJSON() {
+  let jsonStopified = Object.assign({}, JSON);
+  jsonStopified.parse = (text: string) => stopifyObjectArrayRecur(JSON.parse(text));
+  return jsonStopified;
+}
+
+export const JSONStopified = getStopifiedJSON();
+
+/**
+ * Returns the default Object object with few functions modified to
+ * return a stopified object.
+ * 
+ * @return modified Object object
+ */
+function getStopifiedObject() {
+  let objectStopified = Object.assign({}, Object);
+  objectStopified.keys = (obj : any) => stopifyObjectArrayRecur(Object.keys(obj));
+  objectStopified.values = (obj: any) => stopifyObjectArrayRecur(Object.values(obj));
+  objectStopified.entries = (obj: any) => stopifyObjectArrayRecur(Object.entries(obj));
+  return objectStopified
+}
+
+export const ObjectStopified = getStopifiedObject();
 
 let tests: TestResult[] = [];
 
