@@ -325,6 +325,14 @@ export function createImage(width: number, height: number, fill: [number, number
   return img;
 }
 
+export function getProperty(o: any, key: string) {
+  argCheck('getProperty', arguments, ['object', 'string']);
+  if (o.hasOwnProperty(key)) {
+    return { found: true, value: o[key] };
+  }
+  return { found: false };
+}
+
 export const loadJSONFromURL = loadURLHandler(
   {},
   function(runner: any, response: any) {
