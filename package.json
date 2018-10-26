@@ -29,6 +29,7 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)test)\\.(jsx?|tsx?)$",
+    "testEnvironment": "node",
     "moduleFileExtensions": [
       "ts",
       "tsx",
