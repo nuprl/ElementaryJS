@@ -96,6 +96,22 @@ function testSummary(failed: number, passed: number) {
   return `Tests:     ${passed} passed, ${failed + passed} total`;
 }
 
+test('Safe object property getter', async () => {
+  expect.assertions(3);
+  await expect(run(`
+    let obj = { x: 42 };
+    lib220.getProperty(obj, 'x').found
+  `)).resolves.toBe(true);
+  await expect(run(`
+    let obj = { x: 42 };
+    lib220.getProperty(obj, 'x').value
+  `)).resolves.toBe(42);
+  await expect(run(`
+    let obj = { x: 42 };
+    lib220.getProperty(obj, 'y').found
+  `)).resolves.toBe(false);
+});
+
 test('must declare variables', () => {
   expect(staticError(`x = 10`)).toEqual(
     expect.arrayContaining([
