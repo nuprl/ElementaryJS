@@ -1,6 +1,6 @@
 {
   "name": "@stopify/elementary-js",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "JavaScript without sharp edges",
   "main": "dist/index.js",
   "author": [
