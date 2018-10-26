@@ -306,9 +306,9 @@ export const JSONStopified = getStopifiedJSON();
  */
 function getStopifiedObject() {
   let objectStopified = Object.assign({}, Object);
-  objectStopified.keys = (obj : any) => stopifyObjectArrayRecur(Object.keys(obj));
-  objectStopified.values = (obj: any) => stopifyObjectArrayRecur(Object.values(obj));
-  objectStopified.entries = (obj: any) => stopifyObjectArrayRecur(Object.entries(obj));
+  objectStopified.keys = (obj : any) => stopifyArray(Object.keys(obj));
+  objectStopified.values = (obj: any) => stopifyArray(Object.values(obj));
+  objectStopified.entries = (obj: any) => stopifyArray(Object.entries(obj));
   return objectStopified
 }
 
