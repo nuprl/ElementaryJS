@@ -291,7 +291,7 @@ export class ElementaryTestingError extends Error {
  * @returns modified JSON object
  */
 function getStopifiedJSON() {
-  let jsonStopified = Object.assign({}, JSON);
+  let jsonStopified = Object.create(JSON);
   jsonStopified.parse = (text: string) => stopifyObjectArrayRecur(JSON.parse(text));
   return jsonStopified;
 }
@@ -305,7 +305,7 @@ export const JSONStopified = getStopifiedJSON();
  * @return modified Object object
  */
 function getStopifiedObject() {
-  let objectStopified = Object.assign({}, Object);
+  let objectStopified = Object.create(Object);
   objectStopified.keys = (obj : any) => stopifyArray(Object.keys(obj));
   objectStopified.values = (obj: any) => stopifyArray(Object.values(obj));
   objectStopified.entries = (obj: any) => stopifyArray(Object.entries(obj));
