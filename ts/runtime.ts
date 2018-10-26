@@ -100,19 +100,19 @@ export function stopifyArray(array: any[]) {
 
 export function stopifyObjectArrayRecur(obj: any) {
   if (typeof obj !== 'object') { // if not object, just return given
-    return obj
+    return obj;
   }
   if (!Array.isArray(obj)) { // if it's not an array
-    for (let key in obj) { // go through array
+    for (let key in obj) { // go through each property of object
       if (obj.hasOwnProperty(key)) {
-        obj[key] = stopifyObjectArrayRecur(obj[key]) // stopify each field of object
+        obj[key] = stopifyObjectArrayRecur(obj[key]); // stopify each field of object
       }
     }
-    return obj // return the ojbect
+    return obj; // return the object
   }
   // if it's an array
   for (let i = 0; i < obj.length; i++) { // go through each index of array
-    obj[i] = stopifyObjectArrayRecur(obj[i]) // stopify each thing in array
+    obj[i] = stopifyObjectArrayRecur(obj[i]); // stopify each thing in array
   }
   return stopifyArray(obj); // since it's array, stopify the whole array
 }
