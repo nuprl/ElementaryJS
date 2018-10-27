@@ -1004,5 +1004,37 @@ describe('ElementaryJS Testing', () => {
       done();
     });
   });
-
 });
+
+describe('lib220 Testing', () => {
+
+  test('Safe object property getter', async () => {
+    expect.assertions(3);
+    await expect(run(`
+      let obj = { x: 42 };
+      lib220.getProperty(obj, 'x').found
+    `)).resolves.toBe(true);
+    await expect(run(`
+      let obj = { x: 42 };
+      lib220.getProperty(obj, 'x').value
+    `)).resolves.toBe(42);
+    await expect(run(`
+      let obj = { x: 42 };
+      lib220.getProperty(obj, 'y').found
+    `)).resolves.toBe(false);
+  });
+
+  test('non-browser loadJSONFromURL loads default object', async () => {
+    await expect(run(`
+      let obj = lib220.loadJSONFromURL('https://people.cs.umass.edu/~joydeepb/yelp.json');
+      obj.length;
+    `)).resolves.toBe(2);
+  });
+
+  test('non-browser loadImageFromURL loads default image', async () => {
+    await expect(run(`
+      let obj = lib220.loadImageFromURL('https://randomstuff.io/image.png');
+      obj.width;
+    `)).resolves.toBe(50);
+  });
+})

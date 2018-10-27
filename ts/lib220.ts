@@ -334,7 +334,36 @@ export function getProperty(o: any, key: string) {
 }
 
 export const loadJSONFromURL = loadURLHandler(
-  {},
+  [
+    {
+      "name": "Back-Health Chiropractic",
+      "city": "Phoenix",
+      "state": "AZ",
+      "stars": 5,
+      "review_count": 19,
+      "attributes": {
+        "AcceptsInsurance": true,
+        "ByAppointmentOnly": true,
+        "BusinessAcceptsCreditCards": true
+      },
+      "categories": [
+        "Chiropractors",
+        "Health & Medical"
+      ]
+    },
+    {
+      "name": "TRUmatch",
+      "city": "Scottsdale",
+      "state": "AZ",
+      "stars": 3,
+      "review_count": 3,
+      "attributes": {},
+      "categories": [
+        "Professional Services",
+        "Matchmakers"
+      ]
+    }
+  ],
   function(runner: any, response: any) {
     response.json().then((jsonObj : any) => {
       runner.continueImmediate({
