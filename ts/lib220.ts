@@ -27,7 +27,13 @@ function argCheck(func: string, p: any, paramTypes: string[]) {
       }
     }
   } catch (e) {
-    throw new Error(`Invalid call to ${func}`);
+    if (e.toString().includes(`Invalid call to ${func}:`)){
+      // This is one of our expected errors.
+      throw(e);
+    } else {
+      // Unknown error.
+      throw new Error(`Invalid call to ${func}: ${e}`);
+    }
   }
 }
 
