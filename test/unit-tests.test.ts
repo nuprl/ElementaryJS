@@ -1024,6 +1024,22 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(false);
   });
 
+  test('Incorrect getProperty usage', async () => {
+    expect.assertions(3);
+    await expect(dynamicError(`
+      let o = { x: 4};
+      lib220.getProperty(o)
+      `)).resolves.toContain(`2 arguments required but 1 given`);
+    await expect(dynamicError(`
+      let o = 4;
+      lib220.getProperty(o, 'x')
+      `)).resolves.toContain(`argument 0 expected object but number given`);
+    await expect(dynamicError(`
+      let o = {x: 4};
+      lib220.getProperty(o, 4)
+      `)).resolves.toContain(`argument 1 expected string but number given`);
+  });
+
   test('non-browser loadJSONFromURL loads default object', async () => {
     await expect(run(`
       let obj = lib220.loadJSONFromURL('https://people.cs.umass.edu/~joydeepb/yelp.json');
