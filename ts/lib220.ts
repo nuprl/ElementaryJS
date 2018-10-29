@@ -385,3 +385,23 @@ export const loadJSONFromURL = loadURLHandler(
     });
   }
 );
+
+/**
+ * Sleep for given milliseconds
+ *
+ * @param {number} milliseconds
+ */
+export function sleep(milliseconds: number) {
+  argCheck('sleep', arguments, ['number']);
+  if (typeof document === 'undefined') {
+    return; // does not do anything if not run on browser
+  }
+  const runnerResult = getRunner();
+  if (runnerResult.kind === 'error') {
+    throw new Error('Program is not running');
+  }
+  const runner = runnerResult.value;
+  return runner.pauseImmediate(() => {
+    window.setTimeout(() => runner.continueImmediate({ type: 'normal', value: undefined }), milliseconds);
+  });
+}
