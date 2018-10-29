@@ -385,3 +385,34 @@ export const loadJSONFromURL = loadURLHandler(
     });
   }
 );
+
+/**
+ * Prompts for user input
+ *
+ * @param {string} message
+ * @returns empty string if no input given, otherwise returns given input
+ */
+export function input(message: string) {
+  argCheck('input', arguments, ['string']);
+  if (typeof document === 'undefined') {
+    return 'user input is disabled'; // when run on gradescope
+  }
+  const runnerResult = getRunner();
+  if (runnerResult.kind === 'error') {
+    throw new Error('Program is not running');
+  }
+  const runner = runnerResult.value;
+  return runner.pauseImmediate(() => {
+    const userInput = prompt(message);
+    if (userInput === null) { // if user did not write anything/pressed cancel
+      runner.continueImmediate({
+        type: 'normal',
+        value: '' // return empty string
+      });
+    }
+    runner.continueImmediate({
+      type: 'normal',
+      value: userInput
+    })
+  });
+}
