@@ -401,8 +401,18 @@ export function sleep(milliseconds: number) {
     throw new Error('Program is not running');
   }
   const runner = runnerResult.value;
-  return runner.pauseImmediate(() => {
-    window.setTimeout(() => runner.continueImmediate({ type: 'normal', value: undefined }), milliseconds);
+  return runner.pauseImmediate((registerCancel : (handler: () => void) => void) => {
+    let timeoutID = window.setTimeout(() => runner.continueImmediate({
+       type: 'normal', value: undefined 
+    }), milliseconds);
+    registerCancel(() => { // give handler to stopify
+      window.clearTimeout(timeoutID) // clear timeout
+      runner.continueImmediate({ // hacky way to stop a mid running program
+        type: 'exception',
+        stack: [],
+        value: new Error(`Program stopped while sleeping`) // not exactly an error
+      });
+    });
   });
 }
 
