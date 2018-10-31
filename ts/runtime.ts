@@ -39,11 +39,14 @@ class ArrayStub {
 
 export { ArrayStub as Array };
 
-export function checkIfBoolean(value: any) {
+export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
   if (typeof(value) === 'boolean') {
     return value;
   }
-  throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
+  if (typeof operator === 'undefined') { // undefined is for the if statement
+    throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
+  }
+  throw new ElementaryRuntimeError(`arguments of operator '${operator}' must both be booleans`);
 }
 
 export function arrayBoundsCheck(object: any, index: string) {

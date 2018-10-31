@@ -762,17 +762,17 @@ test('logical operators short-circuit', async () => {
   await expect(run(`true || 123`)).resolves.toBe(true);
   await expect(run(`false || true`)).resolves.toBe(true);
   await expect(dynamicError(`false || doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
-  await expect(dynamicError(`false || 123`)).resolves.toMatch(`expected a boolean expression, instead received '123'`);
-  await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`expected a boolean expression, instead received 'as'`);
-  await expect(dynamicError(`0 || false`)).resolves.toMatch(`expected a boolean expression, instead received '0'`);  
+  await expect(dynamicError(`false || 123`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`0 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);  
 
   await expect(run(`false && doesNotExists()`)).resolves.toBe(false);
   await expect(run(`false && 123`)).resolves.toBe(false);
   await expect(run(`false && true`)).resolves.toBe(false);
   await expect(dynamicError(`true && doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
-  await expect(dynamicError(`true && 123`)).resolves.toMatch(`expected a boolean expression, instead received '123'`);
-  await expect(dynamicError(`true && 'as'`)).resolves.toMatch(`expected a boolean expression, instead received 'as'`);
-  await expect(dynamicError(`1 && false`)).resolves.toMatch(`expected a boolean expression, instead received '1'`);
+  await expect(dynamicError(`true && 123`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(dynamicError(`true && 'as'`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(dynamicError(`1 && false`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
 
   await expect(run(`
     function returnTrue() {
