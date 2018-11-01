@@ -278,17 +278,31 @@ let tests: TestResult[] = [];
 
 let testsEnabled = false;
 
-let stopifyRunner: stopify.AsyncRun | undefined = undefined;
+export type EncapsulatedRunner = {
+  runner: stopify.AsyncRun | undefined,
+  isRunning: boolean,
+  onStopped: () => void
+};
 
-export function getRunner(): { kind: 'ok', value: stopify.AsyncRun } | { kind: 'error' }  {
-  if (stopifyRunner === undefined) {
+let stopifyRunner: EncapsulatedRunner = {
+  runner: undefined,
+  isRunning: false,
+  onStopped: () => {}
+};
+
+export function getRunner(): { kind: 'ok', value: EncapsulatedRunner } | { kind: 'error' }  {
+  if (stopifyRunner.runner === undefined) {
     return { kind: 'error' };
   }
   return { kind: 'ok', value: stopifyRunner };
 }
 
 export function setRunner(runner: stopify.AsyncRun) {
-  stopifyRunner = runner;
+  stopifyRunner = {
+    runner: runner,
+    isRunning: false,
+    onStopped: () => {}
+  };
 }
 
 let timeoutMilli: number = 5000;
@@ -334,7 +348,7 @@ export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
   }
-  const runner = stopifyRunner!;
+  const runner = stopifyRunner.runner!;
   // NOTE(arjun): Using Stopify internals
   const runtime = (runner as any).continuationsRTS;
   const suspend = (runner as any).suspendRTS;
