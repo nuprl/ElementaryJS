@@ -1,4 +1,4 @@
-import { getRunner, stopifyArray, stopifyObjectArrayRecur } from './runtime';
+import { getRunner, stopifyArray, stopifyObjectArrayRecur, EncapsulatedRunner } from './runtime';
 
 function hexColorChannel(n: number): string {
   let v = (Math.floor(n * 255)).toString(16);
@@ -229,7 +229,7 @@ function EncapsulatedImage(imageData: any) {
  * @param {(runner: any, response: any, ...args: any[]) => void} loadFunction - the function that loads the correct file format
  * (Must have runner.continueImmediate)
  */
-function loadURLHandler(defaultOutput: any, loadFunction: (runner: any, response: any) => any) {
+function loadURLHandler(defaultOutput: any, loadFunction: (runner: EncapsulatedRunner, response: any) => any) {
   return function(url: any) {
     if (typeof document === 'undefined') {
       return defaultOutput;
@@ -238,37 +238,49 @@ function loadURLHandler(defaultOutput: any, loadFunction: (runner: any, response
     if (runnerResult.kind === 'error') {
       throw new Error('Program is not running');
     }
-    const runner = runnerResult.value;
+    const runner = runnerResult.value.runner!;
     return runner.pauseImmediate(() => {
       const userEmail = localStorage.getItem('userEmail');
       const sessionId = localStorage.getItem('sessionId');
       if (userEmail === null || sessionId === null) {
-        runner.continueImmediate({
-          type: 'exception',
-          stack: [],
-          value: new Error(`User is not logged in`)
-        });
+        if (runnerResult.value.isRunning) {
+          runner.continueImmediate({
+            type: 'exception',
+            stack: [],
+            value: new Error(`User is not logged in`)
+          });
+        } else {
+          runnerResult.value.onStopped();
+        }
       }
       const encodedURL = encodeURIComponent(url);
       const getUrlLink = ` https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/geturl?`
       const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
       fetch(queryURL).then(response => {
         if (response.status !== 200) {
-          runner.continueImmediate({
-            type: 'exception',
-            stack: [],
-            value: new Error(`Could not load from URL, URL may be invalid or redirected`),
-          });
+          if (runnerResult.value.isRunning) {
+            runner.continueImmediate({
+              type: 'exception',
+              stack: [],
+              value: new Error(`Could not load from URL, URL may be invalid or redirected`),
+            });
+          } else {
+            runnerResult.value.onStopped();
+          }
         }
         return response;
       }).then(response => {
-        loadFunction(runner, response);
+        loadFunction(runnerResult.value, response);
       }).catch(err => {
-        runner.continueImmediate({
-          type: 'exception',
-          stack: [],
-          value: new Error(`Could not load from URL`),
-        });
+        if (runnerResult.value.isRunning) {
+          runner.continueImmediate({
+            type: 'exception',
+            stack: [],
+            value: new Error(`Could not load from URL`),
+          });
+        } else {
+          runnerResult.value.onStopped();
+        }
       });
     });
   };
@@ -276,14 +288,19 @@ function loadURLHandler(defaultOutput: any, loadFunction: (runner: any, response
 
 export const loadImageFromURL = loadURLHandler(
   EncapsulatedImage(createImageData(50, 50)),
-  function(runner : any, response: any) {
+  function(runner : EncapsulatedRunner, response: any) {
+    const stopifyRunner = runner.runner!;
     const img = new Image();
     img.onerror = () => {
-      runner.continueImmediate({
-        type: 'exception',
-        stack: [],
-        value: new Error(`Image could not be loaded`)
-      });
+      if (runner.isRunning) {
+        stopifyRunner.continueImmediate({
+          type: 'exception',
+          stack: [],
+          value: new Error(`Image could not be loaded`)
+        });
+      } else {
+        runner.onStopped();
+      }
     };
 
     img.onload = () => {
@@ -293,10 +310,14 @@ export const loadImageFromURL = loadURLHandler(
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, img.width, img.height);
-      runner.continueImmediate({
-        type: 'normal',
-        value: EncapsulatedImage(imageData)
-      });
+      if (runner.isRunning) {
+        stopifyRunner.continueImmediate({
+          type: 'normal',
+          value: EncapsulatedImage(imageData)
+        });
+      } else {
+        runner.onStopped();
+      }
     };
 
     img.setAttribute('crossOrigin', 'Anonymous');
@@ -305,11 +326,15 @@ export const loadImageFromURL = loadURLHandler(
       let objectURL = URL.createObjectURL(blob);
       img.src = objectURL;
     }).catch(() => {
-      runner.continueImmediate({
-        type: 'exception',
-        stack: [],
-        value: new Error(`Image URL could not be loaded`)
-      });
+      if (runner.isRunning) {
+        stopifyRunner.continueImmediate({
+          type: 'exception',
+          stack: [],
+          value: new Error(`Image URL could not be loaded`)
+        });
+      } else {
+        stopifyRunner.pause(()=>{});
+      }
     });
   }
 );
@@ -401,8 +426,15 @@ export function sleep(milliseconds: number) {
     throw new Error('Program is not running');
   }
   const runner = runnerResult.value;
-  return runner.pauseImmediate(() => {
-    window.setTimeout(() => runner.continueImmediate({ type: 'normal', value: undefined }), milliseconds);
+  const stopifyRunner= runner.runner!;
+  return stopifyRunner.pauseImmediate(() => {
+    window.setTimeout(() => {
+      if (runner.isRunning) {
+        stopifyRunner.continueImmediate({ type: 'normal', value: undefined })
+      } else {
+        runner.onStopped();
+      }
+    }, milliseconds);
   });
 }
 
@@ -422,18 +454,27 @@ export function input(message: string) {
     throw new Error('Program is not running');
   }
   const runner = runnerResult.value;
-  return runner.pauseImmediate(() => {
+  const stopifyRunner= runner.runner!;
+  return stopifyRunner.pauseImmediate(() => {
     const userInput = prompt(message);
     if (userInput === null) { // if user did not write anything/pressed cancel
-      runner.continueImmediate({
-        type: 'normal',
-        value: '' // return empty string
-      });
+      if (runner.isRunning) {
+        stopifyRunner.continueImmediate({
+          type: 'normal',
+          value: '' // return empty string
+        });
+      } else {
+        runner.onStopped();
+      }
     }
-    runner.continueImmediate({
-      type: 'normal',
-      value: userInput
-    })
+    if (runner.isRunning) {
+      stopifyRunner.continueImmediate({
+        type: 'normal',
+        value: userInput
+      });
+    } else {
+      runner.onStopped();
+    }
   });
 }
 

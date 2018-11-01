@@ -88,7 +88,15 @@ class ElementaryRunner implements CompileOK {
   }
 
   run(onDone: (result: Result) => void) {
-    this.runner.run(onDone);
+    const eRunner = runtime.getRunner();
+    if (eRunner.kind !== 'ok') {
+      throw('Invalid runner in run');
+    }
+    eRunner.value.isRunning = true;
+    this.runner.run((result) => {
+      eRunner.value.isRunning = false;
+      onDone(result);
+    });
   }
 
   eval(code: string, onDone: (result: Result) => void) {
@@ -108,7 +116,15 @@ class ElementaryRunner implements CompileOK {
   }
 
   stop(onStopped: () => void) {
-    this.runner.pause((line) => onStopped());
+    const eRunner = runtime.getRunner();
+    if (eRunner.kind !== 'ok') {
+      throw('Invalid runner in stop');
+    }
+    eRunner.value.isRunning = false;
+    eRunner.value.onStopped = onStopped;
+    this.runner.pause((line) => {
+      onStopped();
+    });
   }
 
 }
