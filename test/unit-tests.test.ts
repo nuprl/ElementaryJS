@@ -757,14 +757,29 @@ test('for statement must have three parts present', async () => {
   `)).resolves.toBe(3);
 });
 
-test('Only booleans for logical operators', async  () => {
-  await expect(dynamicError(`1 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
-  await expect(dynamicError(`false || ''`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
-  await expect(dynamicError(`false || 1`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+test('logical operators short-circuit', async () => {
+  await expect(run(`true || doesNotExists()`)).resolves.toBe(true);
+  await expect(run(`true || 123`)).resolves.toBe(true);
+  await expect(run(`false || true`)).resolves.toBe(true);
+  await expect(dynamicError(`false || doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
+  await expect(dynamicError(`false || 123`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+  await expect(dynamicError(`0 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);  
+
+  await expect(run(`false && doesNotExists()`)).resolves.toBe(false);
+  await expect(run(`false && 123`)).resolves.toBe(false);
+  await expect(run(`false && true`)).resolves.toBe(false);
+  await expect(dynamicError(`true && doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
+  await expect(dynamicError(`true && 123`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+  await expect(dynamicError(`true && 'as'`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
   await expect(dynamicError(`1 && false`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
-  await expect(dynamicError(`false && ''`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
-  await expect(dynamicError(`false && 1`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
-  await expect(run(`true || false`)).resolves.toBe(true);
+
+  await expect(run(`
+    function returnTrue() {
+      return true;
+    }
+    !(returnTrue() || doesNotExists()) && doesNotExists();
+  `)).resolves.toBe(false);
 });
 
 test('ElementaryJS statically reports const violations', () => {

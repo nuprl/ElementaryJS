@@ -39,11 +39,14 @@ class ArrayStub {
 
 export { ArrayStub as Array };
 
-export function checkIfBoolean(value: any) {
+export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
   if (typeof(value) === 'boolean') {
     return value;
   }
-  throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
+  if (typeof operator === 'undefined') { // undefined is for the if statement
+    throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
+  }
+  throw new ElementaryRuntimeError(`arguments of operator '${operator}' must both be booleans`);
 }
 
 export function arrayBoundsCheck(object: any, index: string) {
@@ -199,20 +202,6 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
     default: {
       elementaryJSBug(`applyNumOrStringOp '${op}'`);
     }
-  }
-}
-export function applyBinaryBooleanOp(op: string, lhs: any, rhs: any) {
-  if (typeof lhs !== 'boolean' || typeof rhs !== 'boolean') {
-    throw new ElementaryRuntimeError(`arguments of operator '${op}' must both be booleans`);
-  }
-  switch (op) {
-    case '&&':
-      return (lhs && rhs);
-    case '||':
-      return (lhs || rhs);
-    default:
-      elementaryJSBug(`applyBinaryBooleanOp '${op}'`);
-      return false;
   }
 }
 export function applyNumOp(op: string, lhs: any, rhs: any) {

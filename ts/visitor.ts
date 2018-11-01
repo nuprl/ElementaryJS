@@ -357,14 +357,11 @@ export const visitor = {
   },
   LogicalExpression: { // logical expressions only has && and || as operators
     exit(path: NodePath<t.LogicalExpression>, st: S) {
-      let op = path.node.operator;
-      let opName = t.stringLiteral(op);
-      path.replaceWith(dynCheck(
-        'applyBinaryBooleanOp',
-        path.node.loc,
-        opName,
-        path.node.left,
-        path.node.right, 
+      const operatorString = t.stringLiteral(path.node.operator);
+      path.replaceWith(t.logicalExpression(
+        path.node.operator,
+        dynCheck('checkIfBoolean', path.node.left.loc, path.node.left, operatorString),
+        dynCheck('checkIfBoolean', path.node.right.loc, path.node.right, operatorString)
       ));
       path.skip();
     }
