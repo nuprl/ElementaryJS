@@ -97,7 +97,7 @@ export function stopifyArray(array: any[]) {
     throw elementaryJSBug(`Stopify not loaded`);
   }
   // A very undocumented interface!
-  return (maybeRunner.value as any).higherOrderFunctions.stopifyArray(array);
+  return (maybeRunner.value.runner as any).higherOrderFunctions.stopifyArray(array);
 
 }
 
