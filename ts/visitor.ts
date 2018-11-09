@@ -237,10 +237,11 @@ export const visitor = {
       if (prop.type === 'ObjectProperty') {
         if (prop.key.type !== 'Identifier') {
           st.elem.error(path,
-            `Object member name must be a literal.`);
+            `Object member name must be an indentifier.`);
         } else {
           propertyNames.has(prop.key.name) ? st.elem.error(path,
-            `Object member name may only be used once.`) : propertyNames.add(prop.key.name);
+            `Object member name may only be used once; ${prop.key.name}.`) :
+            propertyNames.add(prop.key.name);
         }
       }
     }

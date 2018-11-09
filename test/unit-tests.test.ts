@@ -394,21 +394,21 @@ test('can use pre-update operator with numbers', async () => {
   await expect(run(code)).resolves.toBe(11);
 });
 
-test('cannot have non-literal object members', () => {
+test('cannot have literal object member names', () => {
   expect(staticError(`let myObj = { 0: 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be a literal.`
+      `Object member name must be an indentifier.`
     ]));
   expect(staticError(`let myObj = { 'Foo': 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be a literal.`
+      `Object member name must be an indentifier.`
     ]));
 });
 
 test('cannot have duplicate names in object literals', () => {
   expect(staticError(`let myObj = { a: true, a: false };`)).toEqual(
     expect.arrayContaining([
-      `Object member name may only be used once.`
+      `Object member name may only be used once; a.`
     ]));
 });
 
