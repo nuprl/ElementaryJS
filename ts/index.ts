@@ -11,6 +11,7 @@ export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
 import { wheat1, chaff1, hire} from './oracle';
+import * as interpreter from '@stopify/project-interpreter';
 
 function getGlobal(): any {
   if (typeof window !== 'undefined') {
@@ -59,7 +60,10 @@ class ElementaryRunner implements CompileOK {
       hire: hire,
       wheat1: wheat1,
       chaff1: chaff1,
-      JSON: JSONStopfied
+      JSON: JSONStopfied,
+      parser: Object.freeze({
+        parse: interpreter.parseAndTypecheck
+      })
     };
 
     // We can use .get and .set traps to intercept reads and writes to

@@ -22,7 +22,7 @@
  *     // path.skip() to avoid checking generated code.
  *   }
  * }
- * 
+ *
  */
 
 import * as t from 'babel-types';
@@ -193,7 +193,7 @@ export const visitor = {
       const body = functionBody(path.node);
       const id = path.node.id;
       const expected = t.numericLiteral(path.node.params.length);
-      const actual = t.memberExpression(t.identifier('arguments'), 
+      const actual = t.memberExpression(t.identifier('arguments'),
         t.identifier('length'), false);
       const name = t.stringLiteral(id ? id.name : '(anonymous)');
       body.unshift(t.expressionStatement(
@@ -231,12 +231,17 @@ export const visitor = {
     }
   },
   ObjectExpression(path: NodePath<t.ObjectExpression>, st: S) {
+    const propertyNames = new Set();
     for (let i = 0; i < path.node.properties.length; ++i) {
       const prop = path.node.properties[i];
       if (prop.type === 'ObjectProperty') {
         if (prop.key.type !== 'Identifier') {
-          st.elem.error(path, 
-            `Object member name must be a literal.`);
+          st.elem.error(path,
+            `Object member name must be an indentifier.`);
+        } else {
+          propertyNames.has(prop.key.name) ? st.elem.error(path,
+            `Object member name may only be used once; ${prop.key.name}.`) :
+            propertyNames.add(prop.key.name);
         }
       }
     }
@@ -281,7 +286,7 @@ export const visitor = {
       const { operator: op, left, right } = path.node;
       if (left.type === 'Identifier') {
         if (path.scope.hasBinding(left.name) === false) {
-          st.elem.error(path, 
+          st.elem.error(path,
             `You must declare variable '${left.name}' before assigning a value to it.`);
           path.skip();
           return;
@@ -463,8 +468,8 @@ export const visitor = {
     if (path.node.init === null) {
       st.elem.error(path, `for statement variable initialization must be present`);
     }
-    if (path.node.init !== null && 
-      !t.isAssignmentExpression(path.node.init) && 
+    if (path.node.init !== null &&
+      !t.isAssignmentExpression(path.node.init) &&
       !t.isVariableDeclaration(path.node.init)) {
       st.elem.error(path, `for statement variable initialization must be an assignment or a variable declaration`);
     }

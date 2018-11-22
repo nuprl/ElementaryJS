@@ -364,6 +364,14 @@ export function getProperty(o: any, key: string) {
   return { found: false };
 }
 
+export function setProperty(o: any, key: string, value: any) {
+  if (arguments.length !== 3) {
+    throw new Error(`setProperty expects 3 arguments, received ${arguments.length}`);
+  }
+  argCheck('setProperty', [o, key], ['object', 'string']);
+  o[key] = value;
+}
+
 export const loadJSONFromURL = loadURLHandler(
   [
     {

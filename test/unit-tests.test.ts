@@ -199,7 +199,7 @@ test('function can return undef if not required', async () => {
   await expect(run(code)).resolves.toBe(undefined);
 });
 
-test('updateexpression must not duplicate computation', async () => {
+test('update expression must not duplicate computation', async () => {
   expect.assertions(3);
   let code = `
     let x = [ { y: 2 }, { y: 3 }];
@@ -232,7 +232,7 @@ test('accessing member of string', async () => {
   await  expect(run(code)).resolves.toBe(4);
 });
 
-test('acessing members of anonymous objects', async () => {
+test('accessing members of anonymous objects', async () => {
   expect.assertions(3);
   await expect(dynamicError(`[].x`))
     .resolves.toMatch(`object does not have member 'x'`);
@@ -394,14 +394,21 @@ test('can use pre-update operator with numbers', async () => {
   await expect(run(code)).resolves.toBe(11);
 });
 
-test('cannot have non-literal object members', () => {
+test('cannot have literal object member names', () => {
   expect(staticError(`let myObj = { 0: 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be a literal.`
+      `Object member name must be an indentifier.`
     ]));
   expect(staticError(`let myObj = { 'Foo': 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be a literal.`
+      `Object member name must be an indentifier.`
+    ]));
+});
+
+test('cannot have duplicate names in object literals', () => {
+  expect(staticError(`let myObj = { a: true, a: false };`)).toEqual(
+    expect.arrayContaining([
+      `Object member name may only be used once; a.`
     ]));
 });
 
@@ -530,7 +537,7 @@ test('call a builtin method', async () => {
 
 test('gigantic test case', async () => {
   await expect(run(`
-      // Fibonacci sequence, where fibonacci(0) = 0, 
+      // Fibonacci sequence, where fibonacci(0) = 0,
       function fibonacci(n) {
         if ( (n % 1) !== 0) {
           console.error('n must be an integer!');
@@ -567,8 +574,8 @@ test('Can set fields of this in a constructor',  (done) => {
 test('Dynamic checks when settings fields of other objects in constructor', async () => {
   expect.assertions(1);
   await expect(dynamicError(`
-    class C { 
-      constructor(o) { 
+    class C {
+      constructor(o) {
         o.x = 5;
       }
     }
@@ -578,8 +585,8 @@ test('Dynamic checks when settings fields of other objects in constructor', asyn
 test('Dynamic check for this.x = y in function nested in constructor', async () => {
   expect.assertions(1);
   await expect(dynamicError(`
-    class C { 
-      constructor() { 
+    class C {
+      constructor() {
         (function() { this.x = 5; })();
       }
     }
@@ -620,11 +627,11 @@ test('Classes test', async () => {
         return "rectangle";
       }
       properties() {
-        return "width:" + this.width.toString() + 
+        return "width:" + this.width.toString() +
           ", height:" + this.height.toString();
       }
     };
-    
+
     class Circle {
       constructor(r) {
         if (r === undefined) {
@@ -642,14 +649,14 @@ test('Classes test', async () => {
         return "radius:" + this.radius.toString();
       }
     };
-    
+
     let shapes = [
       new Rectangle(2, 3),
       new Circle(1),
     ];
     shapes.forEach(function(s) {
-      console.log("Area of " + s.name() + 
-        " with " + s.properties() + 
+      console.log("Area of " + s.name() +
+        " with " + s.properties() +
         " = " + s.area().toString());
     });`)).resolves.toBeUndefined();
 });
@@ -666,8 +673,8 @@ test('if else must be BlockStatement', async () => {
     ]));
     await expect(run(`let i = 0; if (true) { ++i}; i;`)).resolves.toBe(1);
   await expect(run(`
-    let i = 0; 
-    if (false) { 
+    let i = 0;
+    if (false) {
       ++i
     } else {
       i += 2;
@@ -764,7 +771,7 @@ test('logical operators short-circuit', async () => {
   await expect(dynamicError(`false || doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
   await expect(dynamicError(`false || 123`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
   await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
-  await expect(dynamicError(`0 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);  
+  await expect(dynamicError(`0 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
 
   await expect(run(`false && doesNotExists()`)).resolves.toBe(false);
   await expect(run(`false && 123`)).resolves.toBe(false);
@@ -780,15 +787,6 @@ test('logical operators short-circuit', async () => {
     }
     !(returnTrue() || doesNotExists()) && doesNotExists();
   `)).resolves.toBe(false);
-});
-
-test('ElementaryJS statically reports const violations', () => {
-  expect(staticError(`
-    const x = 1;
-    x = 2;
-  `)).toEqual(expect.arrayContaining([
-    `variable is 'const'`
-  ]));
 });
 
 test('ElementaryJS statically reports const violations', () => {
@@ -824,7 +822,7 @@ test('Overwriting globals cause runtime error', async () => {
   await expect(dynamicError(`let version = 1`)).resolves.toMatch(`version is part of the global library, and cannot be overwritten.`);
   await expect(dynamicError(`let elementaryjs = 1`)).resolves.toMatch(`elementaryjs is part of the global library, and cannot be overwritten.`);
   await expect(dynamicError(`let undefined = 1`)).resolves.toMatch(`undefined is part of the global library, and cannot be overwritten.`);
-  // Array, Object and Math cannot be overwrriten and does not throw dynamic error.
+  // Array, Object and Math cannot be overwritten and does not throw dynamic error.
   await expect(run(`function rewrite() { let test = 1; return test } rewrite();`)).resolves.toBe(1);
 });
 
@@ -854,7 +852,7 @@ describe('ElementaryJS Testing', () => {
       testSummary(1, 0)
     ].join('\n'));
   });
-  
+
   test(`test can break out of an infinite loop and run next test`, async () => {
     runtime.enableTests(true, 2000);
     await expect(run(`
@@ -863,7 +861,7 @@ describe('ElementaryJS Testing', () => {
       });
       test('succeeds', function() {
       });
-  
+
       `))
       .resolves.toBe(undefined);
     expect(runtime.summary(false).output).toBe([
@@ -872,7 +870,7 @@ describe('ElementaryJS Testing', () => {
       testSummary(1, 1)
     ].join('\n'));
   }, 3000);
-  
+
   test('test with higher order functions with infinite loop', async () => {
     runtime.enableTests(true, 3000); // time out of 3 seconds
     expect(await run(`
@@ -915,7 +913,7 @@ describe('ElementaryJS Testing', () => {
       testSummary(1, 0),
     ].join('\n'));
   }, 4000); // should take no more than 4 seconds
-  
+
   test('No tests', () => {
     expect(runtime.summary(false).output).toBe([
       `◈ You don't seem to have any tests written`,
