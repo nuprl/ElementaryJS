@@ -62,7 +62,8 @@ class ElementaryRunner implements CompileOK {
       chaff1: chaff1,
       JSON: JSONStopfied,
       parser: Object.freeze({
-        parse: interpreter.parseAndTypecheck
+        parseProgram: interpreter.parseProgram,
+        parseExpression: interpreter.parseExpression
       })
     };
 

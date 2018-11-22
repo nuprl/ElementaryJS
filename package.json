@@ -55,6 +55,6 @@
     "babel-plugin-transform-es2015-classes": "^6.24.1",
     "babel-types": "^6.26.0",
     "stopify": "0.5.3-elementaryJS",
-    "@stopify/project-interpreter": "1.0.0"
+    "@stopify/project-interpreter": "1.1.0"
   }
 }
