@@ -66,12 +66,8 @@ class ElementaryRunner implements CompileOK {
         parseExpression: interpreter.parseExpression
       }),
       geometry: Object.freeze({
-        Point: function(x: number, y: number) {
-          return new lib220.Point(x, y); 
-        },
-        Line: function(p1: lib220.Point, p2: lib220.Point) {
-          return new lib220.Line(p1, p2); 
-        },
+        Point: lib220.newPoint,
+        Line: lib220.newLine,
         intersects: lib220.intersects
       })
     };
