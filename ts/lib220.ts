@@ -71,6 +71,31 @@ export class Line {
   }
 }
 
+function checkIfPoint(p: any) {
+  if (typeof(p) !== 'object' || 
+      typeof(p.x) !== 'number' || 
+      typeof(p.y) !== 'number') {
+    throw new TypeError(`Invalid Point`);
+  }
+}
+
+function checkIfLine(l: any) {
+  checkIfPoint(l.p1);
+  checkIfPoint(l.p2);
+}
+
+export function newPoint(x: number, y: number) {
+  argCheck('Point constructor', arguments, ['number', 'number']);
+  return new Point(x, y);
+}
+
+export function newLine(p1: Point, p2: Point) {
+  argCheck('Line constructor', arguments, ['object', 'object']);
+  checkIfPoint(p1);
+  checkIfPoint(p2);
+  return new Line(p1, p2);
+}
+
 function perp(l: Line) {
   return new Point(l.p1.y - l.p2.y, l.p2.x - l.p1.x);
 }
@@ -85,6 +110,8 @@ function minus(p1: Point, p2: Point) {
 
 export function intersects(l1: Line, l2: Line) {
   argCheck('intersects', arguments, ['object', 'object']);
+  checkIfLine(l1);
+  checkIfLine(l2);
   let n1 = perp(l1);
   let n2 = perp(l2);
   let intersects1 = dot(n1, minus(l2.p1, l1.p1)) * dot(n1, minus(l2.p2, l1.p1)) < 0;
