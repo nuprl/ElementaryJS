@@ -51,6 +51,47 @@ function validateColor(col: any) {
   }
 }
 
+export class Point {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    argCheck('Point constructor', arguments, ['number', 'number']);
+    this.x = x;
+    this.y = y;
+  }
+};
+
+export class Line {
+  p1: Point;
+  p2: Point;
+  constructor(p1: Point, p2: Point) {
+    argCheck('Line constructor', arguments, ['object', 'object']);
+    this.p1 = p1;
+    this.p2 = p2;
+  }
+}
+
+function perp(l: Line) {
+  return new Point(l.p1.y - l.p2.y, l.p2.x - l.p1.x);
+}
+
+function dot(p1: Point, p2: Point) {
+  return p1.x * p2.x + p1.y * p2.y;
+}
+
+function minus(p1: Point, p2: Point) {
+  return new Point(p1.x - p2.x, p1.y - p2.y);
+}
+
+export function intersects(l1: Line, l2: Line) {
+  argCheck('intersects', arguments, ['object', 'object']);
+  let n1 = perp(l1);
+  let n2 = perp(l2);
+  let intersects1 = dot(n1, minus(l2.p1, l1.p1)) * dot(n1, minus(l2.p2, l1.p1)) < 0;
+  let intersects2 = dot(n2, minus(l1.p1, l2.p1)) * dot(n2, minus(l1.p2, l2.p1)) < 0;
+  return intersects1 && intersects2;
+}
+
 export class DrawingCanvas {
   width: number = 1;
   height: number = 1;
@@ -99,6 +140,17 @@ export class DrawingCanvas {
     argCheck('drawCircle', arguments, ['number', 'number', 'number', 'object']);
     validateColor(col);
     this.drawArc(x, y, r, 0, 2 * Math.PI, col);
+  }
+  drawFilledCircle(x: number, y: number, r: number, col: number[]) {
+    argCheck('drawCircle', arguments, ['number', 'number', 'number', 'object']);
+    validateColor(col);
+    if (this.ctx === undefined) {
+      return;  // for node
+    }
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+    this.ctx.fillStyle = rgbToHex(col);
+    this.ctx.fill();
   }
   clear() {
     argCheck('clear', arguments, []);
