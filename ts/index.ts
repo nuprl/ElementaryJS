@@ -62,8 +62,8 @@ class ElementaryRunner implements CompileOK {
       chaff1: chaff1,
       JSON: JSONStopfied,
       parser: Object.freeze({
-        parseProgram: interpreter.parseProgram,
-        parseExpression: interpreter.parseExpression
+        parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseProgram(input)),
+        parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseExpression(input))
       }),
       geometry: Object.freeze({
         Point: lib220.newPoint,
