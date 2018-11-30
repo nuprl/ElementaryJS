@@ -16,9 +16,9 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-"@stopify/project-interpreter@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@stopify/project-interpreter/-/project-interpreter-1.1.0.tgz#ff54865f72878d9845bf7d70a55fbbfa82fa00a5"
+"@stopify/project-interpreter@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@stopify/project-interpreter/-/project-interpreter-1.1.2.tgz#b63941883d8bf29ceefd3ffdbf9522105500c1d4"
   dependencies:
     immutable "^4.0.0-rc.12"
     parsimmon "^1.12.0"
