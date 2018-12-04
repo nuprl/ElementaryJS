@@ -114,8 +114,8 @@ export function intersects(l1: Line, l2: Line) {
   checkIfLine(l2);
   let n1 = perp(l1);
   let n2 = perp(l2);
-  let intersects1 = dot(n1, minus(l2.p1, l1.p1)) * dot(n1, minus(l2.p2, l1.p1)) < 0;
-  let intersects2 = dot(n2, minus(l1.p1, l2.p1)) * dot(n2, minus(l1.p2, l2.p1)) < 0;
+  let intersects1 = dot(n1, minus(l2.p1, l1.p1)) * dot(n1, minus(l2.p2, l1.p1)) <= 0;
+  let intersects2 = dot(n2, minus(l1.p1, l2.p1)) * dot(n2, minus(l1.p2, l2.p1)) <= 0;
   return intersects1 && intersects2;
 }
 
