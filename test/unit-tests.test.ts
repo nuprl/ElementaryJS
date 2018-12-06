@@ -1066,4 +1066,40 @@ describe('lib220 Testing', () => {
       obj.width;
     `)).resolves.toBe(50);
   });
+
+  test('Intersects: Lines overlapping, share point', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(0, 0);
+      let p2 = new geometry.Point(0, 5);
+      let p3 = new geometry.Point(0, 5);
+      let p4 = new geometry.Point(6, 6);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Lines overlapping, colinear', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(0, 0);
+      let p2 = new geometry.Point(0, 5);
+      let p3 = new geometry.Point(0, 4);
+      let p4 = new geometry.Point(0, 6);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Lines overlapping', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(0, 0);
+      let p2 = new geometry.Point(0, 5);
+      let p3 = new geometry.Point(0, 5);
+      let p4 = new geometry.Point(0, 6);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
 })

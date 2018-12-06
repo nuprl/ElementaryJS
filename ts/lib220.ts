@@ -108,15 +108,61 @@ function minus(p1: Point, p2: Point) {
   return new Point(p1.x - p2.x, p1.y - p2.y);
 }
 
+function distance(p1: Point, p2: Point) {
+  return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+}
+
+function pointOnLine(p: Point, line: Line) {
+  let d = distance(line.p1, line.p2);
+  if (d > 0) {
+    let projection = dot(p, minus(line.p1, line.p2))/d;
+    return projection >= 0 && projection <= 1;
+  } else {
+    return p.x === line.p1.x && p.y === line.p2.y;
+  }
+}
+
 export function intersects(l1: Line, l2: Line) {
   argCheck('intersects', arguments, ['object', 'object']);
   checkIfLine(l1);
   checkIfLine(l2);
   let n1 = perp(l1);
   let n2 = perp(l2);
-  let intersects1 = dot(n1, minus(l2.p1, l1.p1)) * dot(n1, minus(l2.p2, l1.p1)) <= 0;
-  let intersects2 = dot(n2, minus(l1.p1, l2.p1)) * dot(n2, minus(l1.p2, l2.p1)) <= 0;
-  return intersects1 && intersects2;
+  let d1 = dot(n1, minus(l2.p1, l1.p1));
+  let d2 = dot(n1, minus(l2.p2, l1.p1))
+
+  let d3 = dot(n2, minus(l1.p1, l2.p1));
+  let d4 = dot(n2, minus(l1.p2, l2.p1));
+
+  let num_zeros = 0;
+  if (d1 === 0) {
+    num_zeros += 1;
+  }
+  if (d2 === 0) {
+    num_zeros += 1;
+  }
+
+  if (d3 === 0) {
+    num_zeros += 1;
+  }
+
+  if (d4 === 0) {
+    num_zeros += 1;
+  }
+
+  if (num_zeros === 0) {
+    // Lines do not overlap and are not colinear
+    let intersects1 = d1 * d2 < 0;
+    let intersects2 = d3 * d4 < 0;
+    return intersects1 && intersects2;
+  } else if (num_zeros === 2) {
+    // Lines share a point
+    return true;
+  } else {
+    // Lines are colinear, check if the line segments overlap
+    return pointOnLine(l1.p1, l2) || pointOnLine(l1.p2, l2) || 
+           pointOnLine(l2.p1, l1) || pointOnLine(l2.p2, l1);
+  }
 }
 
 export class DrawingCanvas {
