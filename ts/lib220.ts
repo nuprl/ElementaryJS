@@ -116,7 +116,7 @@ function pointOnLine(p: Point, line: Line) {
   let d = distance(line.p1, line.p2);
   if (d > 0) {
     let projection = dot(minus(p, line.p2), minus(line.p1, line.p2))/d;
-    return projection >= 0 && projection <= 1;
+    return projection >= 0 && projection <= d;
   } else {
     return p.x === line.p1.x && p.y === line.p2.y;
   }
