@@ -122,7 +122,18 @@ class ElementaryRunner implements CompileOK {
       });
       return;
     }
-    this.runner.evalAsyncFromAst(elementary.ast, onDone);
+    const eRunner = runtime.getRunner();
+    if (eRunner.kind !== 'ok') {
+      throw('Invalid runner in run');
+    }
+    eRunner.value.isRunning = true;
+    this.runner.evalAsyncFromAst(
+      elementary.ast,
+      (result) => {
+        eRunner.value.isRunning = false;
+        onDone(result);
+      }
+    );
   }
 
   stop(onStopped: () => void) {
