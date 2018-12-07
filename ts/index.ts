@@ -11,7 +11,7 @@ export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
 import { wheat1, chaff1, hire} from './oracle';
-import * as interpreter from '@stopify/project-interpreter';
+// import * as interpreter from '@stopify/project-interpreter';
 
 function getGlobal(): any {
   if (typeof window !== 'undefined') {
@@ -61,10 +61,10 @@ class ElementaryRunner implements CompileOK {
       wheat1: wheat1,
       chaff1: chaff1,
       JSON: JSONStopfied,
-      parser: Object.freeze({
-        parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseProgram(input)),
-        parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseExpression(input))
-      }),
+      //parser: Object.freeze({
+      //  parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseProgram//(input)),
+//        parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseExpression(input))
+//      }),
       geometry: Object.freeze({
         Point: lib220.newPoint,
         Line: lib220.newLine,
