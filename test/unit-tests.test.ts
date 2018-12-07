@@ -1067,6 +1067,12 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(50);
   });
 
+  test('Parser should work', async () => {
+    await expect(run(`
+      parser.parseProgram('let x = 1; let y = x * 2;').kind;
+    `)).resolves.toBe('ok');
+  });
+
   test('Intersects: Lines overlapping, share point', async () => {
     await expect(run(`
       let p1 = new geometry.Point(0, 0);
