@@ -1102,4 +1102,77 @@ describe('lib220 Testing', () => {
       geometry.intersects(l1, l2)
     `)).resolves.toBe(true);
   });
+  
+  test('Intersects: Collinear nonintersecting lines', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(0, 0);
+      let p2 = new geometry.Point(2, 3);
+      let p3 = new geometry.Point(4, 6);
+      let p4 = new geometry.Point(6, 9);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Equal lines', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(1, 1);
+      let p2 = new geometry.Point(2, 2);
+      let p3 = new geometry.Point(1, 1);
+      let p4 = new geometry.Point(2, 2);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: parallel but not intersecting lines', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(1, 1);
+      let p2 = new geometry.Point(2, 2);
+      let p3 = new geometry.Point(2, 1);
+      let p4 = new geometry.Point(3, 2);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Intersecting, not overlapping', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 0);
+      let p2 = new geometry.Point(5, 10);
+      let p3 = new geometry.Point(0, 5);
+      let p4 = new geometry.Point(10, 5);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Not intersection, not parallel or colinear', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 0);
+      let p2 = new geometry.Point(5, 10);
+      let p3 = new geometry.Point(50, 50);
+      let p4 = new geometry.Point(60, 60);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Overlapping lines', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(-1, -1);
+      let p2 = new geometry.Point(1, 1);
+      let p3 = new geometry.Point(-2, -2);
+      let p4 = new geometry.Point(3, 3);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
 })
