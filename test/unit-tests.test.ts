@@ -1167,6 +1167,16 @@ describe('lib220 Testing', () => {
       let l2 = new geometry.Line(p3, p4);
       geometry.intersects(l1, l2)
     `)).resolves.toBe(false);
+
+    await expect(run(`
+      let p1 = new geometry.Point(0, 0);
+      let p2 = new geometry.Point(0, 5);
+      let p3 = new geometry.Point(1, 1);
+      let p4 = new geometry.Point(3, 3);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
   });
 
   test('Intersects: Overlapping lines', async () => {

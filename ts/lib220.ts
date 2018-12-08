@@ -150,7 +150,7 @@ export function intersects(l1: Line, l2: Line) {
     num_zeros += 1;
   }
 
-  if (num_zeros === 0) {
+  if (num_zeros <= 1) {
     // Lines do not overlap and are not colinear
     let intersects1 = d1 * d2 < 0;
     let intersects2 = d3 * d4 < 0;
