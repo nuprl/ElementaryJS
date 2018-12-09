@@ -1203,6 +1203,20 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(false);
   });
 
+  test('Intersects: Line One as point, no collision take 2', async () => {
+    await expect(run(`
+      let l1 = new geometry.Line(
+        new geometry.Point(10, 10),
+        new geometry.Point(10, 10)
+      );
+      let l2 = new geometry.Line(
+        new geometry.Point(30, 4),
+        new geometry.Point(30, 10)
+      );
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
   test('Intersects: Line Two as point, no collision', async () => {
     await expect(run(`
       let p1 = new geometry.Point(10, 10);
