@@ -1277,7 +1277,7 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(true);
   });
 
-  test('Intersects: Line as point, shared vertex collision', async () => {
+  test('Intersects: Line as point, shared vertex no collision', async () => {
     await expect(run(`
       let p1 = new geometry.Point(5, 5);
       let p2 = new geometry.Point(5, 5);
@@ -1286,7 +1286,7 @@ describe('lib220 Testing', () => {
       let l1 = new geometry.Line(p1, p2);
       let l2 = new geometry.Line(p3, p4);
       geometry.intersects(l1, l2)
-    `)).resolves.toBe(true);
+    `)).resolves.toBe(false);
   });
 
 })
