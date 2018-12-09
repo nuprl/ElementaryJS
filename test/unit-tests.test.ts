@@ -1191,4 +1191,88 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(true);
   });
 
+  test('Intersects: Line One as point, no collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 5);
+      let p2 = new geometry.Point(5, 5);
+      let p3 = new geometry.Point(10, 10);
+      let p4 = new geometry.Point(15, 10);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Line Two as point, no collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(10, 10);
+      let p2 = new geometry.Point(15, 10);
+      let p3 = new geometry.Point(5, 5);
+      let p4 = new geometry.Point(5, 5);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Both lines as point, no collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 5);
+      let p2 = new geometry.Point(5, 5);
+      let p3 = new geometry.Point(10, 10);
+      let p4 = new geometry.Point(10, 10);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(false);
+  });
+
+  test('Intersects: Line One as point, has collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 5);
+      let p2 = new geometry.Point(5, 5);
+      let p3 = new geometry.Point(5, 0);
+      let p4 = new geometry.Point(5, 10);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Line Two as point, has collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 0);
+      let p2 = new geometry.Point(5, 10);
+      let p3 = new geometry.Point(5, 5);
+      let p4 = new geometry.Point(5, 5);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Both lines as point, has collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 5);
+      let p2 = new geometry.Point(5, 5);
+      let p3 = new geometry.Point(5, 5);
+      let p4 = new geometry.Point(5, 5);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
+  test('Intersects: Line as point, shared vertex collision', async () => {
+    await expect(run(`
+      let p1 = new geometry.Point(5, 5);
+      let p2 = new geometry.Point(5, 5);
+      let p3 = new geometry.Point(5, 5);
+      let p4 = new geometry.Point(5, 12);
+      let l1 = new geometry.Line(p1, p2);
+      let l2 = new geometry.Line(p3, p4);
+      geometry.intersects(l1, l2)
+    `)).resolves.toBe(true);
+  });
+
 })
