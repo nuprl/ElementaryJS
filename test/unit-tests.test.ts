@@ -1106,7 +1106,7 @@ describe('lib220 Testing', () => {
       let l1 = new geometry.Line(p1, p2);
       let l2 = new geometry.Line(p3, p4);
       geometry.intersects(l1, l2)
-    `)).resolves.toBe(true);
+    `)).resolves.toBe(false);
   });
   
   test('Intersects: Collinear nonintersecting lines', async () => {

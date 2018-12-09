@@ -115,8 +115,11 @@ function distance(p1: Point, p2: Point) {
 function pointOnLine(p: Point, line: Line) {
   let d = distance(line.p1, line.p2);
   if (d > 0) {
-    let projection = dot(minus(p, line.p2), minus(line.p1, line.p2))/d;
-    return projection > 0 && projection < d;
+    let dir = minus(line.p1, line.p2);
+    let perp = new Point(dir.y, -dir.x);
+    let projection = dot(minus(p, line.p2), dir)/d;
+    let collinear = dot(minus(p, line.p2), perp) === 0;
+    return collinear && projection > 0 && projection < d;
   } else {
     return p.x === line.p1.x && p.y === line.p2.y;
   }
