@@ -126,6 +126,13 @@ export function intersects(l1: Line, l2: Line) {
   argCheck('intersects', arguments, ['object', 'object']);
   checkIfLine(l1);
   checkIfLine(l2);
+
+  if (distance(l1.p1, l1.p2) === 0) {
+    return pointOnLine(l1.p1, l2);
+  } else if (distance(l2.p1, l2.p2) === 0) {
+    return pointOnLine(l2.p1, l1);
+  }
+
   let n1 = perp(l1);
   let n2 = perp(l2);
   let d1 = dot(n1, minus(l2.p1, l1.p1));
