@@ -834,6 +834,17 @@ test('parseFloat is available', async () => {
   await expect(run(`parseFloat("3.14159")`)).resolves.toBe(3.14159);
 });
 
+test('Disallow arrow functions', async () => {
+  await expect(staticError('const s = () => 1; s()')).toEqual(
+    expect.arrayContaining([
+      `Do not use arrow functions.`
+  ]));
+  await expect(staticError('(() => 1)()')).toEqual(
+    expect.arrayContaining([
+      `Do not use arrow functions.`
+  ]));
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
