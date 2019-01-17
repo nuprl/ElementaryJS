@@ -561,7 +561,12 @@ export const visitor = {
   },
   ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
     st.elem.error(path, `Do not use for-in loops.`);
-  }
+  },
+  ArrowFunctionExpression(path: NodePath<t.ArrowFunctionExpression>, st: S) {
+    st.elem.error(path, `Do not use arrow functions.`);
+    path.skip();
+    return;
+  },
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
