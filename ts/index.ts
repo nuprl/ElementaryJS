@@ -54,6 +54,7 @@ class ElementaryRunner implements CompileOK {
       Array: runtime.Array,
       Math: Math,
       undefined: undefined,
+      Infinity: Infinity,
       Object: Object, // Needed for classes
       parseInt: parseInt,
       parseFloat: parseFloat,
