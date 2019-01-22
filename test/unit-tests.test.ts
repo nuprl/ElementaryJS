@@ -1289,4 +1289,20 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(false);
   });
 
-})
+});
+
+
+test('Infinity', async () => {
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [1, 5, 3, 0, -1].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(5);
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(-Infinity);
+});
