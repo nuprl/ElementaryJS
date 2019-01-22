@@ -397,11 +397,11 @@ test('can use pre-update operator with numbers', async () => {
 test('cannot have literal object member names', () => {
   expect(staticError(`let myObj = { 0: 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be an indentifier.`
+      `Object member name must be an identifier.`
     ]));
   expect(staticError(`let myObj = { 'Foo': 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be an indentifier.`
+      `Object member name must be an identifier.`
     ]));
 });
 
