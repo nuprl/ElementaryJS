@@ -237,7 +237,7 @@ export const visitor = {
       if (prop.type === 'ObjectProperty') {
         if (prop.key.type !== 'Identifier') {
           st.elem.error(path,
-            `Object member name must be an indentifier.`);
+            `Object member name must be an identifier.`);
         } else {
           propertyNames.has(prop.key.name) ? st.elem.error(path,
             `Object member name may only be used once; ${prop.key.name}.`) :

@@ -397,11 +397,11 @@ test('can use pre-update operator with numbers', async () => {
 test('cannot have literal object member names', () => {
   expect(staticError(`let myObj = { 0: 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be an indentifier.`
+      `Object member name must be an identifier.`
     ]));
   expect(staticError(`let myObj = { 'Foo': 0 };`)).toEqual(
     expect.arrayContaining([
-      `Object member name must be an indentifier.`
+      `Object member name must be an identifier.`
     ]));
 });
 
@@ -1300,4 +1300,20 @@ describe('lib220 Testing', () => {
     `)).resolves.toBe(false);
   });
 
-})
+});
+
+
+test('Infinity', async () => {
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [1, 5, 3, 0, -1].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(5);
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(-Infinity);
+});
