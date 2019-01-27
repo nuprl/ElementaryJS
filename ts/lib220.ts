@@ -191,7 +191,8 @@ export class DrawingCanvas {
     canvas.setAttribute('width', this.width.toString());
     canvas.setAttribute('height', this.height.toString());
     this.ctx = canvas.getContext('2d')!;
-    canvases.appendChild(document.createElement('br'));
+    canvas.style.paddingBottom = '5px';
+    canvas.style.display = 'block';
     canvases.appendChild(canvas);
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(0, 0, this.width, this.height);
@@ -327,7 +328,8 @@ function EncapsulatedImage(imageData: any) {
       canvas.setAttribute('height', h);
       const ctx = canvas.getContext('2d')!;
       ctx.putImageData(imageData, 0, 0);
-      canvases.appendChild(document.createElement('br'));
+      canvas.style.display = 'block';
+      canvas.style.paddingBottom = '5px';
       canvases.appendChild(canvas);
     },
     setPixel: function(x: any, y: any, c: any) {
