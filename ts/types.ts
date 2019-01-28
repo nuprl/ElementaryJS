@@ -10,7 +10,7 @@ export type CompileError = {
   errors: ElementarySyntaxError[]
 }
 
-export  type Result =
+export type Result =
    {type: 'normal', value: any }
  | { type: 'exception', value: any, stack: string[] }
 
@@ -32,5 +32,6 @@ export type TestResult = {
 
 export type CompilerOpts = {
   consoleLog: (message: string) => void,
-  version: () => void
+  version: () => void,
+  requireWhiteList: string
 }
