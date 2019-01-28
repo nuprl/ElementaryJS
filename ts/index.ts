@@ -70,7 +70,15 @@ class ElementaryRunner implements CompileOK {
         Point: lib220.newPoint,
         Line: lib220.newLine,
         intersects: lib220.intersects
-      })
+      }),
+      require: (lib: string): void => {
+        /*
+          - At this point the 'lib' should map to a module,
+              so we don't want to make any network request or file reads.
+          - Grab it from opts.Whitelist.
+          - Load it; how do we do this?
+        */
+      }
     };
 
     // We can use .get and .set traps to intercept reads and writes to
