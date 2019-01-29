@@ -33,5 +33,5 @@ export type TestResult = {
 export type CompilerOpts = {
   consoleLog: (message: string) => void,
   version: () => void,
-  requireWhiteList: string
+  requireWhiteList?: string
 }
