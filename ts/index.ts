@@ -12,20 +12,12 @@ import * as runtime from './runtime';
 import * as lib220 from './lib220';
 import { wheat1, chaff1, hire} from './oracle';
 import * as interpreter from '@stopify/project-interpreter';
-
-function getGlobal(): any {
-  if (typeof window !== 'undefined') {
-    return window;
-  }
-  else {
-    return global;
-  }
-}
+import * as whiteList from './whitelist';//This will be the default list that can be overriden in opts
 
 // TODO(arjun): I think these hacks are necessary for eval to work. We either
 // do them here or we do them within the implementation of Stopify. I want
 // them here for now until I'm certain there isn't a cleaner way.
-const theGlobal = getGlobal();
+const theGlobal: any = (typeof window !== 'undefined') ? window : global;
 theGlobal.elementaryJS = runtime;
 theGlobal.stopify = stopify;
 
@@ -219,6 +211,18 @@ function applyElementaryJS(
       errors: [ { line, message } ]
     };
   }
+}
+
+function whiteListToCode(): void {
+  /*
+    Iterate through the list of module names,
+      for each associted URL,
+      grab the code (from fs or from net).
+    Write to a new file (or update) the list of modules,
+      st they now map to code.
+
+    This will rely heavily on async code, so assuming we'll leverage async/await.
+  */
 }
 
 export function compile(
