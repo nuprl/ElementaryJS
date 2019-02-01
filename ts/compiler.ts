@@ -2,20 +2,36 @@ import * as ejs from './index'
 import * as fs from 'fs'
 import * as version from './version'
 
-if (process.argv.length < 1) {
-  console.error('Usage: ejs input.js [output.js]');
+if (process.argv.length < 3) {
+  console.error('Usage: node compiler.js input.js');
   process.exit(1);
 }
-const input = process.argv[0],
-      output = process.argv[1];
+const input = process.argv[2];
 
 try {
   const code = fs.readFileSync(input);
   const opts = {
     consoleLog: (str: string) => { console.log(str); },
-    version: () => { console.log(version.EJSVERSION); }
+    version: () => { console.log(version.EJSVERSION); },
+    jsonPathOrWhiteList: {
+      myModule: `{
+        method1: function() {
+          return 'hi';
+        },
+        property1: 3
+      }`
+    }
   };
   const result = ejs.compile(code.toString(), opts);
+  if (result.kind === 'error') {
+    throw result.errors;
+  }
+  result.run((result) => {
+    if (result.type === 'exception') {
+      throw result.stack;
+    }
+    console.log(result.value);
+  });
 } catch(e) {
-  console.error(`Error compiling ${input} :` + e.toString);
+  console.error(`Error compiling ${input}`, e);
 }
