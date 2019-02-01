@@ -5,7 +5,8 @@ import * as stopify from 'stopify';
 const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
-  version: () => console.log('No version')
+  version: () => console.log('No version'),
+  jsonPathOrWhiteList: {}
 };
 
 // Helps write test cases that expect the program to terminate normally.
@@ -1119,7 +1120,7 @@ describe('lib220 Testing', () => {
       geometry.intersects(l1, l2)
     `)).resolves.toBe(false);
   });
-  
+
   test('Intersects: Collinear nonintersecting lines', async () => {
     await expect(run(`
       let p1 = new geometry.Point(0, 0);
