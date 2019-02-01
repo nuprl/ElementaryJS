@@ -5,14 +5,14 @@ import * as babel from 'babel-core';
 import { Node, Program } from 'babel-types';
 import * as babylon from 'babylon';
 import * as visitor from './visitor';
-import { CompileOK, CompileError, CompilerOpts, Result } from './types';
+import { CompileOK, CompileError, CompilerOpts, Result, ElementaryRunnerOpts } from './types';
 import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
-import { wheat1, chaff1, hire} from './oracle';
+import { wheat1, chaff1, hire } from './oracle';
 import * as interpreter from '@stopify/project-interpreter';
-import * as whiteList from './whitelist';//This will be the default list that can be overriden in opts
+import * as fs from 'fs';
 
 // TODO(arjun): I think these hacks are necessary for eval to work. We either
 // do them here or we do them within the implementation of Stopify. I want
@@ -28,16 +28,27 @@ const transformClasses = require('babel-plugin-transform-es2015-classes');
 class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
   public kind: 'ok' = 'ok';
+  private codeMap : { [key: string]: any };
 
   constructor(
     private runner: stopify.AsyncRun & stopify.AsyncEval,
-    opts: CompilerOpts) {
+    opts: ElementaryRunnerOpts) {
+
+    this.codeMap = {};
+    const whitelistCode = opts.requireWhiteList,
+          moduleNames = Object.keys(whitelistCode);
+     moduleNames.forEach((moduleName) => {
+      this.codeMap[moduleName] = Function(`'use strict';
+                                           return (${whitelistCode[moduleName]});`)();
+    });
+
     let JSONStopfied = Object.assign({}, JSON);
     JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
+
     const globals = {
       elementaryjs: runtime,
       console: Object.freeze({
-          log: (message: string) => opts.consoleLog(message)
+        log: (message: string) => opts.consoleLog(message)
       }),
       test: runtime.test,
       assert: runtime.assert,
@@ -63,13 +74,8 @@ class ElementaryRunner implements CompileOK {
         Line: lib220.newLine,
         intersects: lib220.intersects
       }),
-      require: (lib: string): void => {
-        /*
-          - At this point the 'lib' should map to a module,
-              so we don't want to make any network request or file reads.
-          - Grab it from opts.Whitelist.
-          - Load it; how do we do this?
-        */
+      require: (lib: string): any => {
+        return this.codeMap[lib];
       }
     };
 
@@ -213,18 +219,6 @@ function applyElementaryJS(
   }
 }
 
-function whiteListToCode(): void {
-  /*
-    Iterate through the list of module names,
-      for each associted URL,
-      grab the code (from fs or from net).
-    Write to a new file (or update) the list of modules,
-      st they now map to code.
-
-    This will rely heavily on async code, so assuming we'll leverage async/await.
-  */
-}
-
 export function compile(
   code: string | Node,
   opts: CompilerOpts): CompileOK | CompileError {
@@ -244,5 +238,24 @@ export function compile(
     };
   }
 
-  return new ElementaryRunner(stopified, opts);
+  let whitelistCode;
+  if (typeof opts.jsonPathOrWhiteList === 'string') { // if is file path
+    const fileMap = JSON.parse(String(fs.readFileSync(opts.jsonPathOrWhiteList))),
+          moduleNames = Object.keys(fileMap),
+          moduleCodeString = Object.create({});
+
+    moduleNames.forEach((moduleName) => {
+      moduleCodeString[moduleName] = String(fs.readFileSync(fileMap[moduleName]));
+    });
+    whitelistCode = moduleCodeString;
+  } else {
+    whitelistCode  = opts.jsonPathOrWhiteList;
+  }
+
+  let elementaryOps: ElementaryRunnerOpts= {
+    consoleLog: opts.consoleLog,
+    version: opts.version,
+    requireWhiteList: whitelistCode
+  }
+  return new ElementaryRunner(stopified, elementaryOps);
 }
