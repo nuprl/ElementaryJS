@@ -36,9 +36,10 @@ type CommonOpts = {
 }
 
 export type CompilerOpts = {
-  jsonPathOrWhiteList: string | { [key: string]: any }
+  jsonPath?: string
+  whiteList?: { [key: string]: string }
 } & CommonOpts
 
 export type ElementaryRunnerOpts = {
-  requireWhiteList: { [key: string]: any }
+  requireWhiteList: { [key: string]: string }
 } & CommonOpts

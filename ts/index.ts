@@ -238,8 +238,8 @@ export function compile(
   }
 
   let whitelistCode;
-  if (typeof opts.jsonPathOrWhiteList === 'string') { // if is file path
-    const fileMap = JSON.parse(String(fs.readFileSync(opts.jsonPathOrWhiteList))),
+  if (opts.jsonPath) {
+    const fileMap = JSON.parse(String(fs.readFileSync(opts.jsonPath))),
           moduleNames = Object.keys(fileMap),
           moduleCodeString = Object.create({});
 
@@ -248,7 +248,7 @@ export function compile(
     });
     whitelistCode = moduleCodeString;
   } else {
-    whitelistCode  = opts.jsonPathOrWhiteList;
+    whitelistCode = opts.whiteList;
   }
 
   let elementaryOps: ElementaryRunnerOpts = {
