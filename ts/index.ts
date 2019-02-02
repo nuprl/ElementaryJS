@@ -38,8 +38,7 @@ class ElementaryRunner implements CompileOK {
     const whitelistCode = opts.requireWhiteList,
           moduleNames = Object.keys(whitelistCode);
      moduleNames.forEach((moduleName) => {
-      this.codeMap[moduleName] = Function(`'use strict';
-                                           return (${whitelistCode[moduleName]});`)();
+      this.codeMap[moduleName] = eval(`(${whitelistCode[moduleName]})`);
     });
 
     let JSONStopfied = Object.assign({}, JSON);
@@ -252,7 +251,7 @@ export function compile(
     whitelistCode  = opts.jsonPathOrWhiteList;
   }
 
-  let elementaryOps: ElementaryRunnerOpts= {
+  let elementaryOps: ElementaryRunnerOpts = {
     consoleLog: opts.consoleLog,
     version: opts.version,
     requireWhiteList: whitelistCode
