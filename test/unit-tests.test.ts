@@ -117,10 +117,37 @@ test('cannot use var', () => {
     ]));
 });
 
-test('cannot use switch', () => {
-  expect(staticError(`switch (5) { case 5: }`)).toEqual(
+test('no switch case fall-through', () => {
+  //Empty case.
+  expect(staticError(`let x = 1;
+    switch (x) {case 1: case 2: break; default: x += 2;}`
+  )).toEqual(
     expect.arrayContaining([
-      expect.stringMatching(`Do not use the 'switch' statement.`)
+      expect.stringMatching(`No case fall-through.`),
+    ]));
+  //Case w/o break.
+  expect(staticError(`let x = 1;
+    switch (x) {case 1: x = 3; case 2: break; default: x += 2;}`
+  )).toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(`No case fall-through.`),
+    ]));
+});
+
+test('require default switch case', () => {
+  //No default.
+  expect(staticError(`let x = 1;
+    switch (x) {case 1: break; case 2: break;}`
+  )).toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(`Must end with non-empty 'default' case.`),
+    ]));
+  //Empty default.
+  expect(staticError(`let x = 1;
+    switch (x) {case 1: break; case 2: break; default:}`
+  )).toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(`Must end with non-empty 'default' case.`),
     ]));
 });
 
@@ -1119,7 +1146,7 @@ describe('lib220 Testing', () => {
       geometry.intersects(l1, l2)
     `)).resolves.toBe(false);
   });
-  
+
   test('Intersects: Collinear nonintersecting lines', async () => {
     await expect(run(`
       let p1 = new geometry.Point(0, 0);

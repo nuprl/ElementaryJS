@@ -544,14 +544,24 @@ export const visitor = {
       }
     }
   },
+  SwitchStatement(path: NodePath<t.SwitchStatement>, st: S) {
+    const cases = path.node.cases;
+    for (var i = 0; i < cases.length - 1; i++) {
+      if(cases[i].consequent.length === 0 ||
+         cases[i].consequent[cases[i].consequent.length - 1].type !== 'BreakStatement') {
+        st.elem.error(path, `No case fall-through.`);
+      }
+    }
+
+    if(cases[i].test || cases[i].consequent.length === 0) {
+      st.elem.error(path, `Must end with non-empty 'default' case.`);
+    }
+  },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
   WithStatement(path: NodePath<t.WithStatement>, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
-  },
-  SwitchStatement(path: NodePath<t.SwitchStatement>, st: S) {
-    st.elem.error(path, `Do not use the 'switch' statement.`);
   },
   LabeledStatement(path: NodePath<t.LabeledStatement>, st: S) {
     st.elem.error(path, `Do not use labels to alter control-flow`);
