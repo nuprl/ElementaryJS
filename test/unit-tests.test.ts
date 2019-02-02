@@ -6,7 +6,7 @@ const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
   version: () => console.log('No version'),
-  jsonPathOrWhiteList: {}
+  whiteList: {}
 };
 
 // Helps write test cases that expect the program to terminate normally.
