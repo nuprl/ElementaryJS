@@ -30,16 +30,8 @@ export type TestResult = {
   error?: string
 };
 
-type CommonOpts = {
+export type CompilerOpts = {
   consoleLog: (message: string) => void,
   version: () => void,
+  whitelistCode?: { [key: string]: string }
 }
-
-export type CompilerOpts = {
-  jsonPath?: string
-  whiteList?: { [key: string]: string }
-} & CommonOpts
-
-export type ElementaryRunnerOpts = {
-  requireWhiteList: { [key: string]: string }
-} & CommonOpts
