@@ -5,7 +5,7 @@ import * as babel from 'babel-core';
 import { Node, Program } from 'babel-types';
 import * as babylon from 'babylon';
 import * as visitor from './visitor';
-import { CompileOK, CompileError, CompilerOpts, Result, ElementaryRunnerOpts } from './types';
+import { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
@@ -32,16 +32,17 @@ class ElementaryRunner implements CompileOK {
 
   constructor(
     private runner: stopify.AsyncRun & stopify.AsyncEval,
-    opts: ElementaryRunnerOpts) {
+    opts: CompilerOpts) {
 
     this.codeMap = {};
-    const whitelistCode = opts.requireWhiteList,
-          moduleNames = Object.keys(whitelistCode);
-     moduleNames.forEach((moduleName) => {
-      this.codeMap[moduleName] = eval(`(${whitelistCode[moduleName]})`);
-    });
+    const whitelistCode = opts.whitelistCode;
+    if (whitelistCode) {
+      Object.keys(whitelistCode).forEach((moduleName) => {
+        this.codeMap[moduleName] = eval(`(${whitelistCode[moduleName]})`);
+      });
+    }
 
-    let JSONStopfied = Object.assign({}, JSON);
+    const JSONStopfied = Object.assign({}, JSON);
     JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
 
     const globals = {
@@ -237,24 +238,5 @@ export function compile(
     };
   }
 
-  let whitelistCode;
-  if (opts.jsonPath) {
-    const fileMap = JSON.parse(String(fs.readFileSync(opts.jsonPath))),
-          moduleNames = Object.keys(fileMap),
-          moduleCodeString = Object.create({});
-
-    moduleNames.forEach((moduleName) => {
-      moduleCodeString[moduleName] = String(fs.readFileSync(fileMap[moduleName]));
-    });
-    whitelistCode = moduleCodeString;
-  } else {
-    whitelistCode = opts.whiteList;
-  }
-
-  let elementaryOps: ElementaryRunnerOpts = {
-    consoleLog: opts.consoleLog,
-    version: opts.version,
-    requireWhiteList: whitelistCode
-  }
-  return new ElementaryRunner(stopified, elementaryOps);
+  return new ElementaryRunner(stopified, opts);
 }

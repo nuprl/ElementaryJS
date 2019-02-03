@@ -5,8 +5,7 @@ import * as stopify from 'stopify';
 const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
-  version: () => console.log('No version'),
-  whiteList: {}
+  version: () => console.log('No version')
 };
 
 // Helps write test cases that expect the program to terminate normally.

@@ -13,7 +13,7 @@ try {
         opts = {
           consoleLog: (str: string) => { console.log(str); },
           version: () => { console.log(version.EJSVERSION); },
-          whiteList: {
+          whitelistCode: {
             myModule: `{
               method1: function() {
                 return 'hi';
