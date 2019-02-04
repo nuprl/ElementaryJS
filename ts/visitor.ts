@@ -157,6 +157,18 @@ function lvalIds(lval: t.LVal): t.Identifier[]  {
   }
 }
 
+function isBreak(stmt: t.Statement[]): boolean {
+  const finalStmt = stmt[stmt.length - 1];
+
+  if(finalStmt.type === 'BlockStatement') {
+    return isBreak(finalStmt.body);
+  } else if (finalStmt.type === 'BreakStatement') {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
@@ -546,15 +558,17 @@ export const visitor = {
   },
   SwitchStatement(path: NodePath<t.SwitchStatement>, st: S) {
     const cases = path.node.cases;
-    for (var i = 0; i < cases.length - 1; i++) {
-      if(cases[i].consequent.length === 0 ||
-         cases[i].consequent[cases[i].consequent.length - 1].type !== 'BreakStatement') {
-        st.elem.error(path, `No case fall-through.`);
-      }
-    }
 
-    if(cases[i].test || cases[i].consequent.length === 0) {
-      st.elem.error(path, `Must end with non-empty 'default' case.`);
+    for (let i = 0; i < cases.length; i++) {
+      if (!cases[i].test && i !== cases.length - 1) {
+        st.elem.error(path, `If a 'default' is present, then it must be last.`);
+      } else if (cases[i].consequent.length === 0) {
+        st.elem.error(path, `A case may not be empty.`);
+      } else if (cases[i].test &&
+                 cases[i].consequent[cases[i].consequent.length - 1].type !== 'BreakStatement' ||
+                 !isBreak(cases[i].consequent)) {
+        st.elem.error(path, `A case must terminate with a 'break;'.`);
+      }
     }
   },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
