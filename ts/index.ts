@@ -75,7 +75,10 @@ class ElementaryRunner implements CompileOK {
         intersects: lib220.intersects
       }),
       require: (lib: string): any => {
-        return this.codeMap[lib];
+        if (this.codeMap[lib]) {
+          return this.codeMap[lib];
+        }
+        throw new runtime.ElementaryRuntimeError(`'${lib}' not found.`);
       }
     };
 
