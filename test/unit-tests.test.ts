@@ -5,7 +5,21 @@ import * as stopify from 'stopify';
 const compileOpts = {
   isOnline: true,
   consoleLog: (message) => console.log(message),
-  version: () => console.log('No version')
+  version: () => console.log('No version'),
+  whitelistCode: {
+    myModule: `{
+      method1: function() {
+        return 'hi';
+      },
+      property1: 3
+    }`,
+    mySecondModule: `{
+      method2: function() {
+        return 7;
+      },
+      property2: ['1', '2', '3']
+    }`
+  }
 };
 
 // Helps write test cases that expect the program to terminate normally.
@@ -185,12 +199,77 @@ test('can assign array members', async () => {
     .resolves.toBe(52);
 });
 
+test('basic successful require', async () => {
+  expect.assertions(1);
+  await expect(run(`require('myModule');`))
+    .resolves.toEqual({
+      method1: expect.any(Function),
+      property1: 3
+    });
+});
+
+test('basic faulty require', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`require('myModule1');`))
+    .resolves.toMatch(`'myModule1' not found.`);
+});
+
+test('require same module over', async (done) => {
+  expect.assertions(3);
+  const runner = compileOK(`let o = require('myModule'), p = require('myModule');
+    o = require('myModule');`);
+  runner.run(result => {
+    expect(result.type).toBe('normal');
+    expect(runner.g.o).toEqual({
+      method1: expect.any(Function),
+      property1: 3
+    });
+    expect(runner.g.p).toEqual({
+      method1: expect.any(Function),
+      property1: 3
+    })
+    done();
+  });
+});
+
+test('access contents of require', async () => {
+  expect.assertions(2);
+  await expect(run(`const o = require('myModule'); o.property1;`))
+    .resolves.toBe(3);
+  await expect(run(`const o = require('myModule'); o.method1();`))
+    .resolves.toBe('hi');
+});
+
+test('error for undefined accessor of require', async () => {
+  expect.assertions(1);
+  await expect(dynamicError(`const o = require('myModule'); o.p;`))
+    .resolves.toMatch(`object does not have member 'p'`);
+});
+
+test('change require', async () => {
+  expect.assertions(1);
+  await expect(run(`let o = require('myModule'); o = require('mySecondModule');`))
+    .resolves.toEqual({
+      method2: expect.any(Function),
+      property2: ['1', '2', '3']
+    });
+});
+
+test('require after code', async () => {
+  expect.assertions(1);
+  await expect(run(`let o = 2 + 2; o = require('mySecondModule');`))
+    .resolves.toEqual({
+      method2: expect.any(Function),
+      property2: ['1', '2', '3']
+    });
+});
+
 test('can update array members', async () => {
   await expect(run(`let obj = [10]; ++obj[0]`))
     .resolves.toBe(11);
 });
 
-test('function can return undef if not required', async () => {
+test('function can return undefined if not required', async () => {
   expect.assertions(1);
   let code = `
     function foo() {};
