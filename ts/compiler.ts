@@ -13,14 +13,7 @@ try {
         opts = {
           consoleLog: (str: string) => { console.log(str); },
           version: () => { console.log(version.EJSVERSION); },
-          whitelistCode: {
-            myModule: `{
-              method1: function() {
-                return 'hi';
-              },
-              property1: 3
-            }`
-          }
+          whitelistCode: {}
         },
         compilerResult = ejs.compile(code.toString(), opts);
 
