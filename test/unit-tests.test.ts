@@ -131,13 +131,6 @@ test('cannot use var', () => {
     ]));
 });
 
-test('cannot use switch', () => {
-  expect(staticError(`switch (5) { case 5: }`)).toEqual(
-    expect.arrayContaining([
-      expect.stringMatching(`Do not use the 'switch' statement.`)
-    ]));
-});
-
 test('can dynamically change types', async () => {
   expect.assertions(2);
   await expect(run(`let x = "foo"; x = 42`)).resolves.toBe(42);
@@ -762,47 +755,6 @@ test('if else must be BlockStatement', async () => {
   `)).resolves.toBe(2);
 });
 
-test('continue statement must not have label', async () => {
-  expect(staticError(`
-  loop:
-  for (let i = 0; i < 10; ++i) {
-    continue loop;
-  }
-  `)).toEqual(expect.arrayContaining([
-    `continue statement must not have label`
-  ]));
-  await expect(run(`
-  let k = 0;
-  for (let i = 0; i < 10; ++i) {
-    if (i >= 5) {
-      continue;
-    }
-    k += 1;
-  }
-  k
-  `)).resolves.toBe(5);
-});
-
-test('break statement must not have label', async () => {
-  expect(staticError(`
-  loop:
-  for (let i = 0; i < 10; ++i) {
-    break loop;
-  }
-  `)).toEqual(expect.arrayContaining([
-    `break statement must not have label`
-  ]));
-  await expect(run(`
-  let k = 0;
-  for (let i = 0; i < 10; ++i) {
-    if (i >= 5) {
-      break;
-    }
-    k += 1;
-  }
-  k
-  `)).resolves.toBe(5);
-});
 
 test('for statement must have three parts present', async () => {
   expect(staticError(`
@@ -913,15 +865,12 @@ test('parseFloat is available', async () => {
   await expect(run(`parseFloat("3.14159")`)).resolves.toBe(3.14159);
 });
 
-test('Disallow arrow functions', async () => {
-  await expect(staticError('const s = () => 1; s()')).toEqual(
-    expect.arrayContaining([
-      `Do not use arrow functions.`
-  ]));
-  await expect(staticError('(() => 1)()')).toEqual(
-    expect.arrayContaining([
-      `Do not use arrow functions.`
-  ]));
+test('Allow arrow functions with expression bodies', async () => {
+  await expect(run(`((x) => x + 1)(10)`)).resolves.toBe(11);
+});
+
+test('Allow arrow functions with block bodies', async () => {
+  await expect(run(`(function(x) { return x + 1; })(10)`)).resolves.toBe(11);
 });
 
 describe('ElementaryJS Testing', () => {
