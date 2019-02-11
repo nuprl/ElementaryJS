@@ -72,8 +72,8 @@ export class Line {
 }
 
 function checkIfPoint(p: any) {
-  if (typeof(p) !== 'object' || 
-      typeof(p.x) !== 'number' || 
+  if (typeof(p) !== 'object' ||
+      typeof(p.x) !== 'number' ||
       typeof(p.y) !== 'number') {
     throw new TypeError(`Invalid Point`);
   }
@@ -170,7 +170,7 @@ export function intersects(l1: Line, l2: Line) {
     return true;
   } else {
     // Lines are colinear, check if the line segments overlap
-    return pointOnLine(l1.p1, l2) || pointOnLine(l1.p2, l2) || 
+    return pointOnLine(l1.p1, l2) || pointOnLine(l1.p2, l2) ||
            pointOnLine(l2.p1, l1) || pointOnLine(l2.p2, l1);
   }
 }
@@ -552,17 +552,19 @@ export const loadJSONFromURL = loadURLHandler(
     }
   ],
   function(runner: any, response: any) {
-    response.json().then((jsonObj : any) => {
-      runner.continueImmediate({
+    response.json().then((jsonObj: any) => {
+      runner.runner.continueImmediate({
         type: 'normal',
         value: stopifyObjectArrayRecur(jsonObj)
       });
     }).catch(() => {
-      runner.continueImmediate({
-        type: 'exception',
-        stack: [],
-        value: new Error(`JSON file could not be loaded`)
-      });
+      runner.isRunning ?
+        runner.runner.continueImmediate({
+          type: 'exception',
+          stack: [],
+          value: new Error(`JSON file could not be loaded`)
+        }) :
+        runner.runner.pause(()=>{});
     });
   }
 );
