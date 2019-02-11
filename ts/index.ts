@@ -10,22 +10,14 @@ import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as lib220 from './lib220';
-import { wheat1, chaff1, hire} from './oracle';
+import { wheat1, chaff1, hire } from './oracle';
 import * as interpreter from '@stopify/project-interpreter';
-
-function getGlobal(): any {
-  if (typeof window !== 'undefined') {
-    return window;
-  }
-  else {
-    return global;
-  }
-}
+import * as fs from 'fs';
 
 // TODO(arjun): I think these hacks are necessary for eval to work. We either
 // do them here or we do them within the implementation of Stopify. I want
 // them here for now until I'm certain there isn't a cleaner way.
-const theGlobal = getGlobal();
+const theGlobal: any = (typeof window !== 'undefined') ? window : global;
 theGlobal.elementaryJS = runtime;
 theGlobal.stopify = stopify;
 
@@ -36,16 +28,27 @@ const transformClasses = require('babel-plugin-transform-es2015-classes');
 class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
   public kind: 'ok' = 'ok';
+  private codeMap : { [key: string]: any };
 
   constructor(
     private runner: stopify.AsyncRun & stopify.AsyncEval,
     opts: CompilerOpts) {
-    let JSONStopfied = Object.assign({}, JSON);
+
+    this.codeMap = {};
+    const whitelistCode = opts.whitelistCode;
+    if (whitelistCode) {
+      Object.keys(whitelistCode).forEach((moduleName) => {
+        this.codeMap[moduleName] = eval(`(${whitelistCode[moduleName]})`);
+      });
+    }
+
+    const JSONStopfied = Object.assign({}, JSON);
     JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
+
     const globals = {
       elementaryjs: runtime,
       console: Object.freeze({
-          log: (message: string) => opts.consoleLog(message)
+        log: (message: string) => opts.consoleLog(message)
       }),
       test: runtime.test,
       assert: runtime.assert,
@@ -70,7 +73,13 @@ class ElementaryRunner implements CompileOK {
         Point: lib220.newPoint,
         Line: lib220.newLine,
         intersects: lib220.intersects
-      })
+      }),
+      require: (lib: string): any => {
+        if (this.codeMap[lib]) {
+          return this.codeMap[lib];
+        }
+        throw new runtime.ElementaryRuntimeError(`'${lib}' not found.`);
+      }
     };
 
     // We can use .get and .set traps to intercept reads and writes to
