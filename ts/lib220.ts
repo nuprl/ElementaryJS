@@ -359,7 +359,18 @@ function EncapsulatedImage(imageData: any) {
     }
   });
 }
-/**
+
+
+function getCloudFunctionBaseUrl(): string {
+  if (window.location.hostname === 'www.ocelot-ide.org') {
+      return 'https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/';
+  }
+  else {
+      return 'https://us-central1-arjunguha-research-group.cloudfunctions.net/ocelot-beta/';
+  }
+}
+
+/*
  * A handler for loading files
  *
  * @param {*} defaultOutput - the default object to return when function is not called on browser
@@ -391,7 +402,7 @@ function loadURLHandler(defaultOutput: any, loadFunction: (runner: EncapsulatedR
         }
       }
       const encodedURL = encodeURIComponent(url);
-      const getUrlLink = ` https://us-central1-arjunguha-research-group.cloudfunctions.net/paws/geturl?`
+      const getUrlLink = `${getCloudFunctionBaseUrl()}geturl?`;
       const queryURL = `${getUrlLink}url=${encodedURL}&user=${userEmail}&session=${sessionId}`;
       fetch(queryURL).then(response => {
         if (response.status !== 200) {
