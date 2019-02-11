@@ -177,6 +177,18 @@ export const visitor = {
       }
     }
   },
+  ArrowFunctionExpression: {
+    enter(path: NodePath<t.ArrowFunctionExpression>) {
+      if (t.isBlockStatement(path.node.body)) {
+        path.replaceWith(t.functionExpression(undefined, path.node.params,
+          path.node.body));
+      }
+      else {
+        path.replaceWith(t.functionExpression(undefined, path.node.params,
+          t.blockStatement([t.returnStatement(path.node.body)])));
+      }
+    }
+  },
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
       const inCtor = path.node.type === 'ClassMethod' &&
@@ -518,16 +530,6 @@ export const visitor = {
       path.skip();
     }
   },
-  BreakStatement(path: NodePath<t.BreakStatement>, st: S) {
-    if (path.node.label !== null) {
-      st.elem.error(path, `break statement must not have label`);
-    }
-  },
-  ContinueStatement(path: NodePath<t.ContinueStatement>, st: S) {
-    if (path.node.label !== null) {
-      st.elem.error(path, `continue statement must not have label`);
-    }
-  },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
@@ -550,23 +552,12 @@ export const visitor = {
   WithStatement(path: NodePath<t.WithStatement>, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
   },
-  SwitchStatement(path: NodePath<t.SwitchStatement>, st: S) {
-    st.elem.error(path, `Do not use the 'switch' statement.`);
-  },
-  LabeledStatement(path: NodePath<t.LabeledStatement>, st: S) {
-    st.elem.error(path, `Do not use labels to alter control-flow`);
-  },
   ForOfStatement(path: NodePath<t.ForOfStatement>, st: S) {
     st.elem.error(path, `Do not use for-of loops.`);
   },
   ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
     st.elem.error(path, `Do not use for-in loops.`);
-  },
-  ArrowFunctionExpression(path: NodePath<t.ArrowFunctionExpression>, st: S) {
-    st.elem.error(path, `Do not use arrow functions.`);
-    path.skip();
-    return;
-  },
+  }
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
