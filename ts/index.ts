@@ -36,7 +36,7 @@ class ElementaryRunner implements CompileOK {
 
     this.codeMap = {};
     for (const moduleName in opts.whitelistCode) {
-      this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]})`);
+      this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}())`);
     }
 
     const JSONStopfied = Object.assign({}, JSON);
