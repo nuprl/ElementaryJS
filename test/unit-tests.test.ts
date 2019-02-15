@@ -7,17 +7,21 @@ const compileOpts = {
   consoleLog: (message) => console.log(message),
   version: () => console.log('No version'),
   whitelistCode: {
-    myModule: `{
-      method1: function() {
-        return 'hi';
-      },
-      property1: 3
+    myModule: `function myModule() {
+      return {
+        method1: function() {
+          return 'hi';
+        },
+        property1: 3
+      };
     }`,
-    mySecondModule: `{
-      method2: function() {
-        return 7;
-      },
-      property2: ['1', '2', '3']
+    mySecondModule: `function mySecondModule() {
+      return {
+        method2: function() {
+          return 7;
+        },
+        property2: ['1', '2', '3']
+      };
     }`
   }
 };
