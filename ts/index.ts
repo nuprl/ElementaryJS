@@ -35,12 +35,17 @@ class ElementaryRunner implements CompileOK {
     opts: CompilerOpts) {
 
     this.codeMap = {};
+    const config: string = `{
+      getRunner: runtime.getRunner,
+      stopifyArray: runtime.stopifyArray,
+      stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur
+    }`;
     for (const moduleName in opts.whitelistCode) {
-      this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}())`);
+      this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}(${config}))`);
     }
 
     const JSONStopfied = Object.assign({}, JSON);
-    JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
+    JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text));
 
     const globals = {
       elementaryjs: runtime,
@@ -73,7 +78,7 @@ class ElementaryRunner implements CompileOK {
       }),
       require: (lib: string): any => {
         if (this.codeMap[lib]) {
-          return this.codeMap[lib];
+          return Object.freeze(this.codeMap[lib]);
         }
         throw new runtime.ElementaryRuntimeError(`'${lib}' not found.`);
       }
@@ -122,9 +127,8 @@ class ElementaryRunner implements CompileOK {
       onDone({
         type: 'exception',
         stack: [], // This is correct
-        value: elementary.errors.map(x => {
-          const l = x.line;
-          return `Line ${l}: ${x.message}`
+        value: elementary.errors.map(e => {
+          return `Line ${e.line}: ${e.message}`;
         }).join('\n')
       });
       return;
