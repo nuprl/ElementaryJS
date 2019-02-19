@@ -9,7 +9,6 @@ import { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
-import * as lib220 from './lib220';
 import { wheat1, chaff1, hire } from './oracle';
 import * as interpreter from '@stopify/project-interpreter';
 import * as fs from 'fs';
@@ -54,7 +53,7 @@ class ElementaryRunner implements CompileOK {
       }),
       test: runtime.test,
       assert: runtime.assert,
-      lib220: Object.freeze(lib220),
+      lib220: Object.freeze(this.codeMap.lib220),
       version: opts.version,
       Array: runtime.Array,
       Math: Math,
@@ -72,9 +71,9 @@ class ElementaryRunner implements CompileOK {
         parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseExpression(input))
       }),
       geometry: Object.freeze({
-        Point: lib220.newPoint,
-        Line: lib220.newLine,
-        intersects: lib220.intersects
+        Point: this.codeMap.lib220.newPoint,
+        Line: this.codeMap.lib220.newLine,
+        intersects: this.codeMap.lib220.intersects
       }),
       require: (lib: string): any => {
         if (this.codeMap[lib]) {
