@@ -1,6 +1,5 @@
 import { compile, CompileOK, Result } from '../ts/index';
 import * as runtime from '../ts/runtime';
-import * as stopify from 'stopify';
 
 const compileOpts = {
   isOnline: true,
@@ -22,6 +21,9 @@ const compileOpts = {
         },
         property2: ['1', '2', '3']
       };
+    }`,
+    lib220: `function lib220() {
+      return {};
     }`
   }
 };
@@ -153,7 +155,7 @@ test('invalid array creation', async () => {
   //   'use Array.create(length, init)');
   await expect(dynamicError(`let a = Array.create(3.5, 0); a`)).resolves.toMatch(
     'positive integer');
-  });
+});
 
 test('valid array creation', async () => {
   expect.assertions(2);
@@ -325,7 +327,6 @@ test('cannot access array non-members', async () => {
     .resolves.toMatch(`index '0' is out of array bounds`);
 });
 
-
 test('array index must be a positive integer', async () => {
   expect.assertions(2);
   await expect(dynamicError(`let a = []; let b = a[3.1415]`))
@@ -441,7 +442,6 @@ test('dynamic error when mixing types', async () => {
     .resolves.toMatch("arguments of operator '+' must both be numbers or strings");
     await expect(dynamicError(`let a = "foo", b = 1; a - b`))
     .resolves.toMatch("arguments of operator '-' must both be numbers");
-
 });
 
 test('dynamic num check order', async () => {
@@ -610,8 +610,7 @@ test('call a builtin method', async () => {
     x[0]`)).resolves.toBe(100);
 });
 
-
-test('gigantic test case', async () => {
+test('fibonacci of 10', async () => {
   await expect(run(`
       // Fibonacci sequence, where fibonacci(0) = 0,
       function fibonacci(n) {
@@ -759,7 +758,6 @@ test('if else must be BlockStatement', async () => {
   `)).resolves.toBe(2);
 });
 
-
 test('for statement must have three parts present', async () => {
   expect(staticError(`
     for (;;) {
@@ -875,6 +873,27 @@ test('Allow arrow functions with expression bodies', async () => {
 
 test('Allow arrow functions with block bodies', async () => {
   await expect(run(`(function(x) { return x + 1; })(10)`)).resolves.toBe(11);
+});
+
+test('Parser should work', async () => {
+  await expect(run(`
+    parser.parseProgram('let x = 1; let y = x * 2;').kind;
+  `)).resolves.toBe('ok');
+});
+
+test('Infinity', async () => {
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [1, 5, 3, 0, -1].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(5);
+  await expect(run(`
+    let max_reducer = function(acc, elem) {
+      return (elem > acc) ? elem : acc;
+    };
+    [].reduce(max_reducer, -Infinity);
+  `)).resolves.toBe(-Infinity);
 });
 
 describe('ElementaryJS Testing', () => {
@@ -1062,7 +1081,7 @@ describe('ElementaryJS Testing', () => {
   });
 });
 
-describe('lib220 Testing', () => {
+xdescribe('lib220 Testing', () => {
 
   test('Safe object property getter', async () => {
     expect.assertions(3);
@@ -1108,12 +1127,6 @@ describe('lib220 Testing', () => {
       let obj = lib220.loadImageFromURL('https://randomstuff.io/image.png');
       obj.width;
     `)).resolves.toBe(50);
-  });
-
-  test('Parser should work', async () => {
-    await expect(run(`
-      parser.parseProgram('let x = 1; let y = x * 2;').kind;
-    `)).resolves.toBe('ok');
   });
 
   test('Intersects: Lines overlapping, share point', async () => {
@@ -1331,21 +1344,4 @@ describe('lib220 Testing', () => {
       geometry.intersects(l1, l2)
     `)).resolves.toBe(false);
   });
-
-});
-
-
-test('Infinity', async () => {
-  await expect(run(`
-    let max_reducer = function(acc, elem) {
-      return (elem > acc) ? elem : acc;
-    };
-    [1, 5, 3, 0, -1].reduce(max_reducer, -Infinity);
-  `)).resolves.toBe(5);
-  await expect(run(`
-    let max_reducer = function(acc, elem) {
-      return (elem > acc) ? elem : acc;
-    };
-    [].reduce(max_reducer, -Infinity);
-  `)).resolves.toBe(-Infinity);
 });
