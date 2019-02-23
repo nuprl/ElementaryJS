@@ -24,6 +24,9 @@ const compileOpts = {
     }`,
     lib220: `function lib220() {
       return {};
+    }`,
+    oracle: `function oracle() {
+      return {};
     }`
   }
 };

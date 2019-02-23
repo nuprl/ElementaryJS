@@ -9,7 +9,6 @@ import { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as stopify from 'stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
-import { wheat1, chaff1, hire } from './oracle';
 import * as interpreter from '@stopify/project-interpreter';
 import * as fs from 'fs';
 
@@ -62,9 +61,9 @@ class ElementaryRunner implements CompileOK {
       Object: Object, // Needed for classes
       parseInt: parseInt,
       parseFloat: parseFloat,
-      hire: hire,
-      wheat1: wheat1,
-      chaff1: chaff1,
+      hire: this.codeMap.oracle.hire,
+      wheat1: this.codeMap.oracle.wheat1,
+      chaff1: this.codeMap.oracle.chaff1,
       JSON: JSONStopfied,
       parser: Object.freeze({
         parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseProgram(input)),
