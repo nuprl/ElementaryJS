@@ -1,6 +1,6 @@
 {
   "name": "@stopify/elementary-js",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "JavaScript without sharp edges",
   "main": "dist/index.js",
   "author": [
@@ -54,7 +54,7 @@
     "babel-core": "^6.26.3",
     "babel-plugin-transform-es2015-classes": "^6.24.1",
     "babel-types": "^6.26.0",
-    "stopify": "0.5.3-elementaryJS",
+    "stopify": "0.5.4-elementaryJS",
     "@stopify/project-interpreter": "1.1.4"
   }
 }
