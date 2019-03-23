@@ -207,16 +207,19 @@ const visitor = {
   CallExpression: {
     exit(path: NodePath<t.CallExpression>) {
       const callee = path.node.callee;
-      if (callee.type === 'MemberExpression' &&
-          callee.computed === false &&
-          callee.property.type === 'Identifier' &&
-          callee.property.name === 'split') {
-        path.replaceWith(dynCheck('checkCall', path.node.loc,
-          callee.object,
-          propertyAsString(callee),
+      if (!t.isMemberExpression(callee) || callee.computed || !t.isIdentifier(callee.property)) {
+        return;
+      }
+      const o = callee.object,
+            p = callee.property;
+      if (p.name === 'split') {
+        path.replaceWith(dynCheck('checkCall', path.node.loc, o, propertyAsString(callee),
           t.arrayExpression(path.node.arguments)));
         path.skip();
       }
+      path.replaceWith(dynCheck('checkFunction', path.node.loc, o, t.stringLiteral(p.name),
+        path.node));
+      path.skip();
     }
   },
   ObjectExpression(path: NodePath<t.ObjectExpression>, st: S) {
@@ -244,23 +247,26 @@ const visitor = {
           (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
       }
+      const o = path.node.object,
+            p = path.node.property;
+      if (path.node.computed) {
+        path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
+        path.skip();
+        return;
+      }
+      // path.node.computed is false onwards
+      if (!t.isIdentifier(p)) {
+        // This should never happen
+        throw new Error(`ElementaryJS expected id. in MemberExpression`);
+      }
       if (t.isCallExpression(parent) && parent.callee === path.node) {
         // This MemberExpression is the callee in a CallExpression, i.e., obj.method(...).
         // We can simply leave this intact. JavaScript will throw an exception
         // with a reasonable error message if obj.method is not a function.
+        // proper checks for toString are handled by CallExpression exit function
         return;
       }
-      const o = path.node.object,
-            p = path.node.property;
-      if (path.node.computed === false) {
-        if (!t.isIdentifier(p)) {
-          // This should never happen
-          throw new Error('ElementaryJS expected id. in MemberExpression');
-        }
-        path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
-      } else {
-        path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
-      }
+      path.replaceWith(dynCheck('dot', p.loc, o, t.stringLiteral(p.name)));
       path.skip();
     }
   },
