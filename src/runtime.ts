@@ -115,11 +115,12 @@ export function dot(object: any, index: string, line: number) {
   if (typeof object !== 'object'  &&
       typeof object !== 'string'  &&
       typeof object !== 'boolean' &&
-      typeof object !== 'number') {
+      typeof object !== 'number'  &&
+      typeof object !== 'function') {
     errorHandle('cannot access member of non-object value types', 'dot', line);
   }
   if (object && !object.hasOwnProperty(index)) {
-    errorHandle(`object does not have member '${index}'`, 'dot', line);
+    errorHandle(`object does not have own member '${index}'`, 'dot', line);
   }
   if (typeof object === 'string' && index === 'split') {
     return function(sep: string) {
@@ -127,6 +128,13 @@ export function dot(object: any, index: string, line: number) {
     };
   }
   return object && object[index];
+}
+
+export function checkFunction(object: any, index: string, result: any, line: number) {
+  if (typeof object === 'function' && index in Function.prototype) {
+    errorHandle('Cannot call default properties of functions', 'checkFunction', line);
+  }
+  return result;
 }
 
 export function updateOnlyNumbers(opcode: string, object: any, line: number) {

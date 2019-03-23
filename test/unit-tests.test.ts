@@ -997,7 +997,90 @@ test('LHS w/ another assign op', async () => {
   });
 });
 
-describe('Testing in ElementaryJS', () => {
+test('Dynamic error on calling functions access with brackets', async () => {
+  await expect(dynamicError(`
+    let obj = {x: (y) => y + 1};
+    obj['x'](1);
+  `)).resolves.toMatch(`array indexing called on a non-array value type`);
+  await expect(dynamicError(`
+    class A {
+      static funcA() {
+        return 1;
+      }
+    }
+    A['funcA']();
+  `)).resolves.toMatch(`array indexing called on a non-array value type`);
+});
+
+test.only('Disallow function toString access', async () => {
+  await expect(dynamicError(`
+    function funcA() {
+      return 1;
+    }
+    funcA.toString;
+  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  await expect(dynamicError(`
+    function funcA() {
+      return 1;
+    }
+    funcA.toString();
+  `)).resolves.toMatch(`Cannot call default properties of functions`);
+  await expect(dynamicError(`
+    class TestClass {
+      static testFunc() {
+        return 1;
+      }
+    }
+    TestClass.testFunc.toString;
+  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  await expect(dynamicError(`
+    class TestClass {
+      static testFunc() {
+        return 1;
+      }
+    }
+    TestClass.testFunc.toString();
+  `)).resolves.toMatch(`Cannot call default properties of functions`);
+  await expect(dynamicError(`
+    Array.toString;
+  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  await expect(dynamicError(`
+    Array.toString()
+  `)).resolves.toMatch(`Cannot call default properties of functions`);
+});
+
+test('function calls work', async () => {
+  await expect(run(`
+    class TestClass {
+      static testFunc() {
+        return 1;
+      }
+    }
+    TestClass.testFunc;
+  `)).resolves.toEqual(expect.any(Function));
+  await expect(run(`
+    class TestClass {
+      static testFunc() {
+        return 1;
+      }
+    }
+    TestClass.testFunc();
+  `)).resolves.toBe(1);
+  await expect(run(`
+    function makeObj(a) {
+      return {
+        a: a,
+        getA: function() {
+          return this.a
+        }
+      }
+    }
+    let randomObj = makeObj(220);
+    [randomObj.getA(), randomObj.getA];
+  `)).resolves.toEqual([220, expect.any(Function)]);
+});
+
+describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {
     runtime.enableTests(true);
