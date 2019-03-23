@@ -22,7 +22,7 @@
   "scripts": {
     "build": "echo \"let EJSVERSION = '$(git rev-parse --short HEAD)';\nexport { EJSVERSION };\" > ts/version.ts && tsc",
     "test": "jest",
-    "clean": "rm -f dist/*"
+    "clean": "rm -rf dist/"
   },
   "jest": {
     "transform": {
@@ -43,11 +43,13 @@
     "@types/babel-core": "^6.7.14",
     "@types/babel-generator": "^6.7.14",
     "@types/babel-traverse": "^6.7.17",
-    "@types/jest": "^23.3.0",
-    "@types/node": "^9.6.6",
-    "jest": "^23.4.1",
-    "ts-jest": "^23.0.1",
-    "typescript": "^2.9.2"
+    "@types/jest": "^24.0.11",
+    "@types/node": "^11.11.6",
+    "jest": "^24.5.0",
+    "jest-haste-map": "^24.5.0",
+    "jest-resolve": "^24.5.0",
+    "ts-jest": "^24.0.0",
+    "typescript": "^3.3.3"
   },
   "dependencies": {
     "@types/babel-types": "^6.7.16",

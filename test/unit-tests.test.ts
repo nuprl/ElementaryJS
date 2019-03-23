@@ -3,7 +3,7 @@ import * as runtime from '../ts/runtime';
 
 const compileOpts = {
   isOnline: true,
-  consoleLog: (message) => console.log(message),
+  consoleLog: (message: any) => console.log(message),
   version: () => console.log('No version'),
   whitelistCode: {
     myModule: `function myModule() {
