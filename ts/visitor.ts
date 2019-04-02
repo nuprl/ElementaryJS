@@ -177,18 +177,6 @@ export const visitor = {
       }
     }
   },
-  ArrowFunctionExpression: {
-    enter(path: NodePath<t.ArrowFunctionExpression>) {
-      if (t.isBlockStatement(path.node.body)) {
-        path.replaceWith(t.functionExpression(undefined, path.node.params,
-          path.node.body));
-      }
-      else {
-        path.replaceWith(t.functionExpression(undefined, path.node.params,
-          t.blockStatement([t.returnStatement(path.node.body)])));
-      }
-    }
-  },
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
       if (path.node.params.length &&
