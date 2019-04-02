@@ -881,7 +881,7 @@ test('Allow arrow functions with expression bodies', async () => {
 });
 
 test('Allow arrow functions with block bodies', async () => {
-  await expect(run(`(function(x) { return x + 1; })(10)`)).resolves.toBe(11);
+  await expect(run(`((x) => { return x + 1; })(10)`)).resolves.toBe(11);
 });
 
 test('Disallow rest params', async () => {

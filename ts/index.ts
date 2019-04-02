@@ -22,6 +22,7 @@ theGlobal.stopify = stopify;
 // NOTE(arjun): This may not be needed, but I am using require instead of the
 // name so that Webpack can statically link.
 const transformClasses = require('babel-plugin-transform-es2015-classes');
+const transformArrowFunctions = require('babel-plugin-transform-es2015-arrow-functions');
 
 class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
@@ -172,8 +173,15 @@ function applyElementaryJS(
       ast: true,
       code: true
     });
-    const result2 = babel.transformFromAst(result1.ast!,
-      result1.code!, {
+
+    const result2 = babel.transformFromAst(result1.ast!, result1.code!, {
+      plugins: [transformArrowFunctions],
+      ast: true,
+      code: true
+    })
+
+    const result3 = babel.transformFromAst(result2.ast!,
+      result2.code!, {
         plugins: [transformClasses],
         ast: true,
         code: false
@@ -181,7 +189,7 @@ function applyElementaryJS(
     // NOTE(arjun): There is some imprecision in the type produced by Babel.
     // I have verified that this cast is safe.
     return {
-      ast: (result2.ast! as babel.types.File).program,
+      ast: (result3.ast! as babel.types.File).program,
       kind: 'ok'
     };
   }
