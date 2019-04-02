@@ -177,6 +177,11 @@ export const visitor = {
       }
     }
   },
+  ArrowFunctionExpression: {
+    enter(path: NodePath<t.ArrowFunctionExpression>) {
+      path.skip(); // TODO
+    }
+  },
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
       if (path.node.params.length &&
