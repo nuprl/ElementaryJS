@@ -175,21 +175,14 @@ function applyElementaryJS(
     });
 
     const result2 = babel.transformFromAst(result1.ast!, result1.code!, {
-      plugins: [transformArrowFunctions],
+      plugins: [transformArrowFunctions, transformClasses],
       ast: true,
-      code: true
-    })
-
-    const result3 = babel.transformFromAst(result2.ast!,
-      result2.code!, {
-        plugins: [transformClasses],
-        ast: true,
-        code: false
+      code: false
     });
     // NOTE(arjun): There is some imprecision in the type produced by Babel.
     // I have verified that this cast is safe.
     return {
-      ast: (result3.ast! as babel.types.File).program,
+      ast: (result2.ast! as babel.types.File).program,
       kind: 'ok'
     };
   }
