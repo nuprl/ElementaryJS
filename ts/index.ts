@@ -12,17 +12,17 @@ import * as runtime from './runtime';
 import * as interpreter from '@stopify/project-interpreter';
 import * as fs from 'fs';
 
+// NOTE(arjun): This may not be needed, but I am using require instead of the
+// name so that Webpack can statically link.
+const transformArrowFunctions = require('babel-plugin-transform-es2015-arrow-functions'),
+      transformClasses = require('babel-plugin-transform-es2015-classes');
+
 // TODO(arjun): I think these hacks are necessary for eval to work. We either
 // do them here or we do them within the implementation of Stopify. I want
 // them here for now until I'm certain there isn't a cleaner way.
 const theGlobal: any = (typeof window !== 'undefined') ? window : global;
 theGlobal.elementaryJS = runtime;
 theGlobal.stopify = stopify;
-
-// NOTE(arjun): This may not be needed, but I am using require instead of the
-// name so that Webpack can statically link.
-const transformClasses = require('babel-plugin-transform-es2015-classes');
-const transformArrowFunctions = require('babel-plugin-transform-es2015-arrow-functions');
 
 class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
