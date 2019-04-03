@@ -528,6 +528,11 @@ export const visitor = {
     }
   },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
+    if (typeof (path.node as any)._generated !== 'undefined' 
+        && (path.node as any)._generated 
+        && path.node.kind === 'var') {
+          return;
+    }
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
       st.elem.error(path, `Use 'let' or 'const' to declare a variable.`);
     }
