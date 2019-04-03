@@ -890,6 +890,25 @@ test('Disallow rest params', async () => {
   ]));
 });
 
+test('Arrow functions work with this', async () => {
+  await expect(run(`
+  class TestClass {
+    constructor() {
+      this.data = "abcde";
+    }
+
+    arrowFuncTest() {
+      let k = () => {
+        return this.data + "f";
+      }
+      return k();
+    }
+  }
+
+  new TestClass().arrowFuncTest();`)).resolves.toEqual("abcdef");
+
+});
+
 test('Parser should work', async () => {
   await expect(run(`
     parser.parseProgram('let x = 1; let y = x * 2;').kind;
