@@ -881,7 +881,7 @@ test('Allow arrow functions with expression bodies', async () => {
 });
 
 test('Allow arrow functions with block bodies', async () => {
-  await expect(run(`((x) => { return x + 1; })(10)`)).resolves.toBe(11);
+  await expect(run(`(x => { return x + 1; })(10)`)).resolves.toBe(11);
 });
 
 test('Disallow rest params', async () => {
@@ -890,23 +890,43 @@ test('Disallow rest params', async () => {
   ]));
 });
 
-test('Arrow functions work with this', async () => {
+test('Arrow functions inherit this', async () => {
+  expect.assertions(1);
   await expect(run(`
   class TestClass {
     constructor() {
-      this.data = "abcde";
+      this.data = 'abcde';
     }
 
     arrowFuncTest() {
       let k = () => {
-        return this.data + "f";
+        return this.data + 'f';
       }
       return k();
     }
   }
 
-  new TestClass().arrowFuncTest();`)).resolves.toEqual("abcdef");
+  new TestClass().arrowFuncTest();`)).resolves.toBe('abcdef');
+});
 
+test('Arrow functions have no implicit params', async () => {
+  expect.assertions(2);
+  await expect(dynamicError(`
+  let a = {
+    b: 0,
+    c: () => this.b
+   };
+
+   a.c();`)).resolves.toMatch(`cannot access member of non-object value types`);
+
+  // A product of the Babel plugin we'll have to live with for now:
+  await expect(run(`
+  let a = {
+    b: 0,
+    c: (d, e, f) => arguments.length
+   };
+
+   a.c(1, 2, 3);`)).resolves.toBe(0);
 });
 
 test('Parser should work', async () => {
