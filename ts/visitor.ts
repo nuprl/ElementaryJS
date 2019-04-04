@@ -192,13 +192,15 @@ export const visitor = {
     },
     exit(path: NodePath<t.Function>, st: S) {
       st.elem.inConstructor = st.elem.inConstructorStack.pop()!
-      if ((path.node as any).shadow) {
+      if (path.has('shadow')) {
         //  Note(Sam L.) Babel arrow function transform leave shadow as true when
         // it transforms an arrow function to a function.
-        // The class transform relies on shadow to do extra work on arrow functions 
-        // (like using arguments that is in the outer scope instead of inner scope)
-        // That is unnecessary as it breaks aritychecking so it is set as undefined.
-        (path.node as any).shadow = undefined;
+        // Babel's shadow functions are just traditional functions but act like
+        // arrow functions (i.e has lexical binding of this and arguments)
+        // It's to let other plugins see if additional transform needs to be done
+        // on these functions. The classes transform would assume the arity
+        // checking we did was using lexical binding of arguments, but we're not.
+        (path.node as any).shadow = undefined; // therefore this is set to undefined
       }
 
       // Inserts the expression `dynCheck(N, arguments.length, name)` at the
