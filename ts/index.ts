@@ -169,20 +169,15 @@ function applyElementaryJS(
       babylon.parse(code).program : code;
     const result1 = babel.transformFromAst(ast,
       typeof code === 'string' && code || undefined, {
-      plugins: [ transformArrowFunctions ],
-      ast: true,
-      code: true,
+      plugins: [ transformArrowFunctions ]
     });
 
     const result2 = babel.transformFromAst(result1.ast!, result1.code!, {
-      plugins: [ [visitor.plugin] ],
-      code: true,
-      ast: true,
+      plugins: [ [visitor.plugin] ]
     });
 
     const result3 = babel.transformFromAst(result2.ast!, result2.code!, {
       plugins: [ transformClasses ],
-      ast: true,
       code: false
     });
     // NOTE(arjun): There is some imprecision in the type produced by Babel.
