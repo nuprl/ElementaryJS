@@ -891,7 +891,7 @@ test('Disallow rest params', async () => {
 });
 
 test('Arrow functions inherit this', async () => {
-  expect.assertions(1);
+  expect.assertions(2);
   await expect(run(`
   class TestClass {
     constructor() {
@@ -907,7 +907,26 @@ test('Arrow functions inherit this', async () => {
   }
 
   new TestClass().arrowFuncTest();`)).resolves.toBe('abcdef');
+
+  await expect(run(`
+  class TestClass {
+    constructor() {
+      this.data = 1;
+    }
+    nestedArrow() {
+      return (() => (() => this.data)() + 1)();
+    }
+  }
+  new TestClass().nestedArrow();
+  `)).resolves.toBe(2);
 });
+
+test('Arrow functions has arity checking', async () => {
+  await expect(dynamicError(`
+  let a = (a) => 1;
+  a();
+  `)).resolves.toMatch('function (anonymous) expected 1 argument but received 0 arguments');
+})
 
 test('Arrow functions have no implicit params', async () => {
   expect.assertions(2);

@@ -177,9 +177,10 @@ function applyElementaryJS(
     const result2 = babel.transformFromAst(result1.ast!, result1.code!, {
       plugins: [ [visitor.plugin] ],
       code: true,
+      ast: true,
     });
 
-    const result3 = babel.transform(result2.code!, {
+    const result3 = babel.transformFromAst(result2.ast!, result2.code!, {
       plugins: [ transformClasses ],
       ast: true,
       code: false
