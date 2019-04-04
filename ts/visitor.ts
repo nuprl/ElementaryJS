@@ -193,10 +193,11 @@ export const visitor = {
     exit(path: NodePath<t.Function>, st: S) {
       st.elem.inConstructor = st.elem.inConstructorStack.pop()!
       if ((path.node as any).shadow) {
-        // Babel arrow function transform leave shadow as true when
-        // they transformed an arrow function to a function.
-        // After inserting dynamic checks, the class transform relies on
-        // shadow to do extra work on functions (like renaming arguments)
+        //  Note(Sam L.) Babel arrow function transform leave shadow as true when
+        // it transforms an arrow function to a function.
+        // The class transform relies on shadow to do extra work on arrow functions 
+        // (like using arguments that is in the outer scope instead of inner scope)
+        // That is unnecessary as it breaks aritychecking so it is set as undefined.
         (path.node as any).shadow = undefined;
       }
 
