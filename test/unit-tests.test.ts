@@ -938,7 +938,6 @@ test('Arrow functions have no implicit params', async () => {
 
    a.c();`)).resolves.toMatch(`cannot access member of non-object value types`);
 
-  // A product of the Babel plugin we'll have to live with for now:
   await expect(run(`
   let a = {
     b: 0,
