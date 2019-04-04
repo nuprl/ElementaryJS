@@ -192,6 +192,13 @@ export const visitor = {
     },
     exit(path: NodePath<t.Function>, st: S) {
       st.elem.inConstructor = st.elem.inConstructorStack.pop()!
+      if ((path.node as any).shadow) {
+        // Babel arrow function transform leave shadow as true when
+        // they transformed an arrow function to a function.
+        // After inserting dynamic checks, the class transform relies on
+        // shadow to do extra work on functions (like renaming arguments)
+        (path.node as any).shadow = undefined;
+      }
 
       // Inserts the expression `dynCheck(N, arguments.length, name)` at the
       // top of the function, where N is the number of declared arguments
@@ -204,7 +211,6 @@ export const visitor = {
       const name = t.stringLiteral(id ? id.name : '(anonymous)');
       body.unshift(t.expressionStatement(
         dynCheck('arityCheck', path.node.loc, name, expected, actual)));
-
       path.skip();
     },
   },
