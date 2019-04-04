@@ -530,7 +530,7 @@ export const visitor = {
     }
   },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
-    // Arrow transform uses "var" declarations.
+    // Arrow transform uses "var" declarations, we can skip over them instead
     if ((path.node as any)._generated && path.node.kind === 'var') {
       return;
     }
