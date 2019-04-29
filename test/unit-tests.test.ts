@@ -397,6 +397,12 @@ test('dynamic error when using non-boolean in if statement', async () => {
     .resolves.toMatch(`expected a boolean expression, instead received '42'`);
 });
 
+test('Can access property when value is undefined', async () => {
+  expect.assertions(2);
+  await expect(run('let x = {y: undefined}; x.y;')).resolves.toBe(undefined);
+  await expect(run('let x = {y: 0}; x.y = undefined; x.y;')).resolves.toBe(undefined);
+});
+
 test('cannot use for-of', () => {
   expect(staticError(`let a = [1, 2]; for (x of a) {}`)).toEqual(
     expect.arrayContaining([

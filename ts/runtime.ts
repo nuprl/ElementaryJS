@@ -72,7 +72,7 @@ export function dot(object: any, index: string) {
       typeof object !== 'number') {
     throw new ElementaryRuntimeError(`cannot access member of non-object value types`);
   }
-  if (object[index] === undefined) {
+  if (!object.hasOwnProperty(index)) {
     throw new ElementaryRuntimeError(`object does not have member '${index}'`);
   }
   if (typeof object === 'string' && index === 'split') {
