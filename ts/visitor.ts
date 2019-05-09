@@ -191,6 +191,12 @@ export const visitor = {
   },
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
+      if (path.node.params.length &&
+          path.node.params[path.node.params.length - 1].type === 'RestElement') {
+        st.elem.error(path, `The rest parameter is not supported.`);
+        path.skip();
+        return;
+      }
       const inCtor = path.node.type === 'ClassMethod' &&
         path.node.kind === 'constructor';
       st.elem.inConstructorStack.push(st.elem.inConstructor);
@@ -283,12 +289,10 @@ export const visitor = {
           throw new Error(`ElementaryJS expected id. in MemberExpression`);
         }
         path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
-        path.skip();
-      }
-      else {
+      } else {
         path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
-        path.skip();
       }
+      path.skip();
     }
   },
   AssignmentExpression: {
@@ -449,7 +453,6 @@ export const visitor = {
           opName,
           a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
-        path.skip();
       } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand',
@@ -457,8 +460,8 @@ export const visitor = {
           opName,
           a.object,
           propertyAsString(a)));
-        path.skip();
       }
+      path.skip();
     }
   },
   ReferencedIdentifier(path: NodePath<t.Identifier>, st: S) {
