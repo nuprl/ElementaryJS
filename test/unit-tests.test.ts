@@ -905,6 +905,21 @@ test('Infinity', async () => {
   `)).resolves.toBe(-Infinity);
 });
 
+test('LHS w/ another assign op', async () => {
+  await expect(run(`
+    const a = [1, 3, 5, 7];
+    let i = 0;
+    a[++i] += 3;
+    i;
+  `)).resolves.toBe(1);
+  await expect(run(`
+    const a = [1, 3, 5, 7];
+    let i = 0;
+    a[++i] = a[++i] + 3;
+    i;
+  `)).resolves.toBe(2);
+});
+
 describe('ElementaryJS Testing', () => {
 
   beforeEach(() => {

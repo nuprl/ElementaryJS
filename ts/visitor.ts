@@ -270,7 +270,7 @@ export const visitor = {
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((t.isUpdateExpression(parent) && parent.argument == path.node) ||
+      if ((t.isUpdateExpression(parent) && parent.argument === path.node) ||
           (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
       }
@@ -341,7 +341,8 @@ export const visitor = {
             t.assignmentExpression('=',
               t.memberExpression(tmp, left.property, left.computed),
               t.binaryExpression(unassign(op),
-                t.memberExpression(tmp, left.property, left.computed),
+                t.memberExpression(tmp, t.isUpdateExpression(left.property) ?
+                  left.property.argument : left.property, left.computed),
                 path.node.right))]));
       }
     },
@@ -433,7 +434,7 @@ export const visitor = {
   UpdateExpression: {
     enter(path: NodePath<t.UpdateExpression>, st: S) {
       // Static checks
-      if (path.node.prefix == false) {
+      if (path.node.prefix === false) {
         st.elem.error(
           path, `Do not use post-increment or post-decrement operators.`);
         return;
