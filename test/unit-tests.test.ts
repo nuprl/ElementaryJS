@@ -910,23 +910,31 @@ test('LHS w/ another assign op', async () => {
     const a = [1, 3, 5, 7];
     let i = 0;
     a[++i] += 3;
-    i;
-  `)).resolves.toBe(1);
+    const expected = {a, i};
+    expected;
+  `)).resolves.toEqual({
+    a: [1, 6, 5, 7],
+    i: 1
+  });
   await expect(run(`
     const a = [1, 3, 5, 7];
     let i = 0;
     a[++i] = a[++i] + 3;
-    i;
-  `)).resolves.toBe(2);
+    const expected = {a, i};
+    expected;
+  `)).resolves.toEqual({
+    a: [1, 8, 5, 7],
+    i: 2
+  });
 });
 
-describe('ElementaryJS Testing', () => {
+describe('Testing in ElementaryJS', () => {
 
   beforeEach(() => {
     runtime.enableTests(true);
   });
 
-  test(`test can break out of an infinite loop`, async () => {
+  test('test can break out of an infinite loop', async () => {
     runtime.enableTests(true, 2000);
     await expect(run(`
       test('loop forever', function() {
@@ -939,7 +947,7 @@ describe('ElementaryJS Testing', () => {
     ].join('\n'));
   });
 
-  test(`test can break out of an infinite loop and run next test`, async () => {
+  test('test can break out of an infinite loop and run next test', async () => {
     runtime.enableTests(true, 2000);
     await expect(run(`
       test('loop forever', function() {
