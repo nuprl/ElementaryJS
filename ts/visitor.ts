@@ -191,6 +191,12 @@ export const visitor = {
   },
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
+      if (path.node.params.length &&
+          path.node.params[path.node.params.length - 1].type === 'RestElement') {
+        st.elem.error(path, `The rest parameter is not supported.`);
+        path.skip();
+        return;
+      }
       const inCtor = path.node.type === 'ClassMethod' &&
         path.node.kind === 'constructor';
       st.elem.inConstructorStack.push(st.elem.inConstructor);
@@ -264,7 +270,7 @@ export const visitor = {
       // Some stupid cases to skip: o.x = v and ++o.x
       // In these cases, the l-value is a MemberExpression, but we tackle
       // these in the AssignmentExpression and UpdateExpression cases.
-      if ((t.isUpdateExpression(parent) && parent.argument == path.node) ||
+      if ((t.isUpdateExpression(parent) && parent.argument === path.node) ||
           (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
       }
@@ -283,12 +289,10 @@ export const visitor = {
           throw new Error(`ElementaryJS expected id. in MemberExpression`);
         }
         path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
-        path.skip();
-      }
-      else {
+      } else {
         path.replaceWith(dynCheck('arrayBoundsCheck', o.loc, o, p));
-        path.skip();
       }
+      path.skip();
     }
   },
   AssignmentExpression: {
@@ -337,7 +341,8 @@ export const visitor = {
             t.assignmentExpression('=',
               t.memberExpression(tmp, left.property, left.computed),
               t.binaryExpression(unassign(op),
-                t.memberExpression(tmp, left.property, left.computed),
+                t.memberExpression(tmp, t.isUpdateExpression(left.property) ?
+                  left.property.argument : left.property, left.computed),
                 path.node.right))]));
       }
     },
@@ -429,7 +434,7 @@ export const visitor = {
   UpdateExpression: {
     enter(path: NodePath<t.UpdateExpression>, st: S) {
       // Static checks
-      if (path.node.prefix == false) {
+      if (path.node.prefix === false) {
         st.elem.error(
           path, `Do not use post-increment or post-decrement operators.`);
         return;
@@ -449,7 +454,6 @@ export const visitor = {
           opName,
           a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
-        path.skip();
       } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand',
@@ -457,8 +461,8 @@ export const visitor = {
           opName,
           a.object,
           propertyAsString(a)));
-        path.skip();
       }
+      path.skip();
     }
   },
   ReferencedIdentifier(path: NodePath<t.Identifier>, st: S) {
