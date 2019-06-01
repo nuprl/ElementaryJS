@@ -878,6 +878,12 @@ test('Allow arrow functions with block bodies', async () => {
   await expect(run(`(function(x) { return x + 1; })(10)`)).resolves.toBe(11);
 });
 
+test('Disallow rest params', async () => {
+  expect(staticError(`function rest(...args) {}`)).toEqual(expect.arrayContaining([
+    `The rest parameter is not supported.`
+  ]));
+});
+
 test('Parser should work', async () => {
   await expect(run(`
     parser.parseProgram('let x = 1; let y = x * 2;').kind;
