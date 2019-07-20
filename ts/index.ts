@@ -6,11 +6,11 @@ import { Node, Program } from 'babel-types';
 import * as babylon from 'babylon';
 import * as visitor from './visitor';
 import { CompileOK, CompileError, CompilerOpts, Result } from './types';
-import * as stopify from 'stopify';
+import { polyfillHofFromAst } from '@stopify/higher-order-functions';
+import * as stopify from '@stopify/stopify';
 export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as interpreter from '@stopify/project-interpreter';
-import * as fs from 'fs';
 
 // NOTE(arjun): This may not be needed, but I am using require instead of the
 // name so that Webpack can statically link.
@@ -178,8 +178,10 @@ function applyElementaryJS(
     });
     // NOTE(arjun): There is some imprecision in the type produced by Babel.
     // I have verified that this cast is safe.
+    const result2Ast = (result2.ast as babel.types.File).program;
+    const polyfilled = polyfillHofFromAst(result2Ast);
     return {
-      ast: (result2.ast! as babel.types.File).program,
+      ast: polyfilled,
       kind: 'ok'
     };
   }
@@ -228,9 +230,7 @@ export function compile(
     return elementary;
   }
 
-  const stopified = stopify.stopifyLocallyFromAst(
-    elementary.ast,
-    undefined, { hofs: 'fill' });
+  const stopified = stopify.stopifyLocallyFromAst(elementary.ast);
   if (stopified.kind === 'error') {
     return {
       kind: 'error',
@@ -238,5 +238,10 @@ export function compile(
     };
   }
 
-  return new ElementaryRunner(stopified, opts);
+  const runner = new ElementaryRunner(stopified, opts);
+  runner.g.$stopifyArray = function(array: any) {
+    return require('@stopify/higher-order-functions/dist/ts/simpleHofPolyfill.lazy')
+        .stopifyArray(array);
+  }
+  return runner;
 }
