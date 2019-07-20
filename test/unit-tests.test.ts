@@ -160,9 +160,11 @@ test('invalid array creation', async () => {
     'positive integer');
 });
 
-test('valid array creation', async () => {
-  expect.assertions(2);
+test('valid array creation (1)', async () => {
   await expect(run(`let a = Array.create(2, 42); a`)).resolves.toEqual([42, 42]);
+});
+
+test('valid array creation (2)', async () => {
   await expect(run(`let a = Array.create(3, 0); a`)).resolves.toEqual([0, 0, 0]);
 });
 
@@ -739,9 +741,9 @@ test('Classes test', async () => {
       new Circle(1),
     ];
     shapes.forEach(function(s) {
-      console.log("Area of " + s.name() +
+      let str = "Area of " + s.name() +
         " with " + s.properties() +
-        " = " + s.area().toString());
+        " = " + s.area().toString();
     });`)).resolves.toBeUndefined();
 });
 
@@ -840,7 +842,7 @@ test('ElementaryJS statically reports const violations', () => {
   ]));
 });
 
-test('string.split produces a Stopify array', async () => {
+test('String.split produces a stopified array', async () => {
   await expect(dynamicError(`
     'a,b,c'.split(',').map(function(x, y, z) { return 0; })
   `)).resolves.toMatch(`function (anonymous) expected 3 arguments but received 1 argument`);
@@ -928,8 +930,7 @@ test('Arrow functions has arity checking', async () => {
   `)).resolves.toMatch('function (anonymous) expected 1 argument but received 0 arguments');
 })
 
-test('Arrow functions have no implicit params', async () => {
-  expect.assertions(2);
+test('Arrow functions have no implicit params (1)', async () => {
   await expect(dynamicError(`
   let a = {
     b: 0,
@@ -937,7 +938,9 @@ test('Arrow functions have no implicit params', async () => {
    };
 
    a.c();`)).resolves.toMatch(`cannot access member of non-object value types`);
+});
 
+test('Arrow functions have no implicit params (2)', async () => {
   await expect(run(`
   let a = {
     b: 0,

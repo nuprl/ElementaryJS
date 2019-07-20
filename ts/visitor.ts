@@ -160,7 +160,15 @@ function lvalIds(lval: t.LVal): t.Identifier[]  {
 export const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
-      st.elem = new State([]);
+        st.elem = new State([]);
+        // Insert "use strict" if needed
+        if (path.node.directives === undefined) {
+          path.node.directives = [ ];
+        }
+        if (!path.node.directives.some(d => d.value.value === 'use strict')) {
+          path.node.directives.push(
+            t.directive(t.directiveLiteral('use strict')));
+        }
     },
     exit(path: NodePath<t.Program>, st: S) {
       if (path.node.body.length !== 0) {

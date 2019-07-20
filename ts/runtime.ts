@@ -1,7 +1,7 @@
 import { EJSVERSION } from './version';
 import { TestResult } from './types';
 import timeoutTest from './timeout';
-import * as stopify from 'stopify';
+import * as stopify from '@stopify/stopify';
 
 export  function version() {
   return EJSVERSION;
@@ -96,9 +96,8 @@ export function stopifyArray(array: any[]) {
   if (maybeRunner.kind === 'error') {
     throw elementaryJSBug(`Stopify not loaded`);
   }
-  // A very undocumented interface!
-  return (maybeRunner.value.runner as any).higherOrderFunctions.stopifyArray(array);
-
+  // TODO(arjun): Why may runner be undefined?
+  return maybeRunner.value.runner!.g.$stopifyArray(array);
 }
 
 export function stopifyObjectArrayRecur(obj: any) {
@@ -356,7 +355,7 @@ export function test(description: string, testFunction: () => void) {
     return runtime.endTurn((onDone: any) => {
       let done = false;
       const timerID = setTimeout(() => {
-        runner.pause(() => {
+          runner.pause(() => {
           if (done) { return; }
           suspend.continuation = k;
           suspend.onDone = onDone;
@@ -365,7 +364,7 @@ export function test(description: string, testFunction: () => void) {
             error: 'time limit exceeded',
             description: description
           });
-          runner.resume();
+          setImmediate(() => runner.resume());
         });
       }, timeoutMilli);
       return runner.runStopifiedCode(testFunction, (result: any) => {
