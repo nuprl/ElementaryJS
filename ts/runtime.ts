@@ -1,9 +1,8 @@
 import { EJSVERSION } from './version';
 import { TestResult } from './types';
-import timeoutTest from './timeout';
 import * as stopify from '@stopify/stopify';
 
-export  function version() {
+export function version() {
   return EJSVERSION;
 }
 
@@ -23,11 +22,11 @@ class ArrayStub {
     if (arguments.length !== 2) {
       throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
     }
-  
+
     if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
       throw new ElementaryRuntimeError('array size must be a positive integer');
     }
-  
+
     let a = new Array(n);
     for (let i = 0; i < a.length; ++i) {
       a[i] = v;
@@ -53,21 +52,18 @@ export function arrayBoundsCheck(object: any, index: string) {
   if (object instanceof Array === false) {
     throw new ElementaryRuntimeError('array indexing called on a non-array value type');
   }
-  if (typeof index !== 'number' ||
-      index < 0 || (index % 1) !== 0) {
-    throw new ElementaryRuntimeError(
-        `array index '${index}' is not valid`);
+  if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
+    throw new ElementaryRuntimeError(`array index '${index}' is not valid`);
   }
   if (object[index] === undefined) {
-    throw new ElementaryRuntimeError(
-        `index '${index}' is out of array bounds`);
+    throw new ElementaryRuntimeError(`index '${index}' is out of array bounds`);
   }
   return object[index];
 }
 
 export function dot(object: any, index: string) {
-  if (typeof object !== 'object'  && 
-      typeof object !== 'string'  && 
+  if (typeof object !== 'object'  &&
+      typeof object !== 'string'  &&
       typeof object !== 'boolean' &&
       typeof object !== 'number') {
     throw new ElementaryRuntimeError(`cannot access member of non-object value types`);
@@ -85,8 +81,7 @@ export function dot(object: any, index: string) {
 export function checkCall(object: any, field: string, args: any[]) {
   if (typeof object === 'string' && field === 'split') {
       return stopifyArray(object.split(args[0]));
-  }
-  else {
+  } else {
     throw elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
   }
 }
@@ -203,6 +198,7 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
     }
   }
 }
+
 export function applyNumOp(op: string, lhs: any, rhs: any) {
   if (!(typeof (lhs) === "number" && typeof (rhs) === "number")) {
     throw new ElementaryRuntimeError(
@@ -275,7 +271,7 @@ export class ElementaryTestingError extends Error {
 
 let tests: TestResult[] = [];
 
-let testsEnabled = false;
+let testsEnabled: boolean = false;
 
 export type EncapsulatedRunner = {
   runner: stopify.AsyncRun | undefined,
@@ -392,7 +388,7 @@ export function test(description: string, testFunction: () => void) {
 /**
  * To be used after all tests are run to get the summary of all tests.
  * Output can be styled with the hasStyles argumnet.
- * 
+ *
  * @param {boolean} hasStyles to determine whether it needs styling (for console.log)
  * @returns an object with output (string) and style, (array of string).
  * If hasStyles is false, object will contain proper output string in output
