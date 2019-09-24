@@ -190,8 +190,6 @@ export const visitor = {
       if (path.node.params.length &&
           path.node.params[path.node.params.length - 1].type === 'RestElement') {
         st.elem.error(path, `The rest parameter is not supported.`);
-        path.skip();
-        return;
       }
       const inCtor = path.node.type === 'ClassMethod' &&
         path.node.kind === 'constructor';
@@ -309,8 +307,6 @@ export const visitor = {
         if (path.scope.hasBinding(left.name) === false) {
           st.elem.error(path,
             `You must declare variable '${left.name}' before assigning a value to it.`);
-          path.skip();
-          return;
         }
       }
       if (allowed.includes(op) === false) {
@@ -320,7 +316,6 @@ export const visitor = {
       }
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         st.elem.error(path, `Do not use patterns`);
-        path.skip();
         return;
       }
 
@@ -332,8 +327,7 @@ export const visitor = {
       if (t.isIdentifier(left)) {
         path.replaceWith(t.assignmentExpression('=', left,
           t.binaryExpression(unassign(op), left, right)));
-      }
-      else {
+      } else {
         // exp.x += rhs =>  tmp = exp, tmp.x = tmp.x + rhs
         const tmp = path.scope.generateUidIdentifier('tmp');
         enclosingScopeBlock(path).push(
@@ -398,13 +392,10 @@ export const visitor = {
       let op = path.node.operator;
       if (op === '==') {
         st.elem.error(path, `Do not use the '==' operator. Use '===' instead.`);
-        path.skip();
       } else if (op === '!=') {
         st.elem.error(path, `Do not use the '!=' operator. Use '!==' instead.`);
-        path.skip();
       } else if (!(allowedBinaryOperators.includes(op))) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
-        path.skip();
       }
     },
     exit(path: NodePath<t.BinaryExpression>, st: S) {
@@ -438,13 +429,10 @@ export const visitor = {
   },
   UpdateExpression: {
     enter(path: NodePath<t.UpdateExpression>, st: S) {
-      // Static checks
       if (path.node.prefix === false) {
         st.elem.error(
           path, `Do not use post-increment or post-decrement operators.`);
-        return;
       }
-
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
@@ -518,9 +506,7 @@ export const visitor = {
     enter(path: NodePath<t.IfStatement>, st: S) {
       if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
         st.elem.error(path, `if statement body must be enclosed in braces.`);
-        return;
-      }
-      if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
+      } else if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
         st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
       }
     },
