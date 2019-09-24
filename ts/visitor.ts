@@ -29,30 +29,34 @@ import * as t from 'babel-types';
 import { NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
 
-let comparisonOperators = [
-  "===",
-  "!=="
-];
-let numOrStringOperators = [
-  "+",
-];
-let numOperators = [
-  "<=",
-  ">=",
-  "<",
-  ">",
-  "<<",
-  ">>",
-  ">>>",
-  "-",
-  "*",
-  "/",
-  "%",
-  "&",
-  "|",
-  "^"
-];
-let allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
+const assignmentOperators = [
+  '=',
+  '+=',
+  '-=',
+  '*=',
+  '/=',
+  '%='
+], comparisonOperators = [
+  '===',
+  '!=='
+], numOperators = [
+  '<=',
+  '>=',
+  '<',
+  '>',
+  '<<',
+  '>>',
+  '>>>',
+  '-',
+  '*',
+  '/',
+  '%',
+  '&',
+  '|',
+  '^'
+], numOrStringOperators = [
+  '+'
+], allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
 
 // This is the visitor state, which includes a list of errors. We throw
 // this object if something goes wrong.Clients of ElementaryJS only rely on the
@@ -100,11 +104,19 @@ interface S {
 
 function unassign(op: string) {
   switch (op) {
+    // Allowed:
     case '+=': return '+';
     case '-=': return '-';
     case '*=': return '*';
     case '/=': return '/';
     case '%=': return '%';
+    // Disallowed (st.elem.error), but still desugar:
+    case '<<=': return '<<';
+    case '>>=': return '>>';
+    case '>>>=': return '>>>';
+    case '&=': return '&';
+    case '^=': return '^';
+    case '|=': return '|';
     default: throw new Error(`unexpected operator type '${op}'`);
   }
 }
@@ -300,19 +312,15 @@ export const visitor = {
   },
   AssignmentExpression: {
     enter(path: NodePath<t.AssignmentExpression>, st: S) {
-      // Disallow certain operators and patterns
-      const allowed = ['=', '+=', '-=', '*=', '/=', '%='];
       const { operator: op, left, right } = path.node;
       if (left.type === 'Identifier') {
-        if (path.scope.hasBinding(left.name) === false) {
+        if (!path.scope.hasBinding(left.name)) {
           st.elem.error(path,
             `You must declare variable '${left.name}' before assigning a value to it.`);
         }
       }
-      if (allowed.includes(op) === false) {
+      if (!assignmentOperators.includes(op)) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
-        path.skip();
-        return;
       }
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         st.elem.error(path, `Do not use patterns`);
