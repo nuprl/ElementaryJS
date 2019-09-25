@@ -1,22 +1,26 @@
-// This module defines all the public types that the ElementaryJS package
-// exports.
+// This module defines all the public types that the EJS package exports.
 export type ElementarySyntaxError = {
   line: number,
   message: string
-}
+};
 
 export type CompileError = {
   kind: 'error',
   errors: ElementarySyntaxError[]
-}
+};
 
-export type Result =
-   {type: 'normal', value: any }
- | { type: 'exception', value: any, stack: string[] }
+export type Result = {
+  type: 'normal',
+  value: any
+} | {
+  type: 'exception',
+  value: any,
+  stack: string[]
+};
 
 export type CompileOK = {
   kind: 'ok';
-  g: { [key: string]: any},
+  g: { [key: string]: any },
   run(onDone: (result: Result) => void): void;
   eval(code: string, onDone: (result: Result) => void): void;
   stop(onStopped: () => void): void;
@@ -34,4 +38,4 @@ export type CompilerOpts = {
   consoleLog: (message: string) => void,
   version: () => void,
   whitelistCode: { [key: string]: string }
-}
+};

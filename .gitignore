@@ -1,6 +1,6 @@
 /node_modules
 /dist
-ts/version.ts
+src/version.ts
 
 /user_files
 users.txt

@@ -1,5 +1,5 @@
-import { compile, CompileOK, Result } from '../ts/index';
-import * as runtime from '../ts/runtime';
+import { compile, CompileOK, Result } from '../src/index';
+import * as runtime from '../src/runtime';
 
 const compileOpts = {
   isOnline: true,
