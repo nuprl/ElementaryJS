@@ -2,5 +2,5 @@
 /dist
 src/version.ts
 
-/user_files
+/userFiles
 users.txt
