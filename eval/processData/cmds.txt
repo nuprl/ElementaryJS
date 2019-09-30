@@ -1,0 +1,5 @@
+Accounts Total: gsutil ls gs://[bucket name]/ | wc -l
+File Total: gsutil ls -r gs://[bucket name]/** | wc -l
+Revision Total: gsutil ls -ar gs://[bucket name]/** | wc -l
+File Size: gsutil du -hs gs://[bucket name]/
+Revision Size: gsutil du -ahs gs://[bucket name]/
