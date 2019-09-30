@@ -2,13 +2,11 @@
 
 [![Build Status](https://travis-ci.org/plasma-umass/ElementaryJS.svg?branch=master)](https://travis-ci.org/plasma-umass/ElementaryJS)
 
-**WARNING: ElementaryJS is not ready for general use.**
-
-JavaScript without sharp edges.
+JavaScript without sharp edges. **WARNING: ElementaryJS is not ready for general use.**
 
 # Usage
 
-[FILL] Describe how to embed in a web page
+[FILL] *Describe how to embed in a web page.*
 
 # Building
 
@@ -36,7 +34,7 @@ These are the primary files of ElementaryJS:
 - `src/runtime.ts`: The ElementaryJS runtime system. This module has the
   implementations of the dynamic checks that the compiler inserts.
 
-- `src/unit-tests.test.ts`: Unit tests.
-
 - `src/index.ts`: Entrypoint of the ElementaryJS package. This is the interface to
   ElementaryJS.
+
+- `test/unit-tests.test.ts`: Unit tests.

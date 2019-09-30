@@ -2,8 +2,8 @@
 #WD: "/ElementaryJS".
 #Requires line-separated list of users (L23); use "gsutil ls [bucket url] > users.txt" to generate.
 
-mkdir user_files
-cd user_files || exit
+mkdir userFiles
+cd userFiles || exit
 
 while IFS= read -r user; do
   id="$(md5sum <<< "$user" | cut -b-6)"
@@ -23,4 +23,4 @@ while IFS= read -r user; do
 done < "../users.txt"
 
 cd ..
-rm ./user_files/files.txt
+rm ./userFiles/files.txt
