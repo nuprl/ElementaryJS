@@ -12,19 +12,32 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-class ArrayStub {
+function errorHandle(err: string, check: string) {
+  if (true) { // TODO
+    throw new ElementaryRuntimeError(err);
+  }
+  console.warn(`EJS ERROR ${check}: ${err}`);
+}
 
+export function elementaryJSBug(what: string) {
+  // TODO(arjun): We should save the trace ourselves
+  errorHandle('You have encountered a potential bug in ' +
+    'ElementaryJS. Please report this to the developers, ' +
+    'along with the following stack trace:\n' + console.trace(), 'elementaryJSBug');
+}
+
+class ArrayStub {
   constructor() {
-    throw new ElementaryRuntimeError(`use Array.create(length, init)`);
+    errorHandle('use Array.create(length, init)', 'Array constructor');
   }
 
   static create(n: any, v: any) {
     if (arguments.length !== 2) {
-      throw new ElementaryRuntimeError(`.create expects 2 arguments, received ${arguments.length}`);
+      errorHandle(`.create expects 2 arguments, received ${arguments.length}`, 'Array.create');
     }
 
     if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
-      throw new ElementaryRuntimeError('array size must be a positive integer');
+      errorHandle('array size must be a positive integer', 'Array.create');
     }
 
     let a = new Array(n);
@@ -33,30 +46,28 @@ class ArrayStub {
     }
     return stopifyArray(a);
   }
-
 }
 
 export { ArrayStub as Array };
 
 export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
-  if (typeof(value) === 'boolean') {
-    return value;
+  if (typeof value !== 'boolean' && typeof operator === 'undefined') { // for the if statement
+    errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean');
+  } else if (typeof value !== 'boolean') {
+    errorHandle(`arguments of operator '${operator}' must both be booleans`, 'checkIfBoolean');
   }
-  if (typeof operator === 'undefined') { // undefined is for the if statement
-    throw new ElementaryRuntimeError(`expected a boolean expression, instead received '${value}'`);
-  }
-  throw new ElementaryRuntimeError(`arguments of operator '${operator}' must both be booleans`);
+  return value;
 }
 
 export function arrayBoundsCheck(object: any, index: string) {
   if (object instanceof Array === false) {
-    throw new ElementaryRuntimeError('array indexing called on a non-array value type');
+    errorHandle('array indexing called on a non-array value type', 'arrayBoundsCheck');
   }
   if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
-    throw new ElementaryRuntimeError(`array index '${index}' is not valid`);
+    errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck');
   }
   if (object[index] === undefined) {
-    throw new ElementaryRuntimeError(`index '${index}' is out of array bounds`);
+    errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck');
   }
   return object[index];
 }
@@ -66,13 +77,15 @@ export function dot(object: any, index: string) {
       typeof object !== 'string'  &&
       typeof object !== 'boolean' &&
       typeof object !== 'number') {
-    throw new ElementaryRuntimeError(`cannot access member of non-object value types`);
+    errorHandle('cannot access member of non-object value types', 'dot');
   }
   if (!object.hasOwnProperty(index)) {
-    throw new ElementaryRuntimeError(`object does not have member '${index}'`);
+    errorHandle(`object does not have member '${index}'`, 'dot');
   }
   if (typeof object === 'string' && index === 'split') {
-    return stopifyStringSplit(object);
+    return function(sep: string) {
+      return stopifyArray(object.split(sep));
+    };
   }
 
   return object[index];
@@ -80,16 +93,15 @@ export function dot(object: any, index: string) {
 
 export function checkCall(object: any, field: string, args: any[]) {
   if (typeof object === 'string' && field === 'split') {
-      return stopifyArray(object.split(args[0]));
-  } else {
-    throw elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
+    return stopifyArray(object.split(args[0]));
   }
+  elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
 }
 
 export function stopifyArray(array: any[]) {
   const maybeRunner = getRunner();
   if (maybeRunner.kind === 'error') {
-    throw elementaryJSBug(`Stopify not loaded`);
+    return elementaryJSBug(`Stopify not loaded`);
   }
   // TODO(arjun): Why may runner be undefined?
   return maybeRunner.value.runner!.g.$stopifyArray(array);
@@ -114,39 +126,24 @@ export function stopifyObjectArrayRecur(obj: any) {
   return stopifyArray(obj); // since it's array, stopify the whole array
 }
 
-function stopifyStringSplit(str: string) {
-  return function(sep: string) {
-    return stopifyArray(str.split(sep));
-  };
-}
-
 export function updateOnlyNumbers(opcode: string, object: any) {
   if (typeof object !== 'number') {
     // TODO(joydeepb): Figure out how to print the operator.
-    throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);
+    errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers');
   }
 }
 
 export function checkNumberAndReturn(opcode: string, object: any) {
   if (typeof object !== 'number') {
     // TODO(joydeepb): Figure out how to print the operator.
-    throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);
+    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkNumberAndReturn');
   }
   return object;
 }
 
-export function elementaryJSBug(what: string) {
-  // TODO(arjun): We should save the trace ourselves
-  let errorMsg = 'You have encountered a potential bug in ' +
-    'ElementaryJS. Please report this to the developers, ' +
-    'along with the following stack trace:\n';
-  console.trace();
-  throw new ElementaryRuntimeError(errorMsg);
-}
-
 export function checkMember(o: any, k: any, v: any) {
   if (o instanceof Array) {
-    throw new ElementaryRuntimeError(`cannot set .${k} of an array`);
+    errorHandle(`cannot set .${k} of an array`, 'checkMember');
   }
   dot(o, k);
   return (o[k] = v);
@@ -157,20 +154,16 @@ export function checkArray(o: any, k: any, v: any) {
   return (o[k] = v);
 }
 
-export function checkUpdateOperand(
-  opcode: string,
-  obj: any,
-  member: string | number) {
+export function checkUpdateOperand(opcode: string, obj: any, member: string | number) {
   if (obj.hasOwnProperty(member) === false) {
     if (typeof member === 'number') {
-      throw new ElementaryRuntimeError(
-        `index '${member}' is out of array bounds`);
+      errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand');
     } else {
-      throw new ElementaryRuntimeError(`object does not have member '${member}'`);
+      errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand');
     }
   }
   if (typeof (obj[member]) !== 'number') {
-    throw new ElementaryRuntimeError(`argument of operator '${opcode}' must be a number`);
+    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand');
   }
   if (opcode === '++') {
     return (++obj[member]);
@@ -178,16 +171,14 @@ export function checkUpdateOperand(
     return (--obj[member]);
   } else {
     // This will only happen if there is an update expression with an opcode other than ++ or --.
-    elementaryJSBug('UpdateOperand dynamic check');
-    return undefined;
+    return elementaryJSBug('UpdateOperand dynamic check');
   }
 }
 
 export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
   if (!((typeof (lhs) === "string" && typeof (rhs) === "string") ||
     (typeof (lhs) === "number" && typeof (rhs) === "number"))) {
-    throw new ElementaryRuntimeError(
-      `arguments of operator '${op}' must both be numbers or strings`);
+    errorHandle(`arguments of operator '${op}' must both be numbers or strings`, 'applyNumOrStringOp');
   }
   switch (op) {
     case "+": {
@@ -201,8 +192,7 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
 
 export function applyNumOp(op: string, lhs: any, rhs: any) {
   if (!(typeof (lhs) === "number" && typeof (rhs) === "number")) {
-    throw new ElementaryRuntimeError(
-      `arguments of operator '${op}' must both be numbers`);
+    errorHandle(`arguments of operator '${op}' must both be numbers`, 'applyNumOp');
   }
   switch (op) {
     case "-": {
@@ -256,10 +246,9 @@ export function applyNumOp(op: string, lhs: any, rhs: any) {
 
 export function arityCheck(name: string, expected: number, actual: number) {
   if (expected !== actual) {
-    const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`;
-    const actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
-    throw new ElementaryRuntimeError(
-      `function ${name} expected ${expectedStr} but received ${actualStr}`);
+    const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`,
+          actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
+    errorHandle(`function ${name} expected ${expectedStr} but received ${actualStr}`, 'arityCheck');
   }
 }
 
@@ -387,7 +376,7 @@ export function test(description: string, testFunction: () => void) {
 
 /**
  * To be used after all tests are run to get the summary of all tests.
- * Output can be styled with the hasStyles argumnet.
+ * Output can be styled with the hasStyles argument.
  *
  * @param {boolean} hasStyles to determine whether it needs styling (for console.log)
  * @returns an object with output (string) and style, (array of string).
