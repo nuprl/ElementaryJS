@@ -36,6 +36,7 @@ export type TestResult = {
 
 export type CompilerOpts = {
   consoleLog: (message: string) => void,
+  isSilent?: boolean,
   version: () => void,
   whitelistCode: { [key: string]: string }
 };

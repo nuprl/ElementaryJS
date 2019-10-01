@@ -29,9 +29,8 @@ class ElementaryRunner implements CompileOK {
   public kind: 'ok' = 'ok';
   private codeMap : { [key: string]: any };
 
-  constructor(
-    private runner: stopify.AsyncRun & stopify.AsyncEval,
-    opts: CompilerOpts) {
+  constructor(private runner: stopify.AsyncRun & stopify.AsyncEval, opts: CompilerOpts) {
+    if (opts.isSilent) { runtime.runSilent(); }
 
     this.codeMap = {};
     const config: string = `{
@@ -196,8 +195,7 @@ function applyElementaryJS(
     if (exn instanceof SyntaxError) {
       const groups = /^(.*) \((\d+):(\d+)\)$/.exec(exn.message);
       if (groups === null) {
-        // NOTE(arjun): I don't think this can happen, but you never know with
-        // JavaScript.
+        // NOTE(arjun): I don't think this can happen, but you never know with JavaScript.
         message = exn.message;
       }
       else {

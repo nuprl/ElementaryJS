@@ -13,6 +13,7 @@ try {
   const code = fs.readFileSync(input),
         opts = {
           consoleLog: s => console.log(s),
+          isSilent: false,
           version: () => console.log(version.EJSVERSION),
           whitelistCode: {}
         },
@@ -26,7 +27,7 @@ try {
     if (result.type === 'exception') {
       throw result.stack;
     }
-    console.log(result.value);
+    console.log(`FINAL RESULT: ${result.value}`);
   });
 } catch(e) {
   console.error(`Error compiling ${input}`, e);
