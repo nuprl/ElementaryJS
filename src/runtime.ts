@@ -19,7 +19,7 @@ function errorHandle(err: string, check: string) {
   if (!isSilent) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
-  console.warn(`EJS ERROR ${check}: ${err}`);
+  console.warn(`EJS RUNTIME ERROR ${check}: ${err}`);
 }
 
 export function elementaryJSBug(what: string) {
@@ -343,7 +343,7 @@ export function test(description: string, testFunction: () => void) {
     return runtime.endTurn((onDone: any) => {
       let done = false;
       const timerID = setTimeout(() => {
-          runner.pause(() => {
+        runner.pause(() => {
           if (done) { return; }
           suspend.continuation = k;
           suspend.onDone = onDone;
@@ -361,17 +361,16 @@ export function test(description: string, testFunction: () => void) {
             failed: false,
             description: description,
           });
-        }
-        else {
+        } else {
           tests.push({
             failed: true,
             description: description,
             error: result.value,
           });
         }
-          clearTimeout(timerID);
-          done = true;
-          runtime.runtime(() => k({ type: 'normal', value: undefined }), onDone);
+        clearTimeout(timerID);
+        done = true;
+        runtime.runtime(() => k({ type: 'normal', value: undefined }), onDone);
       });
     });
   });

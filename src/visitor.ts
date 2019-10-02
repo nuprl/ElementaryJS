@@ -188,9 +188,12 @@ export const visitor = {
       }
       path.stop();
 
-      if (st.elem.errors.length > 0) {
+      const l = st.elem.errors.length;
+      if (l > 0) {
         if (State.isSilent) {
-          console.warn(st.elem.toString());
+          console.warn(
+            `${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' }:\n${st.elem.toString()}`
+          );
         } else {
           throw st.elem;
         }
