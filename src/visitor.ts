@@ -59,17 +59,17 @@ const assignmentOperators = [
 ], allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
 
 // This is the visitor state, which includes a list of errors. We throw
-// this object if something goes wrong.Clients of ElementaryJS only rely on the
+// this object if something goes wrong. Clients of ElementaryJS only rely on the
 // CompileError interface.
 export class State implements CompileError {
+  public static isSilent: boolean = false;
 
   // Allows clients to discriminate between CompileError and CompileResult.
   public kind: 'error' = 'error';
   public inConstructor: boolean = false;
   public inConstructorStack: boolean[] = [];
 
-  constructor(public errors: ElementarySyntaxError[]) {
-  }
+  constructor(public errors: ElementarySyntaxError[]) {}
 
   // Convenience method to add a new error
   error(path: NodePath<t.Node>, message: string) {
@@ -81,12 +81,8 @@ export class State implements CompileError {
   toString() {
     if (this.errors.length === 0) {
       return 'class State in ElementaryJS with no errors';
-    }
-    else {
-      return this.errors.map(x => {
-          const l = x.line;
-          return `- ${x.message} (line ${l})`
-        }).join('\n');
+    } else {
+      return this.errors.map(x => `- ${x.message} (line ${x.line})`).join('\n');
     }
   }
 }
@@ -193,7 +189,11 @@ export const visitor = {
       path.stop();
 
       if (st.elem.errors.length > 0) {
-        throw st.elem;
+        if (State.isSilent) {
+          console.warn(st.elem.toString());
+        } else {
+          throw st.elem;
+        }
       }
     }
   },
@@ -568,6 +568,7 @@ export const visitor = {
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
-export function plugin() {
-  return { visitor: visitor };
+export function plugin(isSilent: boolean) {
+  State.isSilent = isSilent;
+  return function() { return { visitor: visitor }; };
 }

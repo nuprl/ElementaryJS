@@ -27,10 +27,12 @@ theGlobal.stopify = stopify;
 class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
   public kind: 'ok' = 'ok';
-  private codeMap : { [key: string]: any };
+  private codeMap: { [key: string]: any };
+  private isSilent: boolean;
 
   constructor(private runner: stopify.AsyncRun & stopify.AsyncEval, opts: CompilerOpts) {
-    if (opts.isSilent) { runtime.runSilent(); }
+    this.isSilent = opts.isSilent as boolean;
+    if (this.isSilent) { runtime.runSilent(); }
 
     this.codeMap = {};
     const config: string = `{
@@ -120,29 +122,23 @@ class ElementaryRunner implements CompileOK {
   }
 
   eval(code: string, onDone: (result: Result) => void) {
-    const elementary = applyElementaryJS(code);
+    const elementary = applyElementaryJS(code, this.isSilent);
     if (elementary.kind === 'error') {
-      onDone({
+      return onDone({
         type: 'exception',
         stack: [], // This is correct
-        value: elementary.errors.map(e => {
-          return `Line ${e.line}: ${e.message}`;
-        }).join('\n')
+        value: elementary.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n')
       });
-      return;
     }
     const eRunner = runtime.getRunner();
     if (eRunner.kind !== 'ok') {
       throw('Invalid runner in run');
     }
     eRunner.value.isRunning = true;
-    this.runner.evalAsyncFromAst(
-      elementary.ast,
-      (result) => {
-        eRunner.value.isRunning = false;
-        onDone(result);
-      }
-    );
+    this.runner.evalAsyncFromAst(elementary.ast, (result) => {
+      eRunner.value.isRunning = false;
+      onDone(result);
+    });
   }
 
   stop(onStopped: () => void) {
@@ -156,29 +152,24 @@ class ElementaryRunner implements CompileOK {
       onStopped();
     });
   }
-
 }
 
-function applyElementaryJS(
-  code: string | Node): CompileError | { kind: 'ok', ast: Program }  {
-
+function applyElementaryJS(code: string | Node, isSilent: boolean): CompileError | { kind: 'ok', ast: Program }  {
   try {
     // Babylon is the parser that Babel uses internally.
-    const ast = typeof code === 'string' ?
-      babylon.parse(code).program : code;
-    const result1 = babel.transformFromAst(ast,
-      typeof code === 'string' && code || undefined, {
-      plugins: [ transformArrowFunctions, [visitor.plugin] ]
-    });
+    const ast = typeof code === 'string' ? babylon.parse(code).program : code,
+          result1 = babel.transformFromAst(ast,
+            typeof code === 'string' && code || undefined, {
+            plugins: [ transformArrowFunctions, [ visitor.plugin(isSilent) ] ]
+          }),
+          result2 = babel.transformFromAst(result1.ast!, result1.code!, {
+            plugins: [ transformClasses ],
+            code: false
+          }),
+          // NOTE(arjun): There is some imprecision in the type produced by Babel.
+          // I have verified that this cast is safe.
+          polyfilled = polyfillHofFromAst((result2.ast as babel.types.File).program);
 
-    const result2 = babel.transformFromAst(result1.ast!, result1.code!, {
-      plugins: [ transformClasses ],
-      code: false
-    });
-    // NOTE(arjun): There is some imprecision in the type produced by Babel.
-    // I have verified that this cast is safe.
-    const result2Ast = (result2.ast as babel.types.File).program;
-    const polyfilled = polyfillHofFromAst(result2Ast);
     return {
       ast: polyfilled,
       kind: 'ok'
@@ -197,18 +188,14 @@ function applyElementaryJS(
       if (groups === null) {
         // NOTE(arjun): I don't think this can happen, but you never know with JavaScript.
         message = exn.message;
-      }
-      else {
+      } else {
         line = Number(groups[2]);
         message = groups[1];
       }
-    }
-    // This can happen due to Babel.
-    else if (exn.loc && exn.loc.line) {
+    } else if (exn.loc && exn.loc.line) { // This can happen due to Babel.
       line = Number(exn.loc.line);
       message = exn.message;
-    }
-    else {
+    } else {
       message = exn.message;
     }
 
@@ -219,11 +206,8 @@ function applyElementaryJS(
   }
 }
 
-export function compile(
-  code: string | Node,
-  opts: CompilerOpts): CompileOK | CompileError {
-
-  const elementary = applyElementaryJS(code);
+export function compile(code: string | Node, opts: CompilerOpts): CompileOK | CompileError {
+  const elementary = applyElementaryJS(code, opts.isSilent as boolean);
   if (elementary.kind === 'error') {
     return elementary;
   }
@@ -239,7 +223,7 @@ export function compile(
   const runner = new ElementaryRunner(stopified, opts);
   runner.g.$stopifyArray = function(array: any) {
     return require('@stopify/higher-order-functions/dist/ts/simpleHofPolyfill.lazy')
-        .stopifyArray(array);
+      .stopifyArray(array);
   }
   return runner;
 }
