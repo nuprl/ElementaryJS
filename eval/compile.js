@@ -27,7 +27,7 @@ try {
     if (result.type === 'exception') {
       throw result.stack;
     }
-    console.log(`FINAL RESULT: ${result.value}`);
+    console.log(`FINAL 'result.value': ${result.value}`);
   });
 } catch(e) {
   console.error(`Error compiling ${input}`, e);
