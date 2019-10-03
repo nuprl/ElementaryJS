@@ -1,0 +1,11 @@
+# cURL config for fetching 220 libs.
+-Ss
+
+url = "https://raw.githubusercontent.com/umass-compsci220/ocelot-settings/master/dist/oracle.js"
+output = "libs/oracle.js"
+
+url = "https://raw.githubusercontent.com/umass-compsci220/ocelot-settings/master/dist/lib220.js"
+output = "libs/lib220.js"
+
+url = "https://raw.githubusercontent.com/umass-compsci220/ocelot-settings/master/dist/rrt.js"
+output = "libs/rrt.js"
