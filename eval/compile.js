@@ -1,7 +1,10 @@
 'use strict';
-const ejs = require('../dist/index.js'),
-      fs = require('fs'),
-      version = require('../dist/version.js');
+const fs = require('fs'),
+      ejs = require('../dist/index.js'),
+      version = require('../dist/version.js'),
+      lib220 = require('./libs/lib220.js'),
+      oracle = require('./libs/oracle.js'),
+      rrt = require('./libs/rrt.js');
 
 if (process.argv.length < 3) {
   console.error('Usage: node compile.js input.js');
@@ -15,7 +18,7 @@ try {
           consoleLog: s => console.log(s),
           isSilent: false,
           version: () => console.log(version.EJSVERSION),
-          whitelistCode: {}
+          whitelistCode: { lib220, oracle, rrt }
         },
         compilerResult = ejs.compile(code.toString(), opts);
 
@@ -25,10 +28,10 @@ try {
 
   compilerResult.run(result => {
     if (result.type === 'exception') {
-      throw result.stack;
+      throw result.value && result.value.toString();
     }
-    console.log(`FINAL 'result.value': ${result.value}`);
+    console.log(`EXIT SUCCESS on input ${input}: ${result.value}`);
   });
-} catch(e) {
-  console.error(`Error compiling ${input}`, e);
+} catch (e) {
+  console.error(`EXIT FAILURE on input ${input}: ${e}`);
 }
