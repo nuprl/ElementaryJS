@@ -1,5 +1,5 @@
 #!/bin/bash
-#WD: "/ElementaryJS".
+#WD: "/ElementaryJS/eval".
 #Requires line-separated list of users (L23); use "gsutil ls [bucket url] > users.txt" to generate.
 
 mkdir userFiles
@@ -9,7 +9,7 @@ while IFS= read -r user; do
   id="$(md5sum <<< "$user" | cut -b-6)"
 
   gsutil -m ls -a $user > "./files.txt"
-  node ../eval/scripts/processFilePaths.js
+  node ../scripts/processFilePaths.js
 
   mkdir "$id"
   cd "$id" || exit
