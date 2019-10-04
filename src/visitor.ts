@@ -22,45 +22,20 @@
  *     // path.skip() to avoid checking generated code.
  *   }
  * }
- *
  */
-
 import * as t from 'babel-types';
 import { NodePath } from 'babel-traverse';
 import { ElementarySyntaxError, CompileError } from './types';
 
-const assignmentOperators = [
-  '=',
-  '+=',
-  '-=',
-  '*=',
-  '/=',
-  '%='
-], comparisonOperators = [
-  '===',
-  '!=='
-], numOperators = [
-  '<=',
-  '>=',
-  '<',
-  '>',
-  '<<',
-  '>>',
-  '>>>',
-  '-',
-  '*',
-  '/',
-  '%',
-  '&',
-  '|',
-  '^'
-], numOrStringOperators = [
-  '+'
-], allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
+const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '%='],
+      comparisonOperators = ['===', '!=='],
+      numOperators = ['<=', '>=', '<', '>', '<<', '>>', '>>>', '-', '*', '/', '%', '&', '|', '^'],
+      numOrStringOperators = ['+'],
+      allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
 
-// This is the visitor state, which includes a list of errors. We throw
-// this object if something goes wrong. Clients of ElementaryJS only rely on the
-// CompileError interface.
+// This is the visitor state, which includes a list of errors.
+// We throw this object if something goes wrong.
+// Clients of ElementaryJS only rely on the CompileError interface.
 export class State implements CompileError {
   public static isSilent: boolean = false;
 
@@ -76,26 +51,22 @@ export class State implements CompileError {
     this.errors.push({ line: path.node.loc.start.line, message: message });
   }
 
-  // Convenience: object prints reasonably for debugging the implementation
-  // of ElementaryJS.
+  // Convenience: object prints reasonably for debugging the implementation of ElementaryJS.
   toString() {
-    if (this.errors.length === 0) {
-      return 'class State in ElementaryJS with no errors';
-    } else {
-      return this.errors.map(x => `- ${x.message} (line ${x.line})`).join('\n');
-    }
+    return this.errors.length === 0 ? 'class State in ElementaryJS with no errors' :
+      this.errors.map(x => `- ${x.message} (line ${x.line})`).join('\n');
   }
-}
-
-function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
-  const f = t.memberExpression(t.identifier('rts'), t.identifier(name), false);
-  const c = t.callExpression(f, args);
-  c.loc = loc;
-  return c;
 }
 
 interface S {
   elem: State
+}
+
+function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
+  const f = t.memberExpression(t.identifier('rts'), t.identifier(name), false),
+        c = t.callExpression(f, args);
+  c.loc = loc;
+  return c;
 }
 
 function unassign(op: string) {
@@ -117,17 +88,15 @@ function unassign(op: string) {
   }
 }
 
-export function functionBody(node: t.Function | t.Program): t.Statement[] {
+function functionBody(node: t.Function | t.Program): t.Statement[] {
   if (node.type === 'Program') {
     return node.body;
-  }
-  else if (t.isFunctionExpression(node) ||
-           t.isFunctionDeclaration(node) ||
-           t.isClassMethod(node) ||
-           t.isObjectMethod(node)) {
+  } else if (t.isFunctionExpression(node) ||
+              t.isFunctionDeclaration(node) ||
+              t.isClassMethod(node) ||
+              t.isObjectMethod(node)) {
     return node.body.body;
-  }
-  else {
+  } else {
     throw new Error(`node is a ${node.type}`);
   }
 }
@@ -135,47 +104,35 @@ export function functionBody(node: t.Function | t.Program): t.Statement[] {
 function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
   const parent = path.getFunctionParent().node;
   if (t.isProgram(parent) ||
-    t.isClassMethod(parent) ||
-    t.isFunctionExpression(parent) ||
-    t.isFunctionDeclaration(parent) ||
-    t.isObjectMethod(parent)) {
+      t.isClassMethod(parent) ||
+      t.isFunctionExpression(parent) ||
+      t.isFunctionDeclaration(parent) ||
+      t.isObjectMethod(parent)) {
     return functionBody(parent);
-  }
-  else {
+  } else {
     throw new Error(`parent is a ${parent.type}`);
   }
 }
 
 function propertyAsString(node: t.MemberExpression): t.Expression {
-  if (node.computed) {
-    return node.property;
-  }
-  else {
-    return t.stringLiteral((node.property as t.Identifier).name);
-  }
+  return node.computed ? node.property : t.stringLiteral((node.property as t.Identifier).name);
 }
 
 function lvalIds(lval: t.LVal): t.Identifier[]  {
-  if (lval.type === 'Identifier') {
-    return [lval];
-  }
-  else {
-    // TODO(arjun): Not exactly right, but we don't support patterns anyway
-    return [];
-  }
+  // TODO(arjun): Not exactly right, but we don't support patterns anyway
+  return lval.type === 'Identifier' ? [lval] : [];
 }
 
-export const visitor = {
+const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
         st.elem = new State([]);
         // Insert "use strict" if needed
         if (path.node.directives === undefined) {
-          path.node.directives = [ ];
+          path.node.directives = [];
         }
         if (!path.node.directives.some(d => d.value.value === 'use strict')) {
-          path.node.directives.push(
-            t.directive(t.directiveLiteral('use strict')));
+          path.node.directives.push(t.directive(t.directiveLiteral('use strict')));
         }
     },
     exit(path: NodePath<t.Program>, st: S) {
@@ -191,9 +148,7 @@ export const visitor = {
       const l = st.elem.errors.length;
       if (l > 0) {
         if (State.isSilent) {
-          console.warn(
-            `${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' }:\n${st.elem.toString()}`
-          );
+          console.warn(`${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' }:\n${st.elem.toString()}`);
         } else {
           throw st.elem;
         }
@@ -204,10 +159,9 @@ export const visitor = {
     enter(path: NodePath<t.Function>, st: S) {
       if (path.node.params.length &&
           path.node.params[path.node.params.length - 1].type === 'RestElement') {
-        st.elem.error(path, `The rest parameter is not supported.`);
+        st.elem.error(path, 'The rest parameter is not supported.');
       }
-      const inCtor = path.node.type === 'ClassMethod' &&
-        path.node.kind === 'constructor';
+      const inCtor = path.node.type === 'ClassMethod' && path.node.kind === 'constructor';
       st.elem.inConstructorStack.push(st.elem.inConstructor);
       st.elem.inConstructor = inCtor;
     },
@@ -227,12 +181,11 @@ export const visitor = {
       // Inserts the expression `dynCheck(N, arguments.length, name)` at the
       // top of the function, where N is the number of declared arguments
       // and name is the name of the function or '(anonymous').
-      const body = functionBody(path.node);
-      const id = path.node.id;
-      const expected = t.numericLiteral(path.node.params.length);
-      const actual = t.memberExpression(t.identifier('arguments'),
-        t.identifier('length'), false);
-      const name = t.stringLiteral(id ? id.name : '(anonymous)');
+      const body = functionBody(path.node),
+            id = path.node.id,
+            expected = t.numericLiteral(path.node.params.length),
+            actual = t.memberExpression(t.identifier('arguments'), t.identifier('length'), false),
+            name = t.stringLiteral(id ? id.name : '(anonymous)');
       body.unshift(t.expressionStatement(
         dynCheck('arityCheck', path.node.loc, name, expected, actual)));
       path.skip();
@@ -241,14 +194,12 @@ export const visitor = {
   VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
-      st.elem.error(path, `Do not use destructuring patterns.`);
-      // The remaining checks assume that the program is binding a simple
-      // identifier.
+      st.elem.error(path, 'Do not use destructuring patterns.');
+      // The remaining checks assume that the program is binding a simple identifier.
       return;
     }
     if (!t.isExpression(path.node.init)) {
-      let x = path.node.id.name;
-      st.elem.error(path, `You must initialize the variable '${x}'.`);
+      st.elem.error(path, `You must initialize the variable '${path.node.id.name}'.`);
     }
   },
   CallExpression: {
@@ -258,11 +209,11 @@ export const visitor = {
           callee.computed === false &&
           callee.property.type === 'Identifier' &&
           callee.property.name === 'split') {
-          path.replaceWith(dynCheck('checkCall', path.node.loc,
-            callee.object,
-            propertyAsString(callee),
-            t.arrayExpression(path.node.arguments)));
-          path.skip();
+        path.replaceWith(dynCheck('checkCall', path.node.loc,
+          callee.object,
+          propertyAsString(callee),
+          t.arrayExpression(path.node.arguments)));
+        path.skip();
       }
     }
   },
@@ -272,8 +223,7 @@ export const visitor = {
       const prop = path.node.properties[i];
       if (prop.type === 'ObjectProperty') {
         if (prop.key.type !== 'Identifier') {
-          st.elem.error(path,
-            `Object member name must be an identifier.`);
+          st.elem.error(path, 'Object member name must be an identifier.');
         } else {
           propertyNames.has(prop.key.name) ? st.elem.error(path,
             `Object member name may only be used once; ${prop.key.name}.`) :
@@ -293,18 +243,17 @@ export const visitor = {
         return;
       }
       if (t.isCallExpression(parent) && parent.callee === path.node) {
-        // This MemberExpression is the callee in a CallExpression, i.e.,
-        // obj.method(...).
+        // This MemberExpression is the callee in a CallExpression, i.e., obj.method(...).
         // We can simply leave this intact. JavaScript will throw an exception
         // with a reasonable error message if obj.method is not a function.
         return;
       }
-      const o = path.node.object;
-      const p = path.node.property;
+      const o = path.node.object,
+            p = path.node.property;
       if (path.node.computed === false) {
         if (!t.isIdentifier(p)) {
           // This should never happen
-          throw new Error(`ElementaryJS expected id. in MemberExpression`);
+          throw new Error('ElementaryJS expected id. in MemberExpression');
         }
         path.replaceWith(dynCheck('dot', o.loc, o, t.stringLiteral(p.name)));
       } else {
@@ -326,7 +275,7 @@ export const visitor = {
         st.elem.error(path, `Do not use the '${op}' operator.`);
       }
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
-        st.elem.error(path, `Do not use patterns`);
+        st.elem.error(path, 'Do not use patterns');
         return;
       }
 
@@ -359,21 +308,17 @@ export const visitor = {
     exit(path: NodePath<t.AssignmentExpression>, st: S) {
       const { left, right } = path.node;
       if (path.node.operator !== '=') {
-        throw new Error(`desugaring error`);
+        throw new Error('desugaring error');
       }
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
-        throw new Error(`syntactic check error`);
+        throw new Error('syntactic check error');
       }
-
-
       if (t.isIdentifier(left)) {
         return;
       }
-
       if (st.elem.inConstructor && left.object.type === 'ThisExpression') {
         return;
       }
-
       if (left.computed) {
         // exp[x] = rhs => checkArray(exp, x, rhs)
         path.replaceWith(
@@ -381,8 +326,7 @@ export const visitor = {
       } else {
         // exp.x = rhs => checkMember(exp, 'x', rhs)
         path.replaceWith(
-          dynCheck('checkMember', left.object.loc, left.object, propertyAsString(left),
-            right));
+          dynCheck('checkMember', left.object.loc, left.object, propertyAsString(left), right));
       }
       path.skip();
     }
@@ -400,7 +344,7 @@ export const visitor = {
   },
   BinaryExpression: {
     enter(path: NodePath<t.BinaryExpression>, st: S) {
-      let op = path.node.operator;
+      const op = path.node.operator;
       if (op === '==') {
         st.elem.error(path, `Do not use the '==' operator. Use '===' instead.`);
       } else if (op === '!=') {
@@ -411,11 +355,11 @@ export const visitor = {
     },
     exit(path: NodePath<t.BinaryExpression>, st: S) {
       // Original: a + b
-      let op = path.node.operator;
-      let opName = t.stringLiteral(op);
+      const op = path.node.operator,
+            opName = t.stringLiteral(op);
       if (numOrStringOperators.includes(op)) {
         // Transformed: applyNumOrStringOp('+', a, b);
-        path.replaceWith(dynCheck("applyNumOrStringOp",
+        path.replaceWith(dynCheck('applyNumOrStringOp',
           path.node.loc,
           opName,
           path.node.left,
@@ -423,7 +367,7 @@ export const visitor = {
         path.skip();
       } else if (numOperators.includes(op)) {
         // Transformed: applyNumOp('+', a, b);
-        path.replaceWith(dynCheck("applyNumOp",
+        path.replaceWith(dynCheck('applyNumOp',
           path.node.loc,
           opName,
           path.node.left,
@@ -434,29 +378,24 @@ export const visitor = {
   },
   UnaryExpression(path: NodePath<t.UnaryExpression>, st: S) {
     if (path.node.operator == 'delete') {
-      st.elem.error(path, `Do not use the '` + path.node.operator +
-        `' operator.`);
+      st.elem.error(path, `Do not use the '${path.node.operator}' operator.`);
     }
   },
   UpdateExpression: {
     enter(path: NodePath<t.UpdateExpression>, st: S) {
       if (path.node.prefix === false) {
-        st.elem.error(
-          path, `Do not use post-increment or post-decrement operators.`);
+        st.elem.error(path, 'Do not use post-increment or post-decrement operators.');
       }
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
       if (a.type !== 'Identifier' && a.type !== 'MemberExpression') {
-        throw new Error(`not an l-value in update expression`);
+        throw new Error('not an l-value in update expression');
       }
-      let opName = t.stringLiteral(path.node.operator);
+      const opName = t.stringLiteral(path.node.operator);
       if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
-        const check = dynCheck('updateOnlyNumbers',
-          path.node.loc,
-          opName,
-          a);
+        const check = dynCheck('updateOnlyNumbers', path.node.loc, opName, a);
         path.replaceWith(t.sequenceExpression([check, path.node]));
       } else {
         // replace with dyn check function that takes in both obj and member.
@@ -486,51 +425,50 @@ export const visitor = {
   },
   ForStatement(path: NodePath<t.ForStatement>, st: S) {
     if (path.node.init === null) {
-      st.elem.error(path, `for statement variable initialization must be present`);
+      st.elem.error(path, 'for statement variable initialization must be present');
     }
     if (path.node.init !== null &&
       !t.isAssignmentExpression(path.node.init) &&
       !t.isVariableDeclaration(path.node.init)) {
-      st.elem.error(path, `for statement variable initialization must be an assignment or a variable declaration`);
+      st.elem.error(path,
+        'for statement variable initialization must be an assignment or a variable declaration');
     }
     if (path.node.test === null) {
-      st.elem.error(path, `for statement termination test must be present`);
+      st.elem.error(path, 'for statement termination test must be present');
     }
     if (path.node.update === null) {
-      st.elem.error(path, `for statement update expression must be present`);
+      st.elem.error(path, 'for statement update expression must be present');
     }
     if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, `Loop body must be enclosed in braces.`);
+      st.elem.error(path, 'Loop body must be enclosed in braces.');
     }
   },
   WhileStatement(path: NodePath<t.WhileStatement>, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, `Loop body must be enclosed in braces.`);
+      st.elem.error(path, 'Loop body must be enclosed in braces.');
     }
   },
   DoWhileStatement(path: NodePath<t.DoWhileStatement>, st: S) {
     if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, `Loop body must be enclosed in braces.`);
+      st.elem.error(path, 'Loop body must be enclosed in braces.');
     }
   },
   IfStatement: {
     enter(path: NodePath<t.IfStatement>, st: S) {
       if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
-        st.elem.error(path, `if statement body must be enclosed in braces.`);
-      } else if (!t.isBlockStatement(path.node.consequent) && !t.isBlockStatement(path.node.alternate)) {
-        st.elem.error(path, `Body of if-else statement must be enclosed in braces.`);
+        st.elem.error(path, 'if statement body must be enclosed in braces.');
+      } else if (!t.isBlockStatement(path.node.consequent) &&
+                  !t.isBlockStatement(path.node.alternate)) {
+        st.elem.error(path, 'Body of if-else statement must be enclosed in braces.');
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
       // if (a) => if (checkIfBoolean(a))
-      const a = path.node.test;
-      const check = dynCheck('checkIfBoolean',
-          path.node.loc,
-          a);
-      const consequent = path.node.consequent;
-      const alternate = path.node.alternate;
-      const replacement = t.ifStatement(
-          check, consequent, alternate);
+      const a = path.node.test,
+            check = dynCheck('checkIfBoolean', path.node.loc, a),
+            consequent = path.node.consequent,
+            alternate = path.node.alternate,
+            replacement = t.ifStatement(check, consequent, alternate);
       replacement.loc = path.node.loc;
       path.replaceWith(replacement);
       path.skip();
@@ -563,10 +501,10 @@ export const visitor = {
     st.elem.error(path, `Do not use the 'with' statement.`);
   },
   ForOfStatement(path: NodePath<t.ForOfStatement>, st: S) {
-    st.elem.error(path, `Do not use for-of loops.`);
+    st.elem.error(path, 'Do not use for-of loops.');
   },
   ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
-    st.elem.error(path, `Do not use for-in loops.`);
+    st.elem.error(path, 'Do not use for-in loops.');
   }
 }
 
