@@ -9,7 +9,7 @@ while IFS= read -r user; do
   id="$(md5sum <<< "$user" | cut -b-6)"
 
   gsutil -m ls -a $user > "./files.txt"
-  node ../scripts/processFilePaths.js
+  node ../processFilePaths.js
 
   mkdir "$id"
   cd "$id" || exit
