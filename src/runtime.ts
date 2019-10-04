@@ -38,7 +38,6 @@ class ArrayStub {
     if (arguments.length !== 2) {
       errorHandle(`.create expects 2 arguments, received ${arguments.length}`, 'Array.create');
     }
-
     if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
       errorHandle('array size must be a positive integer', 'Array.create');
     }
@@ -179,12 +178,13 @@ export function checkUpdateOperand(opcode: string, obj: any, member: string | nu
 }
 
 export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
-  if (!((typeof (lhs) === "string" && typeof (rhs) === "string") ||
-    (typeof (lhs) === "number" && typeof (rhs) === "number"))) {
-    errorHandle(`arguments of operator '${op}' must both be numbers or strings`, 'applyNumOrStringOp');
+  if (!((typeof (lhs) === 'string' && typeof (rhs) === 'string') ||
+      (typeof (lhs) === 'number' && typeof (rhs) === 'number'))) {
+    errorHandle(`arguments of operator '${op}' must both be numbers or strings`,
+      'applyNumOrStringOp');
   }
   switch (op) {
-    case "+": {
+    case '+': {
       return (<any>(lhs) + <any>(rhs));
     } break;
     default: {
@@ -194,50 +194,50 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
 }
 
 export function applyNumOp(op: string, lhs: any, rhs: any) {
-  if (!(typeof (lhs) === "number" && typeof (rhs) === "number")) {
+  if (!(typeof (lhs) === 'number' && typeof (rhs) === 'number')) {
     errorHandle(`arguments of operator '${op}' must both be numbers`, 'applyNumOp');
   }
   switch (op) {
-    case "-": {
+    case '-': {
       return (lhs - rhs);
     } break;
-    case "/": {
+    case '/': {
       return (lhs / rhs);
     } break;
-    case "*": {
+    case '*': {
       return (lhs * rhs);
     } break;
-    case ">": {
+    case '>': {
       return (lhs > rhs);
     } break;
-    case "<": {
+    case '<': {
       return (lhs < rhs);
     } break;
-    case ">=": {
+    case '>=': {
       return (lhs >= rhs);
     } break;
-    case "<=": {
+    case '<=': {
       return (lhs <= rhs);
     } break;
-    case ">>": {
+    case '>>': {
       return (lhs >> rhs);
     } break;
-    case ">>>": {
+    case '>>>': {
       return (lhs >>> rhs);
     } break;
-    case "<<": {
+    case '<<': {
       return (lhs << rhs);
     } break;
-    case "|": {
+    case '|': {
       return (lhs | rhs);
     } break;
-    case "&": {
+    case '&': {
       return (lhs & rhs);
     } break;
-    case "^": {
+    case '^': {
       return (lhs ^ rhs);
     } break;
-    case "%": {
+    case '%': {
       return (lhs % rhs);
     } break;
     default: {
@@ -251,7 +251,8 @@ export function arityCheck(name: string, expected: number, actual: number) {
   if (expected !== actual) {
     const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`,
           actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
-    errorHandle(`function ${name} expected ${expectedStr} but received ${actualStr}`, 'arityCheck');
+    errorHandle(`function ${name} expected ${expectedStr} but received ${actualStr}`,
+      'arityCheck');
   }
 }
 
@@ -294,8 +295,8 @@ export function setRunner(runner: stopify.AsyncRun) {
 
 let timeoutMilli: number = 5000;
 /**
- * Enable/Disable testing and sets a stopify runner if needed
- * It clears out previous tests and starts anew
+ * Enable/Disable testing and sets a stopify runner if needed.
+ * It clears out previous tests and starts anew.
  *
  * @param {boolean} enable
  * @param {*} runner
@@ -306,7 +307,7 @@ export function enableTests(enable: boolean, timeout: number = 5000) {
   timeoutMilli = timeout;
 }
 /**
- * Assertions to be used in function passed into test
+ * Assertions to be used in function passed into test.
  *
  * @param {boolean} val
  * @returns true if val is true otherwise throws Error
@@ -316,17 +317,15 @@ export function assert(val: boolean) {
     throw new ElementaryTestingError(`assertion argument '${val}' is not a boolean value`);
   }
   if (!val) {
-    throw new ElementaryTestingError(`assertion failed`);
+    throw new ElementaryTestingError('assertion failed');
   }
 
   return true;
 }
 /**
- * Test function to be used for testing
- * Only runs if testing is enabled and uses
- * a stopify runner to run test if given a stopify runner.
- * Once test is run, it saves the result and the summary
- * function will output the result
+ * Test function to be used for testing.
+ * Only runs if testing is enabled and uses a stopify runner to run test if given a stopify runner.
+ * Once test is run, it saves the result and the summary function will output the result.
  *
  * @param {string} description
  * @param {() => void} testFunction
@@ -357,7 +356,7 @@ export function test(description: string, testFunction: () => void) {
       }, timeoutMilli);
       return runner.runStopifiedCode(testFunction, (result: any) => {
         if (result.type === 'normal') {
-            tests.push({
+          tests.push({
             failed: false,
             description: description,
           });
@@ -401,10 +400,10 @@ export function summary(hasStyles: boolean) {
       style: hasStyles ? ['color: #e87ce8'] : []
     };
   }
-  let output: string[] = [];
-  let style: string[] = [];
-  let numPassed = 0;
-  let numFailed = 0;
+  let output: string[] = [],
+      style: string[] = [],
+      numPassed: number = 0,
+      numFailed: number = 0;
   for (let result of tests) {
     if (result.failed) {
       output.push(`${styleMark} FAILED ${styleMark} ${result.description}\n         ${result.error!}`);

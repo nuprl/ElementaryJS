@@ -68,8 +68,10 @@ class ElementaryRunner implements CompileOK {
       chaff1: this.codeMap.oracle.chaff1,
       JSON: JSONStopfied,
       parser: Object.freeze({
-        parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseProgram(input)),
-        parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter.parseExpression(input))
+        parseProgram: (input: string) => runtime.stopifyObjectArrayRecur(interpreter
+          .parseProgram(input)),
+        parseExpression: (input: string) => runtime.stopifyObjectArrayRecur(interpreter
+          .parseExpression(input))
       }),
       geometry: Object.freeze({
         Point: this.codeMap.lib220.newPoint,
@@ -87,21 +89,21 @@ class ElementaryRunner implements CompileOK {
     // We can use .get and .set traps to intercept reads and writes to
     // global variables. Any other trap is useless (I think), since Stopify
     // does not use the global object in any other way.
-    const globalProxy = new Proxy(Object.assign({}, globals), { // prevent Proxy from altering globals
-        get: (o, k) => {
-            if (!Object.hasOwnProperty.call(o, k)) {
-                const msg = `${String(k)} is not defined`;
-                throw new runtime.ElementaryRuntimeError(msg);
-            }
-            return (o as any)[k];
-        },
-        set: (obj, prop, value) => {
-          if (globals.hasOwnProperty(prop)) { // if it's a global variable
-            throw new runtime.ElementaryRuntimeError(`${prop as string} is part of the global library, and cannot be overwritten.`);
-          } else { // if not
-            return Reflect.set(obj, prop, value); // set value
-          }
+    const globalProxy = new Proxy(Object.assign({}, globals), { // prevent altering globals
+      get: (o, k) => {
+        if (!Object.hasOwnProperty.call(o, k)) {
+          throw new runtime.ElementaryRuntimeError(`${String(k)} is not defined`);
         }
+        return (o as any)[k];
+      },
+      set: (obj, prop, value) => {
+        if (globals.hasOwnProperty(prop)) { // if it's a global variable
+          throw new runtime.ElementaryRuntimeError(
+            `${prop as string} is part of the global library, and cannot be overwritten.`);
+        } else { // if not
+          return Reflect.set(obj, prop, value); // set value
+        }
+      }
     });
 
     runtime.setRunner(runner);
@@ -154,12 +156,12 @@ class ElementaryRunner implements CompileOK {
   }
 }
 
-function applyElementaryJS(code: string | Node, isSilent: boolean): CompileError | { kind: 'ok', ast: Program }  {
+function applyElementaryJS(code: string | Node, isSilent: boolean):
+  CompileError | { kind: 'ok', ast: Program } {
   try {
     // Babylon is the parser that Babel uses internally.
     const ast = typeof code === 'string' ? babylon.parse(code).program : code,
-          result1 = babel.transformFromAst(ast,
-            typeof code === 'string' && code || undefined, {
+          result1 = babel.transformFromAst(ast, typeof code === 'string' && code || undefined, {
             plugins: [ transformArrowFunctions, [ visitor.plugin(isSilent) ] ]
           }),
           result2 = babel.transformFromAst(result1.ast!, result1.code!, {
@@ -174,14 +176,13 @@ function applyElementaryJS(code: string | Node, isSilent: boolean): CompileError
       ast: polyfilled,
       kind: 'ok'
     };
-  }
-  catch (exn) {
+  } catch (exn) {
     if (exn instanceof visitor.State) {
       return exn;
     }
 
-    let line: number = 0;
-    let message: string = '';
+    let line: number = 0,
+        message: string = '';
 
     if (exn instanceof SyntaxError) {
       const groups = /^(.*) \((\d+):(\d+)\)$/.exec(exn.message);
@@ -220,7 +221,7 @@ export function compile(code: string | Node, opts: CompilerOpts): CompileOK | Co
     };
   }
 
-  const runner = new ElementaryRunner(stopified, opts);
+  const runner: ElementaryRunner = new ElementaryRunner(stopified, opts);
   runner.g.$stopifyArray = function(array: any) {
     return require('@stopify/higher-order-functions/dist/ts/simpleHofPolyfill.lazy')
       .stopifyArray(array);
