@@ -82,7 +82,7 @@ class ElementaryRunner implements CompileOK {
         if (this.codeMap[lib]) {
           return Object.freeze(this.codeMap[lib]);
         }
-        throw new runtime.ElementaryRuntimeError(`'${lib}' not found.`);
+        runtime.errorHandle(`'${lib}' not found.`, 'require');
       }
     };
 
@@ -92,17 +92,17 @@ class ElementaryRunner implements CompileOK {
     const globalProxy = new Proxy(Object.assign({}, globals), { // prevent altering globals
       get: (o, k) => {
         if (!Object.hasOwnProperty.call(o, k)) {
-          throw new runtime.ElementaryRuntimeError(`${String(k)} is not defined`);
+          runtime.errorHandle(`${String(k)} is not defined`, 'globalProxy');
         }
         return (o as any)[k];
       },
       set: (obj, prop, value) => {
         if (globals.hasOwnProperty(prop)) { // if it's a global variable
-          throw new runtime.ElementaryRuntimeError(
-            `${prop as string} is part of the global library, and cannot be overwritten.`);
-        } else { // if not
-          return Reflect.set(obj, prop, value); // set value
+          runtime.errorHandle(
+            `${prop as string} is part of the global library, and cannot be overwritten.`,
+            'globalProxy');
         }
+        return Reflect.set(obj, prop, value); // set value
       }
     });
 
@@ -114,7 +114,7 @@ class ElementaryRunner implements CompileOK {
   run(onDone: (result: Result) => void) {
     const eRunner = runtime.getRunner();
     if (eRunner.kind !== 'ok') {
-      throw('Invalid runner in run');
+      throw Error('Invalid runner in run');
     }
     eRunner.value.isRunning = true;
     this.runner.run((result) => {
@@ -134,7 +134,7 @@ class ElementaryRunner implements CompileOK {
     }
     const eRunner = runtime.getRunner();
     if (eRunner.kind !== 'ok') {
-      throw('Invalid runner in run');
+      throw Error('Invalid runner in eval');
     }
     eRunner.value.isRunning = true;
     this.runner.evalAsyncFromAst(elementary.ast, (result) => {
@@ -146,7 +146,7 @@ class ElementaryRunner implements CompileOK {
   stop(onStopped: () => void) {
     const eRunner = runtime.getRunner();
     if (eRunner.kind !== 'ok') {
-      throw('Invalid runner in stop');
+      throw Error('Invalid runner in stop');
     }
     eRunner.value.isRunning = false;
     eRunner.value.onStopped = onStopped;

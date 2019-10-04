@@ -15,7 +15,7 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-function errorHandle(err: string, check: string) {
+export function errorHandle(err: string, check: string) {
   if (!isSilent) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
