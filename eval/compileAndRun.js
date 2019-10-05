@@ -23,12 +23,12 @@ try {
         compilerResult = ejs.compile(code.toString(), opts);
 
   if (compilerResult.kind === 'error') {
-    throw compilerResult.errors;
+    throw compilerResult.errors.map(e => `- ${e.message} (line ${e.line})`).join('\n');
   }
 
   compilerResult.run(result => {
     if (result.type === 'exception') {
-      throw result.value && result.value.toString();
+      throw result.value;
     }
     console.log(`EXIT SUCCESS on input ${input}: ${result.value}`);
   });
