@@ -4,13 +4,13 @@
 
 JavaScript without sharp edges. **WARNING: ElementaryJS is not ready for general use.**
 
-# Usage
+## Usage
 
 [FILL] *Describe how to embed in a web page.*
 
-# Building
+## Building
 
-On initialization or when you update `package.json`:
+On initialization (or when you update `package.json`):
 
     yarn install
 
@@ -18,13 +18,11 @@ To build:
 
     yarn build
 
-To run tests:
+To test:
 
     yarn test
 
-# Development
-
-These are the primary files of ElementaryJS:
+## Development
 
 - `src/types.ts`: Some types we use throughout the codebase.
 
@@ -38,3 +36,5 @@ These are the primary files of ElementaryJS:
   ElementaryJS.
 
 - `test/unit-tests.test.ts`: Unit tests.
+
+- `eval/`: Scripts and files necessary for evaluating ElementaryJS effectiveness.

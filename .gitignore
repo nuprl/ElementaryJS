@@ -3,5 +3,5 @@
 src/version.ts
 
 /eval/libs
-/eval/userFiles
+/eval/userFiles*
 /eval/users.txt
