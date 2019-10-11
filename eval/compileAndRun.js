@@ -6,8 +6,8 @@ const fs = require('fs'),
       oracle = require('./libs/oracle.js'),
       rrt = require('./libs/rrt.js');
 
-if (process.argv.length < 3) {
-  console.error('Usage: node compile.js input.js');
+if (process.argv.length < 3 || process.argv.length > 4) {
+  console.error('Invalid number of arguments to \'compileAndRun\'.');
   process.exit(1);
 }
 const input = process.argv[2];
@@ -30,7 +30,7 @@ try {
     if (result.type === 'exception') {
       throw result.value;
     }
-    console.log(`EXIT SUCCESS on input ${input}: ${result.value}`);
+    console.log(`EXIT SUCCESS on input ${input}: ${JSON.stringify(result)}`);
   });
 } catch (e) {
   console.error(`EXIT FAILURE on input ${input}: ${e}`);

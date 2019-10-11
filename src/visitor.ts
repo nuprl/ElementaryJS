@@ -313,10 +313,8 @@ const visitor = {
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         throw new Error('syntactic check error');
       }
-      if (t.isIdentifier(left)) {
-        return;
-      }
-      if (st.elem.inConstructor && left.object.type === 'ThisExpression') {
+      if (t.isIdentifier(left) ||
+          (st.elem.inConstructor && left.object.type === 'ThisExpression')) {
         return;
       }
       if (left.computed) {
@@ -395,8 +393,9 @@ const visitor = {
       const opName = t.stringLiteral(path.node.operator);
       if (t.isIdentifier(a)) {
         // ++x ==> updateOnlyNumbers(++x), x
-        const check = dynCheck('updateOnlyNumbers', path.node.loc, opName, a);
-        path.replaceWith(t.sequenceExpression([check, path.node]));
+        path.replaceWith(t.sequenceExpression([
+          dynCheck('updateOnlyNumbers', path.node.loc, opName, a),
+          path.node]));
       } else {
         // replace with dyn check function that takes in both obj and member.
         path.replaceWith(dynCheck('checkUpdateOperand',
@@ -418,8 +417,7 @@ const visitor = {
     }
 
     if (path.node.name === 'Array') {
-      const e = t.memberExpression(t.identifier('rts'), path.node, false);
-      path.replaceWith(e);
+      path.replaceWith(t.memberExpression(t.identifier('rts'), path.node, false));
       path.skip();
     }
   },
