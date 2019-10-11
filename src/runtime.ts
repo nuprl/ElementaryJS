@@ -69,10 +69,10 @@ export function arrayBoundsCheck(object: any, index: string) {
   if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
     errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck');
   }
-  if (object[index] === undefined) {
+  if (object && object[index] === undefined) {
     errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck');
   }
-  return object[index];
+  return object && object[index];
 }
 
 export function dot(object: any, index: string) {
@@ -82,7 +82,7 @@ export function dot(object: any, index: string) {
       typeof object !== 'number') {
     errorHandle('cannot access member of non-object value types', 'dot');
   }
-  if (!object.hasOwnProperty(index)) {
+  if (object && !object.hasOwnProperty(index)) {
     errorHandle(`object does not have member '${index}'`, 'dot');
   }
   if (typeof object === 'string' && index === 'split') {
@@ -91,7 +91,7 @@ export function dot(object: any, index: string) {
     };
   }
 
-  return object[index];
+  return object && object[index];
 }
 
 export function checkCall(object: any, field: string, args: any[]) {
@@ -149,29 +149,29 @@ export function checkMember(o: any, k: any, v: any) {
     errorHandle(`cannot set .${k} of an array`, 'checkMember');
   }
   dot(o, k);
-  return (o[k] = v);
+  return o && (o[k] = v);
 }
 
 export function checkArray(o: any, k: any, v: any) {
   arrayBoundsCheck(o, k);
-  return (o[k] = v);
+  return o && (o[k] = v);
 }
 
 export function checkUpdateOperand(opcode: string, obj: any, member: string | number) {
-  if (!obj.hasOwnProperty(member)) {
+  if (obj && !obj.hasOwnProperty(member)) {
     if (typeof member === 'number') {
       errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand');
     } else {
       errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand');
     }
   }
-  if (typeof obj[member] !== 'number') {
+  if (obj && typeof obj[member] !== 'number') {
     errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand');
   }
   if (opcode === '++') {
-    return (++obj[member]);
+    return obj && (++obj[member]);
   } else if (opcode === '--') {
-    return (--obj[member]);
+    return obj && (--obj[member]);
   } else {
     // This will only happen if there is an update expression with an opcode other than ++ or --.
     return elementaryJSBug('UpdateOperand dynamic check');
