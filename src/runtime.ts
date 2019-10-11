@@ -31,6 +31,7 @@ export function elementaryJSBug(what: string) {
 
 class ArrayStub {
   constructor() {
+    // TODO: Can this message actually be triggered?
     errorHandle('use Array.create(length, init)', 'Array constructor');
   }
 
@@ -62,7 +63,7 @@ export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
 }
 
 export function arrayBoundsCheck(object: any, index: string) {
-  if (object instanceof Array === false) {
+  if (!Array.isArray(object)) {
     errorHandle('array indexing called on a non-array value type', 'arrayBoundsCheck');
   }
   if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
@@ -144,7 +145,7 @@ export function checkNumberAndReturn(opcode: string, object: any) {
 }
 
 export function checkMember(o: any, k: any, v: any) {
-  if (o instanceof Array) {
+  if (Array.isArray(o)) {
     errorHandle(`cannot set .${k} of an array`, 'checkMember');
   }
   dot(o, k);
@@ -157,14 +158,14 @@ export function checkArray(o: any, k: any, v: any) {
 }
 
 export function checkUpdateOperand(opcode: string, obj: any, member: string | number) {
-  if (obj.hasOwnProperty(member) === false) {
+  if (!obj.hasOwnProperty(member)) {
     if (typeof member === 'number') {
       errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand');
     } else {
       errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand');
     }
   }
-  if (typeof (obj[member]) !== 'number') {
+  if (typeof obj[member] !== 'number') {
     errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand');
   }
   if (opcode === '++') {
@@ -178,14 +179,14 @@ export function checkUpdateOperand(opcode: string, obj: any, member: string | nu
 }
 
 export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
-  if (!((typeof (lhs) === 'string' && typeof (rhs) === 'string') ||
-      (typeof (lhs) === 'number' && typeof (rhs) === 'number'))) {
+  if (!((typeof lhs === 'string' && typeof rhs === 'string') ||
+      (typeof lhs === 'number' && typeof rhs === 'number'))) {
     errorHandle(`arguments of operator '${op}' must both be numbers or strings`,
       'applyNumOrStringOp');
   }
   switch (op) {
     case '+': {
-      return (<any>(lhs) + <any>(rhs));
+      return <any> lhs + <any> rhs;
     } break;
     default: {
       elementaryJSBug(`applyNumOrStringOp '${op}'`);
