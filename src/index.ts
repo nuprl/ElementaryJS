@@ -6,9 +6,9 @@ import { Node, Program } from 'babel-types';
 import * as babylon from 'babylon';
 import * as visitor from './visitor';
 import { CompileOK, CompileError, CompilerOpts, Result } from './types';
+export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import { polyfillHofFromAst } from '@stopify/higher-order-functions';
 import * as stopify from '@stopify/stopify';
-export { CompileOK, CompileError, CompilerOpts, Result } from './types';
 import * as runtime from './runtime';
 import * as interpreter from '@stopify/project-interpreter';
 
@@ -128,7 +128,7 @@ class ElementaryRunner implements CompileOK {
     if (elementary.kind === 'error') {
       return onDone({
         type: 'exception',
-        stack: [], // This is correct
+        stack: [],
         value: elementary.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n')
       });
     }

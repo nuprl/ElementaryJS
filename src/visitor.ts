@@ -126,14 +126,14 @@ function lvalIds(lval: t.LVal): t.Identifier[]  {
 const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
-        st.elem = new State([]);
-        // Insert "use strict" if needed
-        if (path.node.directives === undefined) {
-          path.node.directives = [];
-        }
-        if (!path.node.directives.some(d => d.value.value === 'use strict')) {
-          path.node.directives.push(t.directive(t.directiveLiteral('use strict')));
-        }
+      st.elem = new State([]);
+      // Insert 'use strict' if needed
+      if (path.node.directives === undefined) {
+        path.node.directives = [];
+      }
+      if (!path.node.directives.some(d => d.value.value === 'use strict')) {
+        path.node.directives.push(t.directive(t.directiveLiteral('use strict')));
+      }
     },
     exit(path: NodePath<t.Program>, st: S) {
       if (path.node.body.length !== 0) {
@@ -426,8 +426,8 @@ const visitor = {
       st.elem.error(path, 'for statement variable initialization must be present');
     }
     if (path.node.init !== null &&
-      !t.isAssignmentExpression(path.node.init) &&
-      !t.isVariableDeclaration(path.node.init)) {
+        !t.isAssignmentExpression(path.node.init) &&
+        !t.isVariableDeclaration(path.node.init)) {
       st.elem.error(path,
         'for statement variable initialization must be an assignment or a variable declaration');
     }
@@ -473,7 +473,7 @@ const visitor = {
     }
   },
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
-    // Arrow transform uses "var" declarations, we can skip over them instead
+    // Arrow transform uses 'var' declarations, we can skip over them instead
     if ((path.node as any)._generated && path.node.kind === 'var') {
       return;
     }
