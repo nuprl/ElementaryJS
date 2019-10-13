@@ -257,15 +257,13 @@ export function arityCheck(name: string, expected: number, actual: number) {
   }
 }
 
+// ---------- TEST SUPPPORT ---------- //
+
 export class ElementaryTestingError extends Error {
   constructor(message: string) {
     super(message);
   }
 }
-
-let tests: TestResult[] = [];
-
-let testsEnabled: boolean = false;
 
 export type EncapsulatedRunner = {
   runner: stopify.AsyncRun | undefined,
@@ -273,14 +271,17 @@ export type EncapsulatedRunner = {
   onStopped: () => void
 };
 
-let stopifyRunner: EncapsulatedRunner = {
-  runner: undefined,
-  isRunning: false,
-  onStopped: () => {}
-};
+let tests: TestResult[] = [],
+    testsEnabled: boolean = false,
+    timeoutMilli: number = 5000,
+    stopifyRunner: EncapsulatedRunner = {
+      runner: undefined,
+      isRunning: false,
+      onStopped: () => {}
+    };
 
 export function getRunner(): { kind: 'ok', value: EncapsulatedRunner } | { kind: 'error' }  {
-  if (stopifyRunner.runner === undefined) {
+  if (!stopifyRunner.runner) {
     return { kind: 'error' };
   }
   return { kind: 'ok', value: stopifyRunner };
@@ -294,7 +295,6 @@ export function setRunner(runner: stopify.AsyncRun) {
   };
 }
 
-let timeoutMilli: number = 5000;
 /**
  * Enable/Disable testing and sets a stopify runner if needed.
  * It clears out previous tests and starts anew.
@@ -307,6 +307,7 @@ export function enableTests(enable: boolean, timeout: number = 5000) {
   tests = [];
   timeoutMilli = timeout;
 }
+
 /**
  * Assertions to be used in function passed into test.
  *
@@ -323,6 +324,7 @@ export function assert(val: boolean) {
 
   return true;
 }
+
 /**
  * Test function to be used for testing.
  * Only runs if testing is enabled and uses a stopify runner to run test if given a stopify runner.
@@ -335,10 +337,10 @@ export function test(description: string, testFunction: () => void) {
   if (!testsEnabled) {
     return;
   }
-  const runner = stopifyRunner.runner!;
-  // NOTE(arjun): Using Stopify internals
-  const runtime = (runner as any).continuationsRTS;
-  const suspend = (runner as any).suspendRTS;
+  const runner = stopifyRunner.runner!,
+        // NOTE(arjun): Using Stopify internals
+        runtime = (runner as any).continuationsRTS,
+        suspend = (runner as any).suspendRTS;
   return runtime.captureCC((k: any) => {
     return runtime.endTurn((onDone: any) => {
       let done = false;

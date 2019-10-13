@@ -30,7 +30,7 @@ try {
     if (result.type === 'exception') {
       throw result.value;
     }
-    console.log(`EXIT SUCCESS on input ${input}: ${JSON.stringify(result)}`);
+    console.log(`EXIT SUCCESS on input ${input}`);
   });
 } catch (e) {
   console.error(`EXIT FAILURE on input ${input}: ${e}`);
