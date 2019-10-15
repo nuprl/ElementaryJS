@@ -2,8 +2,8 @@ import { EJSVERSION } from './version';
 import { TestResult } from './types';
 import * as stopify from '@stopify/stopify';
 
-let isSilent: boolean = false;
-export function runSilent() { isSilent = true; }
+let ejsOff: boolean = false;
+export function disableEJS() { ejsOff = true; }
 
 export function version() {
   return EJSVERSION;
@@ -16,7 +16,7 @@ export class ElementaryRuntimeError extends Error {
 }
 
 export function errorHandle(err: string, check: string) {
-  if (!isSilent) { // Normal EJS
+  if (!ejsOff) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
   console.warn(`EJS RUNTIME ERROR ${check}: ${err}`);
