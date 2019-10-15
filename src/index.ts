@@ -28,11 +28,11 @@ class ElementaryRunner implements CompileOK {
   public g: { [key: string]: any };
   public kind: 'ok' = 'ok';
   private codeMap: { [key: string]: any };
-  private isSilent: boolean;
+  private ejsOff: boolean;
 
   constructor(private runner: stopify.AsyncRun & stopify.AsyncEval, opts: CompilerOpts) {
-    this.isSilent = opts.isSilent as boolean;
-    if (this.isSilent) { runtime.runSilent(); }
+    this.ejsOff = opts.ejsOff as boolean;
+    if (this.ejsOff) { runtime.disableEJS(); }
 
     this.codeMap = {};
     const config: string = `{
@@ -124,7 +124,7 @@ class ElementaryRunner implements CompileOK {
   }
 
   eval(code: string, onDone: (result: Result) => void) {
-    const elementary = applyElementaryJS(code, this.isSilent);
+    const elementary = applyElementaryJS(code, this.ejsOff);
     if (elementary.kind === 'error') {
       return onDone({
         type: 'exception',
@@ -156,13 +156,13 @@ class ElementaryRunner implements CompileOK {
   }
 }
 
-function applyElementaryJS(code: string | Node, isSilent: boolean):
+function applyElementaryJS(code: string | Node, ejsOff: boolean):
   CompileError | { kind: 'ok', ast: Program } {
   try {
     // Babylon is the parser that Babel uses internally.
     const ast = typeof code === 'string' ? babylon.parse(code).program : code,
           result1 = babel.transformFromAst(ast, typeof code === 'string' && code || undefined, {
-            plugins: [ transformArrowFunctions, [ visitor.plugin(isSilent) ] ]
+            plugins: [ transformArrowFunctions, [ visitor.plugin(ejsOff) ] ]
           }),
           result2 = babel.transformFromAst(result1.ast!, result1.code!, {
             plugins: [ transformClasses ],
@@ -208,7 +208,7 @@ function applyElementaryJS(code: string | Node, isSilent: boolean):
 }
 
 export function compile(code: string | Node, opts: CompilerOpts): CompileOK | CompileError {
-  const elementary = applyElementaryJS(code, opts.isSilent as boolean);
+  const elementary = applyElementaryJS(code, opts.ejsOff as boolean);
   if (elementary.kind === 'error') {
     return elementary;
   }

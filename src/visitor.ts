@@ -37,7 +37,7 @@ const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '%='],
 // We throw this object if something goes wrong.
 // Clients of ElementaryJS only rely on the CompileError interface.
 export class State implements CompileError {
-  public static isSilent: boolean = false;
+  public static ejsOff: boolean = false;
 
   // Allows clients to discriminate between CompileError and CompileResult.
   public kind: 'error' = 'error';
@@ -147,7 +147,7 @@ const visitor = {
 
       const l = st.elem.errors.length;
       if (l > 0) {
-        if (State.isSilent) {
+        if (State.ejsOff) {
           console.warn(`${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' }:\n${st.elem.toString()}`);
         } else {
           throw st.elem;
@@ -507,7 +507,7 @@ const visitor = {
 }
 
 // Allows ElementaryJS to be used as a Babel plugin.
-export function plugin(isSilent: boolean) {
-  State.isSilent = isSilent;
+export function plugin(ejsOff: boolean) {
+  State.ejsOff = ejsOff;
   return function() { return { visitor: visitor }; };
 }

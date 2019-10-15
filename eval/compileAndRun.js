@@ -16,7 +16,7 @@ try {
   const code = fs.readFileSync(input),
         opts = {
           consoleLog: s => console.log(s),
-          isSilent: Boolean(process.argv[3]),
+          ejsOff: Boolean(process.argv[3]),
           version: () => console.log(version.EJSVERSION),
           whitelistCode: { lib220, oracle, rrt }
         },
