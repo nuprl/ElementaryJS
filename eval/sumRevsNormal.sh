@@ -10,7 +10,7 @@ subCatSTATIC=("The rest parameter is not supported" # EXIT FAILURE > COMPILETIME
   "Object member name must be an identifier"
   "Object member name may only be used once"
   "You must declare variable"
-  "Do not use the '\S+' operator\.$" # Will double count 'throw' below.
+  "Do not use the '\S+' operator\. [^U]" # Will double count 'throw' below.
   "Do not use patterns"
   "Do not use the '.=' operator\. Use '.==' instead" # Could be expanded.
   "Do not use post-increment or post-decrement operators"

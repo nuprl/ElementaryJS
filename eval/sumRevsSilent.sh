@@ -25,7 +25,10 @@ subCat3=("RUNTIME ERROR" # COMPILETIME ERROR
   "10 EJS"
   "11 EJS"
   "12 EJS"
-  "13 EJS")
+  "13 EJS"
+  "14 EJS"
+  "15 EJS"
+  "16 EJS")
 # subCat4=() # RUNTIME ERROR
 
 revisions="$(find ./userFiles/ -type f -name "*_silent.log")"
