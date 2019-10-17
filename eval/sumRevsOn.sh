@@ -37,7 +37,7 @@ subCatDYNAMIC=("use Array\.create" # EXIT FAILURE > RUNTIME
   "must both be numbers$"
   "function \S+ expected")
 
-revisions="$(find ./userFiles/ -type f -name "*_normal.log")"
+revisions="$(find ./userFiles/ -type f -name "*_on.log")"
 echo "EJS is ON.
 $(echo "$revisions" | wc -l) revisions found.
 

@@ -31,7 +31,7 @@ subCat3=("RUNTIME ERROR" # COMPILETIME ERROR
   "16 EJS")
 # subCat4=() # RUNTIME ERROR
 
-revisions="$(find ./userFiles/ -type f -name "*_silent.log")"
+revisions="$(find ./userFiles/ -type f -name "*_off.log")"
 echo "EJS is OFF.
 $(echo "$revisions" | wc -l) revisions found.
 
