@@ -329,7 +329,7 @@ const visitor = {
       path.skip();
     }
   },
-  LogicalExpression: { // logical expressions only has && and || as operators
+  LogicalExpression: { // logical expressions only have '&&' and '||' as operators
     exit(path: NodePath<t.LogicalExpression>, st: S) {
       const operatorString = t.stringLiteral(path.node.operator);
       path.replaceWith(t.logicalExpression(
@@ -375,7 +375,7 @@ const visitor = {
     }
   },
   UnaryExpression(path: NodePath<t.UnaryExpression>, st: S) {
-    if (path.node.operator == 'delete') {
+    if (path.node.operator === 'delete') {
       st.elem.error(path, `Do not use the '${path.node.operator}' operator.`);
     }
   },

@@ -54,7 +54,7 @@ class ArrayStub {
 export { ArrayStub as Array };
 
 export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
-  if (typeof value !== 'boolean' && typeof operator === 'undefined') { // for the if statement
+  if (typeof value !== 'boolean' && !operator) { // for the if statement
     errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean');
   } else if (typeof value !== 'boolean') {
     errorHandle(`arguments of operator '${operator}' must both be booleans`, 'checkIfBoolean');
@@ -90,7 +90,6 @@ export function dot(object: any, index: string) {
       return stopifyArray(object.split(sep));
     };
   }
-
   return object && object[index];
 }
 
@@ -134,14 +133,6 @@ export function updateOnlyNumbers(opcode: string, object: any) {
     // TODO(joydeepb): Figure out how to print the operator.
     errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers');
   }
-}
-
-export function checkNumberAndReturn(opcode: string, object: any) {
-  if (typeof object !== 'number') {
-    // TODO(joydeepb): Figure out how to print the operator.
-    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkNumberAndReturn');
-  }
-  return object;
 }
 
 export function checkMember(o: any, k: any, v: any) {
@@ -321,7 +312,6 @@ export function assert(val: boolean) {
   if (!val) {
     throw new ElementaryTestingError('assertion failed');
   }
-
   return true;
 }
 
