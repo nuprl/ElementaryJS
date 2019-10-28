@@ -19,7 +19,7 @@ export function errorHandle(err: string, check: string) {
   if (!ejsOff) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
-  console.warn(`EJS RUNTIME ERROR ${check}: ${err}`);
+  console.warn(`EJS RUNTIME ERROR SURPRESSED ${check}: ${err}`);
 }
 
 export function elementaryJSBug(what: string) {
