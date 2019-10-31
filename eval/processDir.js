@@ -39,8 +39,8 @@ revs.forEach(line => {
 
     stats._total_.fileCount += 1;
     stats[prevFile] = {
-      lineCount: 0,
-      revCount: 0, // function() { return this.revs.length; }
+      lineCount: +line[0],
+      revCount: 1, // function() { return this.revs.length; }
       revs: [{
         rev: fileSuffix,
         time: +fileSuffix.substring(1, 14),
@@ -76,10 +76,4 @@ revs.forEach(line => {
       });
     }(prevFile, prevRev.rev, line[1]));
   }
-
-  stats[prevFile].revs.push({
-    rev: fileSuffix,
-    time: +fileSuffix.substring(1, 14),
-    lines: +line[0]
-  });
 });
