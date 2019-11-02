@@ -1,5 +1,5 @@
 'use strict';
-const fs = require('fs'),
+const readFileSync = require('fs').readFileSync,
       ejs = require('../dist/index.js'),
       version = require('../dist/version.js'),
       lib220 = require('./libs/lib220.js'),
@@ -13,7 +13,7 @@ if (process.argv.length < 3 || process.argv.length > 4) {
 const input = process.argv[2];
 
 try {
-  const code = fs.readFileSync(input),
+  const code = readFileSync(input),
         opts = {
           consoleLog: s => console.log(s),
           ejsOff: Boolean(process.argv[3]),
