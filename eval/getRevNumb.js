@@ -1,5 +1,5 @@
 'use strict';
-const fs = require('fs');
+const readFile = require('fs').readFile;
 
 if (!process.argv[2]) {
   console.error('Please pass a file path to \'getRevNumb\'.');
@@ -20,7 +20,7 @@ if (rev.length > 2) {
   rev[1] = '_' + rev[1];
 }
 
-fs.readFile(path, 'utf8', (err, file) => {
+readFile(path, 'utf8', (err, file) => {
   if (err) {
     console.warn(`Read ERROR: ${JSON.stringify(err)}`);
   } else {
