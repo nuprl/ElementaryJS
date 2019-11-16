@@ -3,7 +3,8 @@
 categories=("TIMEOUT"
   "EXIT FAILURE"
   "EXIT SUCCESS")
-catLists=()
+catListsRevs=()
+catListsFiles=()
 subCatSTATIC=("The rest parameter is not supported" # EXIT FAILURE > COMPILETIME
   "Do not use destructuring patterns"
   "You must initialize the variable"
@@ -38,14 +39,16 @@ subCatDYNAMIC=("use Array\.create" # EXIT FAILURE > RUNTIME
   "function \S+ expected")
 
 revisions="$(find ./userFiles/ -type f -name "*_on.log")"
+files="$(find ./userFiles/ -type f -name "*_on_master.log")"
 echo "EJS is ON.
-$(echo "$revisions" | wc -l) revisions found.
+$(echo "$revisions" | wc -l) revisions found; $(echo "$files" | wc -l) unique files.
 
 Collecting instances of..."
 
 for i in "${categories[@]}"; do
   echo ..."$i"
-  catLists+=("$(echo "$revisions" | xargs grep -HPlr "$i")")
+  catListsRevs+=("$(echo "$revisions" | xargs grep -HPlr "$i")")
+  catListsFiles+=("$(echo "$files" | xargs grep -HPlr "$i")")
 done
 
 echo "Collection complete.
@@ -53,19 +56,23 @@ echo "Collection complete.
 Applying any subcategories and counting..."
 
 for i in {0..2}; do
-  list="${catLists["$i"]}"
-  echo "${categories[$i]}": "$(echo "$list" | wc -l)"
+  listRevs="${catListsRevs["$i"]}"; listFiles="${catListsFiles["$i"]}"
+  echo "${categories["$i"]}" '(R)': "$(echo "$listRevs" | wc -l)"
+  echo "${categories["$i"]}" '(F)': "$(echo "$listFiles" | wc -l)"
 
   if [[ $i -eq 1 ]]; then # EXIT FAILURE
     for j in STATIC DYNAMIC; do
-      total=0; subCat="subCat$j[@]" # TODO: Do this better.
+      tR=0; tF=0; subCat="subCat$j[@]" # TODO: Do this better.
 
       for k in "${!subCat}"; do
-        res="$(echo "$list" | xargs grep -HPlnr "$k" | wc -l)"
-        (( total += res ))
-        echo "${categories[$i]}" "$j" \""$k"\": "$res"
+        r1="$(echo "$listRevs" | xargs grep -HPlnr "$k" | wc -l)"
+        r2="$(echo "$listFiles" | xargs grep -HPlnr "$k" | wc -l)"
+        (( tR += r1 )); (( tF += r2 ))
+        echo "${categories[$i]}" "$j" \""$k"\" '(R)': "$r1"
+        echo "${categories[$i]}" "$j" \""$k"\" '(F)': "$r2"
       done
-      echo "${categories[$i]}" "$j": "$total"
+      echo "${categories[$i]}" "$j" '(R)': "$tR"
+      echo "${categories[$i]}" "$j" '(F)': "$tF"
     done
   fi
 done

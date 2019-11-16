@@ -61,8 +61,8 @@ class ElementaryRunner implements CompileOK {
       undefined: undefined,
       Infinity: Infinity,
       Object: Object, // Needed for classes
-      parseInt: parseInt,
-      parseFloat: parseFloat,
+      parseInt: Number.parseInt,
+      parseFloat: Number.parseFloat,
       hire: this.codeMap.oracle.hire,
       wheat1: this.codeMap.oracle.wheat1,
       chaff1: this.codeMap.oracle.chaff1,
