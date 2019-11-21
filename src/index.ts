@@ -38,6 +38,7 @@ class ElementaryRunner implements CompileOK {
 
     this.codeMap = {};
     const config: string = `{
+      ws: opts.ws,
       getRunner: runtime.getRunner,
       stopifyArray: runtime.stopifyArray,
       stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur
@@ -62,6 +63,7 @@ class ElementaryRunner implements CompileOK {
       ocelot: Object.freeze(this.codeMap.lib220),
       version: opts.version,
       Array: runtime.Array,
+      Date: Date,
       Math: Math,
       undefined: undefined,
       Infinity: Number.POSITIVE_INFINITY,

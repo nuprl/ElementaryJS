@@ -39,7 +39,8 @@ export type CompilerOpts = {
   consoleLog: (message: string) => void,
   ejsOff?: boolean,
   version: () => void,
-  whitelistCode: { [key: string]: string }
+  whitelistCode: { [key: string]: string },
+  ws?: WebSocket
 };
 
 export type Environment = {
