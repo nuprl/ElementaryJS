@@ -5,3 +5,6 @@ src/version.ts
 /eval/libs
 /eval/userFiles*
 /eval/users.txt
+
+/eval/taint/*_.j*
+jalangi2/
