@@ -27,6 +27,9 @@ const compileOpts = {
     }`,
     oracle: `function oracle() {
       return {};
+    }`,
+    rrt: `function rrt() {
+      return {};
     }`
   }
 };
