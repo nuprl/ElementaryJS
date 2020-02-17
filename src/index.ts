@@ -74,9 +74,9 @@ class ElementaryRunner implements CompileOK {
           .parseExpression(input))
       }),
       geometry: Object.freeze({
-        Point: this.codeMap.lib220.newPoint,
-        Line: this.codeMap.lib220.newLine,
-        intersects: this.codeMap.lib220.intersects
+        Point: this.codeMap.rrt.Point,
+        Line: this.codeMap.rrt.Line,
+        intersects: this.codeMap.rrt.intersects
       }),
       require: (lib: string): any => {
         if (this.codeMap[lib]) {
