@@ -1,38 +1,57 @@
 'use strict';
-const readFileSync = require('fs').readFileSync,
+/*
+  This file supports compilation and execution of EJS from the command line.
+  There are four modes:
+    1. Normal/Default.
+      $ node <relative path to>/compileAndRun.js <script>
+    2. Testing: Run user specified tests.
+      $ node <relative path to>/compileAndRun.js <script> 1
+    3. Silent (i.e. off): Suppress EJS errors.
+      $ node <relative path to>/compileAndRun.js <script> '' 1
+    4. Silent Testing: Suppress EJS errors; run user specified tests.
+      $ node <relative path to>/compileAndRun.js <script> 1 1
+*/
+const readFile = require('fs').readFile,
       ejs = require('../dist/index.js'),
+      rt = require('../dist/runtime.js'),
       version = require('../dist/version.js'),
       lib220 = require('./libs/lib220.js'),
       oracle = require('./libs/oracle.js'),
       rrt = require('./libs/rrt.js');
 
-if (process.argv.length < 3 || process.argv.length > 4) {
+if (process.argv.length < 3 || process.argv.length > 5) {
   console.error('Invalid number of arguments to \'compileAndRun\'.');
   process.exit(1);
 }
 const input = process.argv[2];
 
-try {
-  const code = readFileSync(input),
-        opts = {
-          consoleLog: s => console.log(s),
-          ejsOff: Boolean(process.argv[3]),
-          version: () => console.log(version.EJSVERSION),
-          whitelistCode: { lib220, oracle, rrt }
-        },
-        compilerResult = ejs.compile(code.toString(), opts);
+readFile(input, (e, f) => {
+  if (e) { throw e; }
+  try {
+    const opts = {
+            consoleLog: s => console.log(s),
+            ejsOff: Boolean(process.argv[4]),
+            version: () => console.log(version.EJSVERSION),
+            whitelistCode: { lib220, oracle, rrt }
+          },
+          tOn = Boolean(process.argv[3]),
+          compileResult = ejs.compile(f.toString(), opts);
+    rt.enableTests(tOn);
 
-  if (compilerResult.kind === 'error') {
-    throw `\n${compilerResult.errors.map(e =>
-      `- ${e.message} (line ${e.line})`).join('\n')}`;
-  }
-
-  compilerResult.run(result => {
-    if (result.type === 'exception') {
-      throw `${result.value}\n\t${result.stack.join('\n\t')}`;
+    if (compileResult.kind === 'error') {
+      throw `\n${compileResult.errors.map(e =>
+        `- ${e.message} (line ${e.line})`).join('\n')}`;
     }
-    console.log(`EXIT SUCCESS on input ${input}`);
-  });
-} catch (e) {
-  console.error(`EXIT FAILURE on input ${input}: ${e}`);
-}
+
+    compileResult.run(runResult => {
+      if (runResult.type === 'exception') {
+        throw `${runResult.value}\n\t${runResult.stack.join('\n\t')}`;
+      }
+      console.log(
+        `${tOn ? `${rt.summary().output}\n` : ''}EXIT SUCCESS on input ${input}`
+      );
+    });
+  } catch (e) {
+    console.error(`EXIT FAILURE on input ${input}: ${e}`);
+  }
+});
