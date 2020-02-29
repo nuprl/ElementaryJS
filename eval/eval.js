@@ -3,13 +3,13 @@
   This file supports compilation and execution of EJS from the command line.
   There are four modes:
     1. Normal/Default.
-      $ node <relative path to>/compileAndRun.js <script>
+      $ node <relative path to>/eval.js <script>
     2. Testing: Run user specified tests.
-      $ node <relative path to>/compileAndRun.js <script> 1
+      $ node <relative path to>/eval.js <script> 1
     3. Silent (i.e. off): Suppress EJS errors.
-      $ node <relative path to>/compileAndRun.js <script> '' 1
+      $ node <relative path to>/eval.js <script> '' 1
     4. Silent Testing: Suppress EJS errors; run user specified tests.
-      $ node <relative path to>/compileAndRun.js <script> 1 1
+      $ node <relative path to>/eval.js <script> 1 1
 */
 const readFile = require('fs').readFile,
       ejs = require('../dist/index.js'),
@@ -20,7 +20,7 @@ const readFile = require('fs').readFile,
       rrt = require('./libs/rrt.js');
 
 if (process.argv.length < 3 || process.argv.length > 5) {
-  console.error('Invalid number of arguments to \'compileAndRun\'.');
+  console.error('Invalid number of arguments to \'eval\'.');
   process.exit(1);
 }
 const input = process.argv[2];
