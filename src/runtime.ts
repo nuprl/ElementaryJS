@@ -308,8 +308,7 @@ export function enableTests(enable: boolean, timeout: number = 5000) {
 export function assert(val: boolean) {
   if (typeof val !== 'boolean') {
     throw new ElementaryTestingError(`assertion argument '${val}' is not a boolean value`);
-  }
-  if (!val) {
+  } else if (!val) {
     throw new ElementaryTestingError('assertion failed');
   }
   return true;
@@ -342,7 +341,7 @@ export function test(description: string, testFunction: () => void) {
           tests.push({
             failed: true,
             error: 'time limit exceeded',
-            description: description
+            description
           });
           setImmediate(() => runner.resume());
         });
@@ -351,18 +350,21 @@ export function test(description: string, testFunction: () => void) {
         if (result.type === 'normal') {
           tests.push({
             failed: false,
-            description: description,
+            description
           });
         } else {
           tests.push({
             failed: true,
-            description: description,
             error: result.value,
+            description
           });
         }
         clearTimeout(timerID);
         done = true;
-        runtime.runtime(() => k({ type: 'normal', value: undefined }), onDone);
+        runtime.runtime(() => k({
+          type: 'normal',
+          value: undefined
+        }), onDone);
       });
     });
   });
@@ -381,7 +383,7 @@ export function test(description: string, testFunction: () => void) {
 export function summary(hasStyles: boolean) {
   if (!testsEnabled) {
     return {
-      output: `Test not enabled`,
+      output: 'Test not enabled',
       style: []
     }
   }
@@ -418,6 +420,6 @@ export function summary(hasStyles: boolean) {
   enableTests(false);
   return {
     output: output.join('\n'),
-    style: style
+    style
   }
 }
