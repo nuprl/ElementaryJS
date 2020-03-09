@@ -53,7 +53,7 @@ class ArrayStub {
 
 export { ArrayStub as Array };
 
-export function checkIfBoolean(value: any, operator: '||' | '&&'  | undefined) {
+export function checkIfBoolean(value: any, operator: '||' | '&&' | undefined) {
   if (typeof value !== 'boolean' && !operator) { // for the if statement
     errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean');
   } else if (typeof value !== 'boolean') {

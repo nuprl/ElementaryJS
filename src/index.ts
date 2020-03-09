@@ -40,7 +40,7 @@ class ElementaryRunner implements CompileOK {
       stopifyArray: runtime.stopifyArray,
       stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur
     }`;
-    Object.keys(opts.whitelistCode).forEach((moduleName) => {
+    Object.keys(opts.whitelistCode).forEach((moduleName: string) => {
       this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}(${config}))`);
     });
 
@@ -59,7 +59,7 @@ class ElementaryRunner implements CompileOK {
       Array: runtime.Array,
       Math: Math,
       undefined: undefined,
-      Infinity: Infinity,
+      Infinity: Number.POSITIVE_INFINITY,
       Object: Object, // Needed for classes
       parseInt: Number.parseInt,
       parseFloat: Number.parseFloat,
@@ -117,7 +117,7 @@ class ElementaryRunner implements CompileOK {
       throw Error('Invalid runner in run');
     }
     eRunner.value.isRunning = true;
-    this.runner.run((result) => {
+    this.runner.run((result: Result) => {
       eRunner.value.isRunning = false;
       onDone(result);
     });
@@ -137,7 +137,7 @@ class ElementaryRunner implements CompileOK {
       throw Error('Invalid runner in eval');
     }
     eRunner.value.isRunning = true;
-    this.runner.evalAsyncFromAst(elementary.ast, (result) => {
+    this.runner.evalAsyncFromAst(elementary.ast, (result: Result) => {
       eRunner.value.isRunning = false;
       onDone(result);
     });
@@ -150,7 +150,7 @@ class ElementaryRunner implements CompileOK {
     }
     eRunner.value.isRunning = false;
     eRunner.value.onStopped = onStopped;
-    this.runner.pause((line) => {
+    this.runner.pause(() => {
       onStopped();
     });
   }
