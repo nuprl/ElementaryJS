@@ -279,31 +279,30 @@ const visitor = {
         st.elem.error(path, 'Do not use patterns');
         return;
       }
-
-      if (op === '=') {
-        return;
-      }
-
       // Desugar everything that is not '='
+      if (op === '=') { return; }
+
+      // We have to manually assign the `loc` obj for potential future dyn checks.
       if (t.isIdentifier(left)) {
-        path.replaceWith(t.assignmentExpression('=', left,
-          t.binaryExpression(unassign(op), left, right)));
-      } else {
-        // exp.x += rhs => tmp = exp, tmp.x = tmp.x + rhs
-        const tmp = path.scope.generateUidIdentifier('tmp');
+        const a = t.assignmentExpression('=', left,
+                    t.binaryExpression(unassign(op), left, right));
+        a.right.loc = right.loc;
+        path.replaceWith(a);
+      } else { // exp.x += rhs => tmp = exp, tmp.x = tmp.x + rhs
+        const tmp = path.scope.generateUidIdentifier('tmp'),
+              a1 = t.assignmentExpression('=', tmp, left.object),
+              a2 = t.assignmentExpression('=',
+                t.memberExpression(tmp, left.property, left.computed),
+                t.binaryExpression(unassign(op),
+                  t.memberExpression(tmp, t.isUpdateExpression(left.property) ?
+                    left.property.argument : left.property, left.computed),
+                  path.node.right));
+
         enclosingScopeBlock(path).push(
-          t.variableDeclaration('var', [
-            t.variableDeclarator(tmp)
-          ]));
-        path.replaceWith(
-          t.sequenceExpression([
-            t.assignmentExpression('=', tmp, left.object),
-            t.assignmentExpression('=',
-              t.memberExpression(tmp, left.property, left.computed),
-              t.binaryExpression(unassign(op),
-                t.memberExpression(tmp, t.isUpdateExpression(left.property) ?
-                  left.property.argument : left.property, left.computed),
-                path.node.right))]));
+          t.variableDeclaration('var', [t.variableDeclarator(tmp)]));
+        a1.left.loc = left.loc;
+        a2.right.loc = right.loc;
+        path.replaceWith(t.sequenceExpression([a1, a2]));
       }
     },
     exit(path: NodePath<t.AssignmentExpression>, st: S) {
@@ -353,7 +352,7 @@ const visitor = {
       }
     },
     exit(path: NodePath<t.BinaryExpression>, st: S) {
-      // Original: a + b
+      // Original: a <op> b
       const op = path.node.operator,
             opName = t.stringLiteral(op);
       if (numOrStringOperators.includes(op)) {
@@ -365,7 +364,7 @@ const visitor = {
           path.node.right));
         path.skip();
       } else if (numOperators.includes(op)) {
-        // Transformed: applyNumOp('+', a, b);
+        // Transformed: applyNumOp('*', a, b);
         path.replaceWith(dynCheck('applyNumOp',
           path.node.loc,
           opName,
