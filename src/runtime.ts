@@ -5,9 +5,7 @@ import * as stopify from '@stopify/stopify';
 let ejsOff: boolean = false;
 export function disableEJS() { ejsOff = true; }
 
-export function version() {
-  return EJSVERSION;
-}
+export function version() { return EJSVERSION; }
 
 export class ElementaryRuntimeError extends Error {
   constructor(message: string) {
@@ -15,11 +13,11 @@ export class ElementaryRuntimeError extends Error {
   }
 }
 
-export function errorHandle(err: string, check: string) {
+export function errorHandle(err: string, check: string, line?: number) {
   if (!ejsOff) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
-  console.warn(`EJS RUNTIME ERROR SURPRESSED ${check}: ${err}`);
+  console.warn(`EJS RUNTIME ERROR SURPRESSED ${check}${line ? ` at ${line}` : ''}: ${err}`);
 }
 
 export function elementaryJSBug(what: string) {
@@ -50,55 +48,7 @@ class ArrayStub {
     return stopifyArray(a);
   }
 }
-
 export { ArrayStub as Array };
-
-export function checkIfBoolean(value: any, operator: '||' | '&&' | undefined) {
-  if (typeof value !== 'boolean' && !operator) { // for the if statement
-    errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean');
-  } else if (typeof value !== 'boolean') {
-    errorHandle(`arguments of operator '${operator}' must both be booleans`, 'checkIfBoolean');
-  }
-  return value;
-}
-
-export function arrayBoundsCheck(object: any, index: string) {
-  if (!Array.isArray(object)) {
-    errorHandle('array indexing called on a non-array value type', 'arrayBoundsCheck');
-  }
-  if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
-    errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck');
-  }
-  if (object && object[index] === undefined) {
-    errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck');
-  }
-  return object && object[index];
-}
-
-export function dot(object: any, index: string) {
-  if (typeof object !== 'object'  &&
-      typeof object !== 'string'  &&
-      typeof object !== 'boolean' &&
-      typeof object !== 'number') {
-    errorHandle('cannot access member of non-object value types', 'dot');
-  }
-  if (object && !object.hasOwnProperty(index)) {
-    errorHandle(`object does not have member '${index}'`, 'dot');
-  }
-  if (typeof object === 'string' && index === 'split') {
-    return function(sep: string) {
-      return stopifyArray(object.split(sep));
-    };
-  }
-  return object && object[index];
-}
-
-export function checkCall(object: any, field: string, args: any[]) {
-  if (typeof object === 'string' && field === 'split') {
-    return stopifyArray(object.split(args[0]));
-  }
-  elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
-}
 
 export function stopifyArray(array: any[]) {
   const maybeRunner = getRunner();
@@ -128,36 +78,87 @@ export function stopifyObjectArrayRecur(obj: any) {
   return stopifyArray(obj); // since it's array, stopify the whole array
 }
 
-export function updateOnlyNumbers(opcode: string, object: any) {
+// ---------- DYNAMIC CHECKS ---------- //
+
+export function checkCall(object: any, field: string, args: any[]) {
+  if (typeof object === 'string' && field === 'split') {
+    return stopifyArray(object.split(args[0]));
+  }
+  elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
+}
+
+export function checkIfBoolean(value: any, operator: '||' | '&&' | undefined, line: number) {
+  if (typeof value !== 'boolean' && !operator) { // for the if statement
+    errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean',
+      line);
+  } else if (typeof value !== 'boolean') {
+    errorHandle(`arguments of operator '${operator}' must both be booleans`, 'checkIfBoolean',
+      line);
+  }
+  return value;
+}
+
+export function arrayBoundsCheck(object: any, index: string, line: number) {
+  if (!Array.isArray(object)) {
+    errorHandle('array indexing called on a non-array value type', 'arrayBoundsCheck', line);
+  }
+  if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
+    errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck', line);
+  }
+  if (object && object[index] === undefined) {
+    errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck', line);
+  }
+  return object && object[index];
+}
+
+export function dot(object: any, index: string, line: number) {
+  if (typeof object !== 'object'  &&
+      typeof object !== 'string'  &&
+      typeof object !== 'boolean' &&
+      typeof object !== 'number') {
+    errorHandle('cannot access member of non-object value types', 'dot', line);
+  }
+  if (object && !object.hasOwnProperty(index)) {
+    errorHandle(`object does not have member '${index}'`, 'dot', line);
+  }
+  if (typeof object === 'string' && index === 'split') {
+    return function(sep: string) {
+      return stopifyArray(object.split(sep));
+    };
+  }
+  return object && object[index];
+}
+
+export function updateOnlyNumbers(opcode: string, object: any, line: number) {
   if (typeof object !== 'number') {
     // TODO(joydeepb): Figure out how to print the operator.
-    errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers');
+    errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers', line);
   }
 }
 
-export function checkMember(o: any, k: any, v: any) {
+export function checkMember(o: any, k: any, v: any, line: number) {
   if (Array.isArray(o)) {
-    errorHandle(`cannot set .${k} of an array`, 'checkMember');
+    errorHandle(`cannot set .${k} of an array`, 'checkMember', line);
   }
-  dot(o, k);
+  dot(o, k, line);
   return o && (o[k] = v);
 }
 
-export function checkArray(o: any, k: any, v: any) {
-  arrayBoundsCheck(o, k);
+export function checkArray(o: any, k: any, v: any, line: number) {
+  arrayBoundsCheck(o, k, line);
   return o && (o[k] = v);
 }
 
-export function checkUpdateOperand(opcode: string, obj: any, member: string | number) {
+export function checkUpdateOperand(opcode: string, obj: any, member: string | number, line: number) {
   if (obj && !obj.hasOwnProperty(member)) {
     if (typeof member === 'number') {
-      errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand');
+      errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand', line);
     } else {
-      errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand');
+      errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand', line);
     }
   }
   if (obj && typeof obj[member] !== 'number') {
-    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand');
+    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand', line);
   }
   if (opcode === '++') {
     return obj && (++obj[member]);
@@ -169,11 +170,11 @@ export function checkUpdateOperand(opcode: string, obj: any, member: string | nu
   }
 }
 
-export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
+export function applyNumOrStringOp(op: string, lhs: any, rhs: any, line: number) {
   if (!((typeof lhs === 'string' && typeof rhs === 'string') ||
       (typeof lhs === 'number' && typeof rhs === 'number'))) {
     errorHandle(`arguments of operator '${op}' must both be numbers or strings`,
-      'applyNumOrStringOp');
+      'applyNumOrStringOp', line);
   }
   switch (op) {
     case '+': {
@@ -185,9 +186,9 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any) {
   }
 }
 
-export function applyNumOp(op: string, lhs: any, rhs: any) {
+export function applyNumOp(op: string, lhs: any, rhs: any, line: number) {
   if (!(typeof (lhs) === 'number' && typeof (rhs) === 'number')) {
-    errorHandle(`arguments of operator '${op}' must both be numbers`, 'applyNumOp');
+    errorHandle(`arguments of operator '${op}' must both be numbers`, 'applyNumOp', line);
   }
   switch (op) {
     case '-': {
@@ -239,12 +240,12 @@ export function applyNumOp(op: string, lhs: any, rhs: any) {
   }
 }
 
-export function arityCheck(name: string, expected: number, actual: number) {
+export function arityCheck(name: string, expected: number, actual: number, line: number) {
   if (expected !== actual) {
     const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`,
           actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
     errorHandle(`function ${name} expected ${expectedStr} but received ${actualStr}`,
-      'arityCheck');
+      'arityCheck', line);
   }
 }
 

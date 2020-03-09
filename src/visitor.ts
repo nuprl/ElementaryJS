@@ -63,6 +63,7 @@ interface S {
 }
 
 function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
+  args.push(t.numericLiteral(loc.start.line)); // line numb is last arg to any dyn check
   const f = t.memberExpression(t.identifier('rts'), t.identifier(name), false),
         c = t.callExpression(f, args);
   c.loc = loc;
