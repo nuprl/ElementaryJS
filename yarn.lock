@@ -365,10 +365,10 @@
     immutable "^4.0.0-rc.12"
     parsimmon "^1.12.0"
 
-"@stopify/stopify@0.7.1":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/@stopify/stopify/-/stopify-0.7.1.tgz#2a42907dd2b950a6ec030e9ed088ed88a23b36b0"
-  integrity sha512-sZHJGpnWfOAaeR9kn0C2LKl6PeDF1hhTpvAqITCVfwKsPPridji5wJltZfzvUP06e2Ck3kegH+7e+YoBaiK88Q==
+"@stopify/stopify@0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@stopify/stopify/-/stopify-0.7.2.tgz#a3438bf8a1937c4f6e38d5a7c1622262531fccff"
+  integrity sha512-tTpgUpz5fULKINiop1FUsjGWny1jxmOmc6SbwRs3i1Mk9Yck83qbV2FrYXqloRz/c4wp6ADLeBrXfWzXtmBHfA==
   dependencies:
     "@stopify/continuations" "0.7.1"
     "@stopify/continuations-runtime" "0.7.1"
