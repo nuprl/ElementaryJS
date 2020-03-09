@@ -289,7 +289,7 @@ const visitor = {
         path.replaceWith(t.assignmentExpression('=', left,
           t.binaryExpression(unassign(op), left, right)));
       } else {
-        // exp.x += rhs =>  tmp = exp, tmp.x = tmp.x + rhs
+        // exp.x += rhs => tmp = exp, tmp.x = tmp.x + rhs
         const tmp = path.scope.generateUidIdentifier('tmp');
         enclosingScopeBlock(path).push(
           t.variableDeclaration('var', [
@@ -464,7 +464,7 @@ const visitor = {
     exit(path: NodePath<t.IfStatement>, st: S) {
       // if (a) => if (checkIfBoolean(a))
       const a = path.node.test,
-            check = dynCheck('checkIfBoolean', path.node.loc, a),
+            check = dynCheck('checkIfBoolean', path.node.loc, a, t.nullLiteral()),
             consequent = path.node.consequent,
             alternate = path.node.alternate,
             replacement = t.ifStatement(check, consequent, alternate);
@@ -505,7 +505,7 @@ const visitor = {
   ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
     st.elem.error(path, 'Do not use for-in loops.');
   }
-}
+};
 
 // Allows ElementaryJS to be used as a Babel plugin.
 export function plugin(ejsOff: boolean) {
