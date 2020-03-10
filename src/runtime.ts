@@ -288,11 +288,10 @@ export function setRunner(runner: stopify.AsyncRun) {
 }
 
 /**
- * Enable/Disable testing and sets a stopify runner if needed.
- * It clears out previous tests and starts anew.
+ * Enable/Disable testing; it clears out previous tests and starts anew.
  *
  * @param {boolean} enable
- * @param {*} runner
+ * @param {number} timeout
  */
 export function enableTests(enable: boolean, timeout: number = 5000) {
   testsEnabled = enable;
@@ -376,10 +375,10 @@ export function test(description: string, testFunction: () => void) {
  * Output can be styled with the hasStyles argument.
  *
  * @param {boolean} hasStyles to determine whether it needs styling (for console.log)
- * @returns an object with output (string) and style, (array of string).
+ * @returns an object with output (string) and style (array of string).
  * If hasStyles is false, object will contain proper output string in output
  * field and no styling. If hasStyling is true, markers are placed in output
- * and styling is given in the style field to be used in console.log
+ * and styling is given in the style field to be used in console.log.
  */
 export function summary(hasStyles: boolean) {
   if (!testsEnabled) {
