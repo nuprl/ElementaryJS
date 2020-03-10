@@ -5,8 +5,6 @@
 # W/O: `time -p find ./userFiles/ -type f -name "*.js" -exec ./eval.sh {} \;`.
 
 if [[ -n $1 ]]; then
-  f="${1::-3}_on.log" # NOTE: Change to '_off.log'.
-  if ! timeout 10 node ./eval.js "$1" &> "$f"; then
-    echo "TIMEOUT" >> "$f"
-  fi
+  # NOTE: Change to '_off.log' when silent.
+  node ./eval.js "$1" &> "${1::-3}_on.log"
 fi
