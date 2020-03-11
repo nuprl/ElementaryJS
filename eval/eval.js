@@ -4,12 +4,16 @@
   There are four modes:
     1. Normal/Default.
       $ node <relative path to>/eval.js <script>
-    2. Testing: Run user specified tests.
+    2a. Testing: Run tests specified in same file.
       $ node <relative path to>/eval.js <script> 1
+    2b. Testing: Run tests specified in separate JS file.
+      $ node <relative path to>/eval.js <script> <tests>
     3. Silent (i.e. off): Suppress EJS errors.
       $ node <relative path to>/eval.js <script> '' 1
-    4. Silent Testing: Suppress EJS errors; run user specified tests.
+    4a. Silent Testing: Suppress EJS errors; run tests in same file.
       $ node <relative path to>/eval.js <script> 1 1
+    4b. Silent Testing: Suppress EJS errors; run tests in separate JS file.
+      $ node <relative path to>/eval.js <script> 1 <tests>
 */
 const readFile = require('fs').readFile,
       ejs = require('../dist/index.js'),
@@ -28,8 +32,8 @@ if (process.argv.length < 3 || process.argv.length > 5) {
 const input = process.argv[2].trim().toLowerCase(),
       tests = process.argv[3] ? process.argv[3].trim().toLowerCase() : '';
 
-function exitFailure(reason) {
-  console.error(`EXIT FAILURE on input ${input}:${reason}`);
+function exitFailure(reason, _input = input) {
+  console.error(`EXIT FAILURE on input ${_input}:${reason}`);
 }
 
 function exitSuccess(result) {
@@ -54,20 +58,16 @@ function run(compileResult, loadedTests) {
   }).then(result => {
     if (result) {
       exitSuccess('');
-    } else {
-      function _runResult(runResult) {
-        if (runResult.type === 'exception') { // TODO: Is this even possible?
-          exitFailure(` ${runResult.value}\n\t${runResult.stack.join('\n\t')}`);
+    } else if (loadedTests) {
+      compileResult.eval(loadedTests.toString(), evalResult => {
+        if (evalResult.type === 'exception') { // Actually a static check.
+          exitFailure(`\n\t${evalResult.value.split('\n').join('\n\t')}`, tests);
         } else {
           exitSuccess(`${rt.summary().output}\n`);
         }
-      }
-
-      if (loadedTests) {
-        compileResult.eval(loadedTests.toString(), _runResult);
-      } else { // In-line tests.
-        compileResult.run(_runResult);
-      }
+      });
+    } else { // In-line tests; test framework handles RT exceptions itself.
+      compileResult.run(() => exitSuccess(`${rt.summary().output}\n`));
     }
   }, reason => {
     exitFailure(reason);
