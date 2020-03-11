@@ -120,7 +120,7 @@ export function dot(object: any, index: string, line: number) {
     errorHandle('cannot access member of non-object value types', 'dot', line);
   }
   if (object && !object.hasOwnProperty(index)) {
-    errorHandle(`object does not have own member '${index}'`, 'dot', line);
+    errorHandle(`object does not have member '${index}'`, 'dot', line);
   }
   if (typeof object === 'string' && index === 'split') {
     return function(sep: string) {
