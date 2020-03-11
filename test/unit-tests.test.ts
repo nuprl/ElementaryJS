@@ -1012,13 +1012,13 @@ test('Dynamic error on calling functions access with brackets', async () => {
   `)).resolves.toMatch(`array indexing called on a non-array value type`);
 });
 
-test.only('Disallow function toString access', async () => {
+test('Disallow function toString access', async () => {
   await expect(dynamicError(`
     function funcA() {
       return 1;
     }
     funcA.toString;
-  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  `)).resolves.toMatch(`object does not have member 'toString'`);
   await expect(dynamicError(`
     function funcA() {
       return 1;
@@ -1032,7 +1032,7 @@ test.only('Disallow function toString access', async () => {
       }
     }
     TestClass.testFunc.toString;
-  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  `)).resolves.toMatch(`object does not have member 'toString'`);
   await expect(dynamicError(`
     class TestClass {
       static testFunc() {
@@ -1043,7 +1043,7 @@ test.only('Disallow function toString access', async () => {
   `)).resolves.toMatch(`Cannot call default properties of functions`);
   await expect(dynamicError(`
     Array.toString;
-  `)).resolves.toMatch(`object does not have own member 'toString'`);
+  `)).resolves.toMatch(`object does not have member 'toString'`);
   await expect(dynamicError(`
     Array.toString()
   `)).resolves.toMatch(`Cannot call default properties of functions`);
