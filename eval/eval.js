@@ -24,7 +24,56 @@ if (process.argv.length < 3 || process.argv.length > 5) {
   console.error('Invalid number of arguments to \'eval\'.');
   process.exit(1);
 }
-const input = process.argv[2];
+
+const input = process.argv[2].trim().toLowerCase(),
+      tests = process.argv[3] ? process.argv[3].trim().toLowerCase() : '';
+
+function exitFailure(reason) {
+  console.error(`EXIT FAILURE on input ${input}:${reason}`);
+}
+
+function exitSuccess(result) {
+  console.log(`${result}EXIT SUCCESS on input ${input}`);
+}
+
+function run(compileResult, loadedTests) {
+  new Promise((resolve, reject) => {
+    const tId = global.setTimeout(() => reject(' TIMEOUT'), TIMEOUT);
+
+    compileResult.run(runResult => {
+      global.clearTimeout(tId);
+
+      if (runResult.type === 'exception') {
+        reject(` ${runResult.value}\n\t${runResult.stack.join('\n\t')}`);
+      } else if (!tests) {
+        resolve(true);
+      } else {
+        resolve(rt.enableTests(true)); // Has default timeout.
+      }
+    });
+  }).then(result => {
+    if (result) {
+      exitSuccess('');
+    } else {
+      function _runResult(runResult) {
+        if (runResult.type === 'exception') { // TODO: Is this even possible?
+          exitFailure(` ${runResult.value}\n\t${runResult.stack.join('\n\t')}`);
+        } else {
+          exitSuccess(`${rt.summary().output}\n`);
+        }
+      }
+
+      if (loadedTests) {
+        compileResult.eval(loadedTests.toString(), _runResult);
+      } else { // In-line tests.
+        compileResult.run(_runResult);
+      }
+    }
+  }, reason => {
+    exitFailure(reason);
+    process.exit(1); // Note: This seems wrong.
+  }).catch(() => {});
+}
 
 readFile(input, (e, f) => {
   if (e) { throw e; }
@@ -34,28 +83,17 @@ readFile(input, (e, f) => {
           version: () => console.log(version.EJSVERSION),
           whitelistCode: { lib220, oracle, rrt }
         },
-        tOn = Boolean(process.argv[3]),
         compileResult = ejs.compile(f.toString(), opts);
-  rt.enableTests(tOn);
 
   if (compileResult.kind === 'error') {
-    return console.error(`EXIT FAILURE on input ${input}:\n${compileResult.errors.map(e =>
+    return exitFailure(`\n${compileResult.errors.map(e =>
       `- ${e.message} (line ${e.line})`).join('\n')}`);
   }
 
-  new Promise((resolve, reject) => {
-    const tId = global.setTimeout(() => reject('TIMEOUT'), TIMEOUT);
-
-    compileResult.run(runResult => {
-      global.clearTimeout(tId);
-
-      if (runResult.type === 'exception') {
-        reject(`${runResult.value}\n\t${runResult.stack.join('\n\t')}`);
-      }
-      resolve(`${tOn ? `${rt.summary().output}\n` : ''}EXIT SUCCESS on input ${input}`);
+  if (tests.endsWith('.js')) { // Separate tests.
+    readFile(tests, (_e, _f) => {
+      if (_e) { throw _e; }
+      run(compileResult, _f);
     });
-  }).then(result => console.log(result), reason => {
-    console.error(`EXIT FAILURE on input ${input}: ${reason}`);
-    process.exit(1); // Note: This seems wrong.
-  });
+  } else { run(compileResult); }
 });
