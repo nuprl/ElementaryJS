@@ -54,7 +54,9 @@ class ElementaryRunner implements CompileOK {
       }),
       test: runtime.test,
       assert: runtime.assert,
+      // TODO: Remove `lib220` as a part of '/issues/156'.
       lib220: Object.freeze(this.codeMap.lib220),
+      ocelot: Object.freeze(this.codeMap.lib220),
       version: opts.version,
       Array: runtime.Array,
       Math: Math,
