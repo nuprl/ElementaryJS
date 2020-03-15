@@ -6,4 +6,5 @@ install:
   - yarn install
   - yarn build
 script:
+  - yarn lint
   - yarn test
