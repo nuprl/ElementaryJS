@@ -29,8 +29,8 @@ if (process.argv.length < 3 || process.argv.length > 5) {
   process.exit(1);
 }
 
-const input = process.argv[2].trim().toLowerCase(),
-      tests = process.argv[3] ? process.argv[3].trim().toLowerCase() : '';
+const input = process.argv[2],
+      tests = process.argv[3] || '';
 
 function exitFailure(reason, _input = input) {
   console.error(`EXIT FAILURE on input ${_input}:${reason}`);
