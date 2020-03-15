@@ -18,23 +18,24 @@ To build:
 
     yarn build
 
+To lint:
+
+    yarn lint
+
 To test:
 
     yarn test
 
 ## Development
 
-- `src/types.ts`: Some types we use throughout the codebase.
+- `src/types.ts`: Types used throughout the codebase.
 
-- `src/visitor.ts`: The heart of the ElementaryJS compiler. This code inserts
-  all the static and dynamic checks that ElementaryJS enforces.
+- `src/visitor.ts`: The heart of the ElementaryJS compiler. This code performs static checks and inserts dynamic checks that ElementaryJS enforces.
 
-- `src/runtime.ts`: The ElementaryJS runtime system. This module has the
-  implementations of the dynamic checks that the compiler inserts.
+- `src/runtime.ts`: The ElementaryJS runtime system. This module has the implementations of the dynamic checks that the compiler inserts.
 
-- `src/index.ts`: Entrypoint of the ElementaryJS package. This is the interface to
-  ElementaryJS.
+- `src/index.ts`: Entrypoint of the ElementaryJS package. This is the interface to ElementaryJS.
 
-- `test/unit-tests.test.ts`: Unit tests.
+- `tests/`: Unit tests.
 
-- `eval/`: Scripts and files necessary for evaluating ElementaryJS effectiveness.
+- `eval/`: Scripts and files used for evaluating ElementaryJS effectiveness.
