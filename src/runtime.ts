@@ -17,6 +17,7 @@ export function errorHandle(err: string, check: string, line?: number) {
   if (!ejsOff) { // Normal EJS
     throw new ElementaryRuntimeError(err);
   }
+  // tslint:disable-next-line:no-console
   console.warn(`EJS RUNTIME ERROR SURPRESSED ${check}${line ? ` at ${line}` : ''}: ${err}`);
 }
 
@@ -24,6 +25,7 @@ export function elementaryJSBug(what: string) {
   // TODO(arjun): We should save the trace ourselves
   errorHandle('You have encountered a potential bug in ' +
     'ElementaryJS. Please report this to the developers, ' +
+    // tslint:disable-next-line:no-console
     'along with the following stack trace:\n' + console.trace(), 'elementaryJSBug');
 }
 
@@ -41,7 +43,7 @@ class ArrayStub {
       errorHandle('array size must be a positive integer', 'Array.create');
     }
 
-    let a = new Array(n);
+    const a = new Array(n);
     for (let i = 0; i < a.length; ++i) {
       a[i] = v;
     }
@@ -64,7 +66,7 @@ export function stopifyObjectArrayRecur(obj: any) {
     return obj;
   }
   if (!Array.isArray(obj)) { // if it's not an array
-    for (let key in obj) { // go through each property of object
+    for (const key in obj) { // go through each property of object
       if (obj.hasOwnProperty(key)) {
         obj[key] = stopifyObjectArrayRecur(obj[key]); // stopify each field of object
       }
@@ -186,7 +188,7 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any, line: number)
   }
   switch (op) {
     case '+': {
-      return <any> lhs + <any> rhs;
+      return (lhs as any) + (rhs as any);
     } break;
     default: {
       elementaryJSBug(`applyNumOrStringOp '${op}'`);
@@ -403,11 +405,11 @@ export function summary(hasStyles: boolean) {
       style: hasStyles ? ['color: #e87ce8'] : []
     };
   }
-  let output: string[] = [],
-      style: string[] = [],
-      numPassed: number = 0,
+  const output: string[] = [],
+        style: string[] = [];
+  let numPassed: number = 0,
       numFailed: number = 0;
-  for (let result of tests) {
+  for (const result of tests) {
     if (result.failed) {
       output.push(`${styleMark} FAILED ${styleMark} ${result.description}\n         ${result.error!}`);
       hasStyles && style.push('background-color: #f44336; font-weight: bold', '');

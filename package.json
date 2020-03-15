@@ -21,23 +21,13 @@
   "private": false,
   "scripts": {
     "build": "echo \"export const EJSVERSION = '$(git rev-parse --short HEAD)';\" > src/version.ts && tsc",
-    "test": "jest",
-    "clean": "rm -rf dist/"
+    "clean": "rm -rf dist/",
+    "lint": "tslint src/*",
+    "test": "jest"
   },
   "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)test)\\.(jsx?|tsx?)$",
-    "testEnvironment": "node",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "devDependencies": {
     "@types/babel-core": "^6.7.14",
@@ -50,6 +40,7 @@
     "jest-haste-map": "^24.5.0",
     "jest-resolve": "^24.5.0",
     "ts-jest": "^24.0.0",
+    "tslint": "^6.1.0",
     "typescript": "^3.3.3"
   },
   "dependencies": {
