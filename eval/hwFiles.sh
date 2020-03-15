@@ -11,8 +11,8 @@ filterAndWrite () {
   echo -n "$list" | sort > tests/"$2".txt
 }
 
-cd "$(dirname "$0")" || exit
-cd ../userFiles || exit; mkdir -p tests
+cd "$(dirname "$0")"/userFiles || exit
+mkdir -p tests
 
 files="$(find . -type f -name '*.js')"
 
