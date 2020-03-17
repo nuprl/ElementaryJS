@@ -338,12 +338,14 @@ const visitor = {
   },
   LogicalExpression: { // logical expressions only have '&&' and '||' as operators
     exit(path: NodePath<t.LogicalExpression>, st: S) {
-      const operatorString = t.stringLiteral(path.node.operator);
-      path.replaceWith(t.logicalExpression(
-        path.node.operator,
-        dynCheck('checkIfBoolean', path.node.left.loc, path.node.left, operatorString),
-        dynCheck('checkIfBoolean', path.node.right.loc, path.node.right, operatorString)
-      ));
+      const l = path.node.left,
+            r = path.node.right,
+            opStr = t.stringLiteral(path.node.operator),
+            newNode = t.logicalExpression(path.node.operator,
+              dynCheck('checkIfBoolean', l.loc, l, opStr),
+              dynCheck('checkIfBoolean', r.loc, r, opStr));
+      newNode.loc = path.node.loc; // In case of >= 3 in 1 expression.
+      path.replaceWith(newNode);
       path.skip();
     }
   },
