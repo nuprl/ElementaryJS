@@ -1,12 +1,14 @@
 {
   "name": "@stopify/elementary-js",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "JavaScript without sharp edges.",
   "license": "BSD-3-Clause",
   "repository": "github:plasma-umass/ElementaryJS",
   "main": "dist/index.js",
   "private": false,
-  "files": [ "dist/" ],
+  "files": [
+    "dist/"
+  ],
   "contributors": [
     "Arjun Guha <arjun@cs.umass.edu>",
     "Sam Lee <chunghinlee@umass.edu>",
