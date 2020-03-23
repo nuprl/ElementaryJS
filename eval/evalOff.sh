@@ -5,5 +5,8 @@
 # W/O: `time find ./userFiles/ -type f -name "*.js" -exec ./evalOff.sh {} \;`.
 
 if [[ -n $1 ]]; then
-  node ./eval.js "$1" "" 1 &> "${1::-3}_off.log"
+  f="${1::-3}_off.log"
+  if ! timeout 120 node ./eval.js "$1" "" 1 &> "$f"; then
+    echo "SIGTERM" >> "$f"
+  fi
 fi
