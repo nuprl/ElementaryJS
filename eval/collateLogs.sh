@@ -7,9 +7,9 @@ if [[ -n $1 ]]; then
   files="$(node ../../collateLogs.js)"
 
   for i in $files; do
-    for j in _off _on; do
+    for j in _off _on; do # _off_test _on_test
       for k in "$i"_*"$j"\.log; do
-        res+="$(cat "$k")"
+        res+="$(cat "$k" 2> /dev/null)"
         res+=$'
 ----------------------------------------------------------------------------------------------------
 '
