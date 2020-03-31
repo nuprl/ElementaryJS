@@ -18,7 +18,7 @@ export function errorHandle(err: string, check: string, line?: number) {
     throw new ElementaryRuntimeError(err);
   }
   // tslint:disable-next-line:no-console
-  console.warn(`EJS RUNTIME ERROR SURPRESSED ${check}${line ? ` at ${line}` : ''}: ${err}`);
+  console.warn(`EJS RUNTIME ERROR SUPPRESSED ${check}${line ? ` at ${line}` : ''}: ${err}`);
 }
 
 export function elementaryJSBug(what: string) {

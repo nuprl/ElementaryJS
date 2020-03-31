@@ -150,7 +150,7 @@ const visitor = {
       if (l > 0) {
         if (State.ejsOff) {
           console.warn( // tslint:disable-line:no-console
-            `${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' } SURPRESSED:\n${st.elem.toString()}`);
+            `${l} EJS COMPILETIME ERROR${l > 1 ? 'S': '' } SUPPRESSED:\n${st.elem.toString()}`);
         } else {
           throw st.elem;
         }
