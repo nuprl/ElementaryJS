@@ -2,6 +2,7 @@
 filterAndWrite () {
   echo 'Filtering and generating final list...'
 
+  list=''
   for f in $1; do
     if [[ -z "$(node -c "$f" 2>&1 > /dev/null)" ]]; then
       list+="$f"$'\n'
