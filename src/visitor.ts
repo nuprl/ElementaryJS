@@ -273,11 +273,9 @@ const visitor = {
   AssignmentExpression: {
     enter(path: NodePath<t.AssignmentExpression>, st: S) {
       const { operator: op, left, right } = path.node;
-      if (left.type === 'Identifier') {
-        if (!path.scope.hasBinding(left.name)) {
-          st.elem.error(path,
-            `You must declare variable '${left.name}' before assigning a value to it.`);
-        }
+      if (left.type === 'Identifier' && !path.scope.hasBinding(left.name)) {
+        st.elem.error(path,
+          `You must declare variable '${left.name}' before assigning a value to it.`);
       }
       if (!assignmentOperators.includes(op)) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
