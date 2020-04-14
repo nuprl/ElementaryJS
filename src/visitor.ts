@@ -31,7 +31,8 @@ const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '%='],
       comparisonOperators = ['===', '!=='],
       numOperators = ['<=', '>=', '<', '>', '<<', '>>', '>>>', '-', '*', '/', '%', '&', '|', '^'],
       numOrStringOperators = ['+'],
-      allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
+      allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators),
+      lets: t.Identifier[] = [];
 
 // This is the visitor state, which includes a list of errors.
 // We throw this object if something goes wrong.
@@ -195,13 +196,9 @@ const visitor = {
   },
   VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
     if (path.node.id.type !== 'Identifier') {
-      // TODO(arjun): This is an awful error message!
       st.elem.error(path, 'Do not use destructuring patterns.');
-      // The remaining checks assume that the program is binding a simple identifier.
-      return;
-    }
-    if (!t.isExpression(path.node.init)) {
-      st.elem.error(path, `You must initialize the variable '${path.node.id.name}'.`);
+    } else if (!t.isExpression(path.node.init)) {
+      lets.push(path.node.id);
     }
   },
   CallExpression: {
@@ -285,10 +282,18 @@ const visitor = {
         return;
       }
       // Desugar everything that is not '='
-      if (op === '=') { return; }
+      if (op === '=') {
+        if (t.isIdentifier(left) && lets.includes(path.scope.getBindingIdentifier(left.name))) {
+          lets.splice(lets.indexOf(path.scope.getBindingIdentifier(left.name)), 1);
+        }
+        return;
+      }
 
       // We have to manually assign the `loc` obj for potential future dyn checks.
       if (t.isIdentifier(left)) {
+        if (lets.includes(path.scope.getBindingIdentifier(left.name))) {
+          st.elem.error(path, `You must initialize the variable '${left.name}' before use.`);
+        }
         const a = t.assignmentExpression('=', left,
                     t.binaryExpression(unassign(op), left, right));
         a.right.loc = right.loc;
@@ -426,6 +431,8 @@ const visitor = {
     if (path.node.name === 'Array') {
       path.replaceWith(t.memberExpression(t.identifier('rts'), path.node, false));
       path.skip();
+    } else if (lets.includes(path.scope.getBindingIdentifier(path.node.name))) {
+      st.elem.error(path, `You must initialize the variable '${path.node.name}' before use.`);
     }
   },
   ForStatement(path: NodePath<t.ForStatement>, st: S) {
