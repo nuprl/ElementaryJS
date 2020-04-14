@@ -40,6 +40,26 @@ describe('ElementaryJS', () => {
       expect.arrayContaining([
         `You must initialize the variable 'x' before use.`
       ]));
+    expect(staticError(`
+      let x;
+      if (false) {
+        x = 10;
+      }
+      let y = x;
+    `)).toEqual(
+      expect.arrayContaining([
+        `You must initialize the variable 'x' before use.`
+      ]));;
+    compileOK(`
+      let x;
+      if (1 + 1 > 2) {
+        x = 10;
+      }
+      else {
+        x = 20;
+      }
+      let y = x;
+      `);
     // Handle shadow variables:
     compileOK(`let x; { let x, y; x = 1; y = x; }`);
   });
