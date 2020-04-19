@@ -158,7 +158,7 @@ describe('ElementaryJS', () => {
     await expect(run(`
       function foo() {};
       foo();
-    `)).resolves.toBe(undefined);
+    `)).resolves.toBeUndefined();
   });
 
   test('Update expression must not duplicate computation', async () => {
@@ -275,8 +275,8 @@ describe('ElementaryJS', () => {
 
   test('Can access property when value is undefined', async () => {
     expect.assertions(2);
-    await expect(run('let x = {y: undefined}; x.y;')).resolves.toBe(undefined);
-    await expect(run('let x = {y: 0}; x.y = undefined; x.y;')).resolves.toBe(undefined);
+    await expect(run('let x = {y: undefined}; x.y;')).resolves.toBeUndefined();
+    await expect(run('let x = {y: 0}; x.y = undefined; x.y;')).resolves.toBeUndefined();
   });
 
   test('Cannot use for-of', () => {
@@ -548,17 +548,17 @@ describe('ElementaryJS', () => {
   test('Arity-mismatch: too few arguments', async () => {
     expect.assertions(1);
     await expect(dynamicError(`
-      function F(x) { }
-      F()`)).resolves
-      .toMatch(`function F expected 1 argument but received 0 arguments`);
+      function F(x) {}
+      F();
+    `)).resolves.toMatch(`function F expected 1 argument but received 0 arguments`);
   });
 
   test('Arity-mismatch: too many arguments', async () => {
     expect.assertions(1);
     await expect(dynamicError(`
-      function F(x) { }
-      F(1,2,3)`)).resolves
-      .toMatch(`function F expected 1 argument but received 3 arguments`);
+      function F(x) {}
+      F(1,2,3);
+    `)).resolves.toMatch(`function F expected 1 argument but received 3 arguments`);
   });
 
   test('Classes test', async () => {
@@ -623,7 +623,7 @@ describe('ElementaryJS', () => {
       expect.arrayContaining([
         `Body of if-else statement must be enclosed in braces.`
       ]));
-      await expect(run(`let i = 0; if (true) { ++i}; i;`)).resolves.toBe(1);
+    await expect(run(`let i = 0; if (true) { ++i}; i;`)).resolves.toBe(1);
     await expect(run(`
       let i = 0;
       if (false) {
@@ -709,10 +709,38 @@ describe('ElementaryJS', () => {
     ]));
   });
 
-  test('String.split produces a stopified array', async () => {
-    await expect(dynamicError(`
-      'a,b,c'.split(',').map(function(x, y, z) { return 0; })
-    `)).resolves.toMatch(`function (anonymous) expected 3 arguments but received 1 argument`);
+  test('Calls to .split produce a stopified array when needed', async () => {
+    expect.assertions(3);
+    // Case 1: built-in string method (motivating example for such check).
+    await expect(run(`
+      'a,b,c'.split(',').filter(x => x === 'b');
+    `)).resolves.toEqual(['b']);
+    // Case 2: custom object method that doesn't return an [].
+    await expect(run(`
+      const a = { split: b => b };
+      a.split(true);
+    `)).resolves.toBe(true);
+    // Case 3: custom object method that does return an [].
+    await expect(run(`
+      const a = { split: b => [b] };
+      a.split(true).filter(x => x);
+    `)).resolves.toEqual([true]);
+  });
+
+  test('Calls to Object.<x> produce a stopified array', async () => {
+    expect.assertions(1);
+    await expect(run(`
+      const o = { a: 0, b: 1, c: 2 },
+            keys = Object.keys(o),
+            values = Object.values(o),
+            entries = Object.entries(o),
+            properties = Object.getOwnPropertyNames(o);
+
+      keys.filter(x => true);
+      values.filter(x => true);
+      entries.filter(x => true);
+      properties.filter(x => true);
+    `)).resolves.toEqual(['a', 'b', 'c']);
   });
 
   test('Cannot set .length of arrays', async () => {
