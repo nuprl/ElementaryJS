@@ -52,13 +52,11 @@ export function dynamicError(code: string) {
       return reject(result);
     }
     return result.run((result: Result) => {
-      if (result.type === 'normal') {
-        return reject(`Expected exception, got result ${result.value}`);
-      }
-      if (typeof result.value.message !== 'string') {
-        return reject(`no error message`);
-      }
-      return resolve(result.value.message);
+      return result.type === 'normal' ?
+        reject(`Expected exception, got result ${result.value}`) :
+        typeof result.value.message !== 'string' ?
+          reject(`Expected exception, got result ${result.value}`) :
+          resolve(result.value.message);
     });
   });
 }
@@ -79,7 +77,6 @@ export function run(code: string) {
   return new Promise((resolve, reject) => {
     const runner = compile('', compileOpts);
     if (runner.kind === 'error') {
-      console.log(`Rejecting ` + code);
       return reject(runner);
     }
     runner.run((result: Result) => {
@@ -87,11 +84,8 @@ export function run(code: string) {
         return reject(result.value);
       }
       runner.eval(code, (result: Result) => {
-        if (result.type === 'exception') {
-          return reject(result.value);
-
-        }
-        resolve(result.value);
+        return result.type === 'exception' ? reject(result.value) :
+          resolve(result.value);
       });
     });
   });

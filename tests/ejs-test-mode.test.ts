@@ -7,7 +7,7 @@ function testFailure(description: string, errorMsg: string = 'Error: assertion f
   return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
-// Returns the expected ok message from testing
+// Returns the expected OK message from testing
 function testOk(description: string) {
   return ` OK      ${description}`;
 }
@@ -30,8 +30,8 @@ describe('ElementaryJS Test Mode', () => {
     await expect(run(`
       test('loop forever', function() {
         while(true) {};
-      })`))
-      .resolves.toBe(undefined);
+      });
+    `)).resolves.toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testFailure('loop forever', 'time limit exceeded'),
       testSummary(1, 0)
@@ -44,13 +44,10 @@ describe('ElementaryJS Test Mode', () => {
       test('loop forever', function() {
         while(true) {};
       });
-      test('succeeds', function() {
-      });
-
-      `))
-      .resolves.toBe(undefined);
+      test('succeeds', function() {});
+    `)).resolves.toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure(`loop forever`, 'time limit exceeded'),
+      testFailure('loop forever', 'time limit exceeded'),
       testOk('succeeds'),
       testSummary(1, 1)
     ].join('\n'));
@@ -60,19 +57,19 @@ describe('ElementaryJS Test Mode', () => {
     runtime.enableTests(true, 3000); // time out of 3 seconds
     expect(await run(`
       function takeInFunc(func, arr) {
-        let val = func(arr);
-        while (true) {1; }
-        return val
+        const val = func(arr);
+        while (true) {}
+        return val;
       }
       function adder(num) {
-        while (true) {1;}
-        return function(x) { return x + num };
+        while (true) {}
+        return function(x) { return x + num; };
       }
       test('higher order', function() {
-        takeInFunc(function(x) {return 1}, 1);
+        takeInFunc(function(x) { return 1; }, 1);
       });
       test('adder', function() { adder(1)(2) });
-    `)).toBe(undefined);
+    `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testFailure('higher order', 'time limit exceeded'),
       testFailure('adder', 'time limit exceeded'),
@@ -84,14 +81,14 @@ describe('ElementaryJS Test Mode', () => {
     runtime.enableTests(true, 3000); // timeout of 3 seconds
     expect(await run(`
       function hof(func) {
-        let newFunc = function(x) { return 2 + func(x) };
+        const newFunc = function(x) { return 2 + func(x); };
         let x = -9999999;
         while (x !== 9999999) {
           x += 1;
         }
         return newFunc;
       }
-      test('run a while', function() {hof(function(x) {return x + 1})});
+      test('run a while', function() { hof(function(x) { return x + 1; }); });
     `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testFailure('run a while', 'time limit exceeded'),
@@ -117,7 +114,7 @@ describe('ElementaryJS Test Mode', () => {
   });
 
   test('One OK test', async () => {
-    expect(await run(`test('Test 1', function() {})`)).toBe(undefined);
+    expect(await run(`test('Test 1', function() {});`)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testOk('Test 1'),
       testSummary(0, 1)
@@ -125,18 +122,20 @@ describe('ElementaryJS Test Mode', () => {
   });
 
   test('One failed Test', async () => {
-    expect(await run(`test('Failed Test', function() { assert(false) })`)).toBe(undefined);
+    expect(await run(`test('Failed Test', function() {
+      assert(false);
+    });`)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testFailure('Failed Test', 'Error: assertion failed'),
       testSummary(1, 0)
     ].join('\n'));
   });
 
-  test('One Ok, One failed', async () => {
+  test('One OK, One failed', async () => {
     expect(await run(`
-      test('Ok test', function() {return 1});
-      test('Failed', function() { assert(false)});
-    `)).toBe(undefined);
+      test('Ok test', function() { return 1; });
+      test('Failed', function() { assert(false); });
+    `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testOk('Ok test'),
       testFailure('Failed', 'Error: assertion failed'),
@@ -147,12 +146,12 @@ describe('ElementaryJS Test Mode', () => {
   test('20 tests', async () => {
     expect(await run(`
       for (let i = 0; i < 10; ++i) {
-        test(i.toString(), function() { return 1});
+        test(i.toString(), function() { return 1; });
       }
       for (let i = 10; i < 20; ++i) {
-        test(i.toString(), function() { assert(false)});
+        test(i.toString(), function() { assert(false); });
       }
-    `)).toBe(undefined);
+    `)).toBeUndefined();
     let output: string[] = [];
     for (let i = 0; i < 10; i++) {
       output.push(testOk(i.toString()));
@@ -166,7 +165,7 @@ describe('ElementaryJS Test Mode', () => {
 
   test('Tests not enabled', () => {
     runtime.enableTests(false);
-    runtime.test('Test', () => { runtime.assert(false)});
+    runtime.test('Test', () => { runtime.assert(false); });
     expect(runtime.summary(false).output).toMatch(/not enabled/);
   });
 
@@ -177,22 +176,22 @@ describe('ElementaryJS Test Mode', () => {
 
   test('Stopify bug: arguments array materialization and boxing interacts poorly', done => {
     const runner = compileOK(`
-      let r1 = false;
-      let r2 = false;
-      let r3 = false;
-      let r4 = false;
+      let r1 = false,
+          r2 = false,
+          r3 = false,
+          r4 = false;
       function oracle(x) {
         let b = true;
-        test("Test 1", function() {
+        test('Test 1', function() {
           r1 = x === 900;
         });
         r2 = x === 900;
-        test("Test 2", function() {
+        test('Test 2', function() {
           r3 = x === 900;
         });
         r4 = x === 900;
       }
-      oracle(900)
+      oracle(900);
     `);
     runner.run((result: Result) => {
       expect(runner.g.r1).toBe(true);
