@@ -85,6 +85,11 @@ export function stopifyObjectArrayRecur(obj: any) {
 export function checkCall(object: any, field: string, args: any[]) {
   if (typeof object === 'string' && field === 'split') {
     return stopifyArray(object.split(args[0]));
+  } else if (field === 'split') {
+    const result = object.split(...args);
+    return Array.isArray(result) ? stopifyArray(result) : result;
+  } else if (typeof object === 'function' && object.name === 'Object') {
+    return stopifyArray(object[field](args[0]));
   }
   elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
 }
