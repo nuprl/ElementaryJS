@@ -197,10 +197,7 @@ const visitor = {
     if (path.node.id.type !== 'Identifier') {
       // TODO(arjun): This is an awful error message!
       st.elem.error(path, 'Do not use destructuring patterns.');
-      // The remaining checks assume that the program is binding a simple identifier.
-      return;
-    }
-    if (!t.isExpression(path.node.init)) {
+    } else if (!t.isExpression(path.node.init)) {
       st.elem.error(path, `You must initialize the variable '${path.node.id.name}'.`);
     }
   },
@@ -212,7 +209,10 @@ const visitor = {
       }
       const o = callee.object,
             p = callee.property;
-      if (p.name === 'split') {
+      if (p.name === 'split' || // string split
+          t.isIdentifier(o) && o.name === 'Object' && // Cases where `Object.<x>` returns an [].
+          (p.name === 'getOwnPropertyNames' || p.name === 'entries' ||
+            p.name === 'values' || p.name === 'keys')) {
         path.replaceWith(dynCheck('checkCall', path.node.loc, o, propertyAsString(callee),
           t.arrayExpression(path.node.arguments)));
         path.skip();
