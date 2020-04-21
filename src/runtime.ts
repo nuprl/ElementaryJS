@@ -135,13 +135,6 @@ export function dot(object: any, index: string, line: number) {
   return object && object[index];
 }
 
-export function checkFunction(object: any, index: string, result: any, line: number) {
-  if (typeof object === 'function' && index in Function.prototype) {
-    errorHandle('Cannot call default properties of functions', 'checkFunction', line);
-  }
-  return result;
-}
-
 export function updateOnlyNumbers(opcode: string, object: any, line: number) {
   if (typeof object !== 'number') {
     errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers', line);
