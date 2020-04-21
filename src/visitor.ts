@@ -217,9 +217,6 @@ const visitor = {
           t.arrayExpression(path.node.arguments)));
         path.skip();
       }
-      path.replaceWith(dynCheck('checkFunction', path.node.loc, o, t.stringLiteral(p.name),
-        path.node));
-      path.skip();
     }
   },
   ObjectExpression(path: NodePath<t.ObjectExpression>, st: S) {

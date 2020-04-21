@@ -908,43 +908,6 @@ describe('ElementaryJS', () => {
     `)).resolves.toMatch(`array indexing called on a non-array value type`);
   });
 
-  test('Disallow function toString access', async () => {
-    await expect(dynamicError(`
-      function funcA() {
-        return 1;
-      }
-      funcA.toString;
-    `)).resolves.toMatch(`object does not have member 'toString'`);
-    await expect(dynamicError(`
-      function funcA() {
-        return 1;
-      }
-      funcA.toString();
-    `)).resolves.toMatch(`Cannot call default properties of functions`);
-    await expect(dynamicError(`
-      class TestClass {
-        static testFunc() {
-          return 1;
-        }
-      }
-      TestClass.testFunc.toString;
-    `)).resolves.toMatch(`object does not have member 'toString'`);
-    await expect(dynamicError(`
-      class TestClass {
-        static testFunc() {
-          return 1;
-        }
-      }
-      TestClass.testFunc.toString();
-    `)).resolves.toMatch(`Cannot call default properties of functions`);
-    await expect(dynamicError(`
-      Array.toString;
-    `)).resolves.toMatch(`object does not have member 'toString'`);
-    await expect(dynamicError(`
-      Array.toString()
-    `)).resolves.toMatch(`Cannot call default properties of functions`);
-  });
-
   test('Function calls work', async () => {
     await expect(run(`
       class TestClass {
