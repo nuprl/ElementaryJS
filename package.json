@@ -1,6 +1,6 @@
 {
   "name": "@stopify/elementary-js",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "JavaScript without sharp edges.",
   "license": "BSD-3-Clause",
   "repository": "github:plasma-umass/ElementaryJS",
