@@ -240,9 +240,9 @@ const visitor = {
   MemberExpression: {
     exit(path: NodePath<t.MemberExpression>) {
       const parent = path.parent;
-      // Some stupid cases to skip: o.x = v and ++o.x
-      // In these cases, the l-value is a MemberExpression, but we tackle
-      // these in the AssignmentExpression and UpdateExpression cases.
+      // Some stupid cases to skip: `o.x = v` and `++o.x`.
+      // In these cases, the l-value is a MemberExpression.
+      // We tackle these in the AssignmentExpression and UpdateExpression cases.
       if ((t.isUpdateExpression(parent) && parent.argument === path.node) ||
           (t.isAssignmentExpression(parent) && parent.left === path.node)) {
         return;
@@ -256,14 +256,13 @@ const visitor = {
       }
       // path.node.computed is false onwards
       if (!t.isIdentifier(p)) {
-        // This should never happen
+        // This should never happen.
         throw new Error(`ElementaryJS expected id. in MemberExpression`);
       }
       if (t.isCallExpression(parent) && parent.callee === path.node) {
         // This MemberExpression is the callee in a CallExpression, i.e., obj.method(...).
-        // We can simply leave this intact. JavaScript will throw an exception
-        // with a reasonable error message if obj.method is not a function.
-        // proper checks for toString are handled by CallExpression exit function
+        // We can simply leave this intact.
+        // JS will throw a reasonable error message if obj.method is not a function.
         return;
       }
       path.replaceWith(dynCheck('dot', p.loc, o, t.stringLiteral(p.name)));

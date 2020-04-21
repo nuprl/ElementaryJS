@@ -21,12 +21,10 @@ export function errorHandle(err: string, check: string, line?: number) {
   console.warn(`EJS RUNTIME ERROR SUPPRESSED ${check}${line ? ` at ${line}` : ''}: ${err}`);
 }
 
-export function elementaryJSBug(what: string) {
-  // TODO(arjun): We should save the trace ourselves
-  errorHandle('You have encountered a potential bug in ' +
-    'ElementaryJS. Please report this to the developers, ' +
-    // tslint:disable-next-line:no-console
-    'along with the following stack trace:\n' + console.trace(), 'elementaryJSBug');
+export function elementaryJSBug(msg: string) {
+  errorHandle(`You have encountered a potential bug in ElementaryJS.
+Please report this to the developers along with the following message:
+  ${msg}`, 'elementaryJSBug');
 }
 
 class ArrayStub {
@@ -146,7 +144,6 @@ export function checkFunction(object: any, index: string, result: any, line: num
 
 export function updateOnlyNumbers(opcode: string, object: any, line: number) {
   if (typeof object !== 'number') {
-    // TODO(joydeepb): Figure out how to print the operator.
     errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers', line);
   }
 }
