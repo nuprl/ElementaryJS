@@ -25,13 +25,9 @@
  */
 import * as t from 'babel-types';
 import { NodePath } from 'babel-traverse';
-import { ElementarySyntaxError, CompileError } from './types';
+import { CompileError, ElementarySyntaxError, Environment } from './types';
 
-const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '%='],
-      comparisonOperators = ['===', '!=='],
-      numOperators = ['<=', '>=', '<', '>', '<<', '>>', '>>>', '-', '*', '/', '%', '&', '|', '^'],
-      numOrStringOperators = ['+'],
-      allowedBinaryOperators = comparisonOperators.concat(numOrStringOperators, numOperators);
+interface S { elem: State }
 
 // This is the visitor state, which includes a list of errors.
 // We throw this object if something goes wrong.
@@ -48,7 +44,7 @@ export class State implements CompileError {
 
   // Convenience method to add a new error
   error(path: NodePath<t.Node>, message: string) {
-    this.errors.push({ line: path.node.loc.start.line, message: message });
+    this.errors.push({ line: path.node.loc.start.line, message });
   }
 
   // Convenience: object prints reasonably for debugging the implementation of ElementaryJS.
@@ -58,9 +54,70 @@ export class State implements CompileError {
   }
 }
 
-interface S {
-  elem: State
+class EnvironmentList {
+  private list: Environment[];
+
+  constructor() {
+    this.list = [];
+  }
+
+  private add(setToAdd: Set<t.Identifier>, id: t.Identifier): void {
+    if (setToAdd.has(id)) {
+      throw Error(`Identifier ${id} already in ${setToAdd}.`);
+    }
+    setToAdd.add(id);
+  }
+
+  public addI(id: t.Identifier): void {
+    this.add(this.peek().I, id);
+  }
+
+  public addU(id: t.Identifier): void {
+    this.add(this.peek().U, id);
+  }
+
+  public peek(): Environment { // Why doesn't TS complain here like w/ pop below?
+    return this.list[this.list.length - 1];
+  }
+
+  public push(e: Environment): void {
+    this.list.push(e);
+  }
+
+  public pop(): Environment {
+    const res: Environment | undefined = this.list.pop();
+    if (!res) {
+      throw Error('Attempting to remove global env is forbidden.');
+    }
+    return res;
+  }
+
+  public swap(id: t.Identifier): void {
+    const envU: Set<t.Identifier> = this.peek().U,
+          envI: Set<t.Identifier> = this.peek().I;
+
+    if (!envU.has(id)) {
+      throw Error(`Identifier ${id} cannot be found in ${envU}.`);
+    } else if (envI.has(id)) {
+      throw Error(`Identifier ${id} already in ${envI}.`);
+    } else {
+      envU.delete(id);
+      envI.add(id);
+    }
+  }
+
+  // TODO: Needs to print sets to be of use.
+  public toString(): string {
+    return this.list.join('\n');
+  }
 }
+
+const assignmentOperators: string[] = ['=', '+=', '-=', '*=', '/=', '%='],
+      comparisonOperators: string[] = ['===', '!=='],
+      numOperators: string[] = ['<=', '>=', '<', '>', '<<', '>>', '>>>', '-', '*', '/', '%', '&', '|', '^'],
+      numOrStringOperators: string[] = ['+'],
+      allowedBinaryOperators: string[] = comparisonOperators.concat(numOrStringOperators, numOperators),
+      envList: EnvironmentList = new EnvironmentList();
 
 function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
   args.push(t.numericLiteral(loc.start.line)); // line numb is last arg to any dyn check
@@ -128,6 +185,11 @@ const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
       st.elem = new State([]);
+      envList.push({
+        name: path.node.type,
+        I: new Set(),
+        U: new Set()
+      });
       // Insert 'use strict' if needed
       if (path.node.directives === undefined) {
         path.node.directives = [];
@@ -146,6 +208,7 @@ const visitor = {
       }
       path.stop();
 
+      // console.log(envList);
       const l = st.elem.errors.length;
       if (l > 0) {
         if (State.ejsOff) {
@@ -195,10 +258,15 @@ const visitor = {
   },
   VariableDeclarator(path: NodePath<t.VariableDeclarator>, st: S) {
     if (path.node.id.type !== 'Identifier') {
-      // TODO(arjun): This is an awful error message!
       st.elem.error(path, 'Do not use destructuring patterns.');
-    } else if (!t.isExpression(path.node.init)) {
-      st.elem.error(path, `You must initialize the variable '${path.node.id.name}'.`);
+      return;
+    }
+    if (!t.isExpression(path.node.init)) {
+      // console.log(`VariableDeclarator: Adding ${path.node.id.name} to U of ${envList.peek().name}`);
+      envList.addU(path.node.id);
+    } else {
+      // console.log(`VariableDeclarator: Adding ${path.node.id.name} to I of ${envList.peek().name}`);
+      envList.addI(path.node.id);
     }
   },
   CallExpression: {
