@@ -57,8 +57,8 @@ export class State implements CompileError {
 class EnvironmentList {
   private list: Environment[];
 
-  constructor() {
-    this.list = [];
+  constructor(...envs: Environment[]) {
+    this.list = envs;
   }
 
   private add(setToAdd: Set<t.Identifier>, id: t.Identifier): void {
@@ -106,9 +106,16 @@ class EnvironmentList {
     }
   }
 
-  // TODO: Needs to print sets to be of use.
+  // For debugging purposes.
   public toString(): string {
-    return this.list.join('\n');
+    let res: string = 'Current Env List:\n';
+    for (let i = 0; i < this.list.length; i++) {
+      res += this.list[i].name + '\n\tI:';
+      this.list[i].I.forEach(id => res += '\n\t\t' + id.name);
+      res += '\n\tU:';
+      this.list[i].U.forEach(id => res += '\n\t\t' + id.name);
+    }
+    return res;
   }
 }
 
@@ -116,8 +123,8 @@ const assignmentOperators: string[] = ['=', '+=', '-=', '*=', '/=', '%='],
       comparisonOperators: string[] = ['===', '!=='],
       numOperators: string[] = ['<=', '>=', '<', '>', '<<', '>>', '>>>', '-', '*', '/', '%', '&', '|', '^'],
       numOrStringOperators: string[] = ['+'],
-      allowedBinaryOperators: string[] = comparisonOperators.concat(numOrStringOperators, numOperators),
-      envList: EnvironmentList = new EnvironmentList();
+      allowedBinaryOperators: string[] = comparisonOperators.concat(numOrStringOperators, numOperators);
+let envList: EnvironmentList; // Initialized on AST entrance (i.e., Visitor.Program.enter).
 
 function dynCheck(name: string, loc: t.SourceLocation, ...args: t.Expression[]): t.CallExpression {
   args.push(t.numericLiteral(loc.start.line)); // line numb is last arg to any dyn check
@@ -185,7 +192,7 @@ const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
       st.elem = new State([]);
-      envList.push({
+      envList = new EnvironmentList({
         name: path.node.type,
         I: new Set(),
         U: new Set()
@@ -208,7 +215,7 @@ const visitor = {
       }
       path.stop();
 
-      // console.log(envList);
+      // console.log(`AST TRAVERSED. ${envList}`);
       const l = st.elem.errors.length;
       if (l > 0) {
         if (State.ejsOff) {
@@ -261,6 +268,7 @@ const visitor = {
       st.elem.error(path, 'Do not use destructuring patterns.');
       return;
     }
+    // NOTE(joseph): Here we have: (getOwnBindingIdentifier === getBindingIdentifier === path.node.id).
     if (!t.isExpression(path.node.init)) {
       // console.log(`VariableDeclarator: Adding ${path.node.id.name} to U of ${envList.peek().name}`);
       envList.addU(path.node.id);
@@ -490,6 +498,8 @@ const visitor = {
     if (path.node.name === 'Array') {
       path.replaceWith(t.memberExpression(t.identifier('rts'), path.node, false));
       path.skip();
+    } else if (envList.peek().U.has(path.scope.getBindingIdentifier(path.node.name))) {
+      st.elem.error(path, `You must initialize the variable '${path.node.name}' before use.`);
     }
   },
   ForStatement: {
