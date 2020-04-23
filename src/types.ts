@@ -1,4 +1,5 @@
-// This module defines all the public types that the EJS package exports.
+import { Identifier } from 'babel-types';
+
 export type ElementarySyntaxError = {
   line: number,
   message: string
@@ -39,4 +40,10 @@ export type CompilerOpts = {
   ejsOff?: boolean,
   version: () => void,
   whitelistCode: { [key: string]: string }
+};
+
+export type Environment = {
+  name: string,
+  I: Set<Identifier>,
+  U: Set<Identifier>
 };
