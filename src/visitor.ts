@@ -43,12 +43,12 @@ export class State implements CompileError {
   constructor(public errors: ElementarySyntaxError[]) {}
 
   // Convenience method to add a new error
-  error(path: NodePath<t.Node>, message: string) {
+  public error(path: NodePath<t.Node>, message: string): void {
     this.errors.push({ line: path.node.loc.start.line, message });
   }
 
   // Convenience: object prints reasonably for debugging the implementation of ElementaryJS.
-  toString() {
+  public toString(): string {
     return this.errors.length === 0 ? 'class State in ElementaryJS with no errors' :
       this.errors.map(x => `- ${x.message} (line ${x.line})`).join('\n');
   }
@@ -96,7 +96,7 @@ class EnvironmentList {
     const envU: Set<t.Identifier> = this.peek().U,
           envI: Set<t.Identifier> = this.peek().I;
 
-    if (!envU.has(id)) {
+    if (!envU.has(id)) { // Redundant; we check if an ID is in U before call.
       throw Error(`Identifier ${id} cannot be found in ${envU}.`);
     } else if (envI.has(id)) {
       throw Error(`Identifier ${id} already in ${envI}.`);
@@ -230,7 +230,7 @@ const visitor = {
   Function: {
     enter(path: NodePath<t.Function>, st: S) {
       if (path.node.params.length &&
-          path.node.params[path.node.params.length - 1].type === 'RestElement') {
+          t.isRestElement(path.node.params[path.node.params.length - 1])) {
         st.elem.error(path, 'The rest parameter is not supported.');
       }
       const inCtor = path.node.type === 'ClassMethod' && path.node.kind === 'constructor';
@@ -299,8 +299,8 @@ const visitor = {
     const propertyNames = new Set();
     for (let i = 0; i < path.node.properties.length; ++i) {
       const prop = path.node.properties[i];
-      if (prop.type === 'ObjectProperty') {
-        if (prop.key.type !== 'Identifier') {
+      if (t.isObjectProperty(prop)) {
+        if (!t.isIdentifier(prop.key)) {
           st.elem.error(path, 'Object member name must be an identifier.');
         } else {
           propertyNames.has(prop.key.name) ? st.elem.error(path,
@@ -345,7 +345,7 @@ const visitor = {
   AssignmentExpression: {
     enter(path: NodePath<t.AssignmentExpression>, st: S) {
       const { operator: op, left, right } = path.node;
-      if (left.type === 'Identifier' && !path.scope.hasBinding(left.name)) {
+      if (t.isIdentifier(left) && !path.scope.hasBinding(left.name)) {
         st.elem.error(path,
           `You must declare variable '${left.name}' before assigning a value to it.`);
       }
@@ -361,6 +361,9 @@ const visitor = {
 
       // We have to manually assign the `loc` obj for potential future dyn checks.
       if (t.isIdentifier(left)) {
+        if (envList.peek().U.has(path.scope.getBindingIdentifier(left.name))) {
+          st.elem.error(path, `You must initialize the variable '${left.name}' before use.`);
+        }
         const a = t.assignmentExpression('=', left,
                     t.binaryExpression(unassign(op), left, right));
         a.right.loc = right.loc;
@@ -386,20 +389,19 @@ const visitor = {
       const { left, right } = path.node;
       if (path.node.operator !== '=') {
         throw new Error('desugaring error');
-      }
-      if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
+      } else if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         throw new Error('syntactic check error');
-      }
-      if (t.isIdentifier(left) ||
-          (st.elem.inConstructor && left.object.type === 'ThisExpression')) {
+      } else if (t.isIdentifier(left)) {
+        if (envList.peek().U.has(path.scope.getBindingIdentifier(left.name))) {
+          envList.swap(path.scope.getBindingIdentifier(left.name));
+        }
         return;
-      }
-      if (left.computed) {
-        // exp[x] = rhs => checkArray(exp, x, rhs)
+      } else if (st.elem.inConstructor && left.object.type === 'ThisExpression') {
+        return;
+      } else if (left.computed) { // exp[x] = rhs => checkArray(exp, x, rhs)
         path.replaceWith(
           dynCheck('checkArray', left.object.loc, left.object, left.property, right));
-      } else {
-        // exp.x = rhs => checkMember(exp, 'x', rhs)
+      } else { // exp.x = rhs => checkMember(exp, 'x', rhs)
         path.replaceWith(
           dynCheck('checkMember', left.object.loc, left.object, propertyAsString(left), right));
       }
@@ -466,7 +468,7 @@ const visitor = {
     },
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
-      if (a.type !== 'Identifier' && a.type !== 'MemberExpression') {
+      if (!t.isIdentifier(a) && !t.isMemberExpression(a)) {
         throw new Error('not an l-value in update expression');
       }
       const opName = t.stringLiteral(path.node.operator);
@@ -488,10 +490,8 @@ const visitor = {
   },
   ReferencedIdentifier(path: NodePath<t.Identifier>, st: S) {
     // Babel AST is not well-designed here.
-    const parentType = path.parent.type;
-    if (parentType === 'BreakStatement' ||
-        parentType === 'ContinueStatement' ||
-        parentType === 'LabeledStatement') {
+    if (t.isBreakStatement(path.parent) || t.isContinueStatement(path.parent) ||
+        t.isLabeledStatement(path.parent)) {
       return;
     }
 
