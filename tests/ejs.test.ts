@@ -1,5 +1,4 @@
 import { Result } from '../src/index';
-import * as runtime from '../src/runtime';
 import { compileOpts, compileOK, staticError, dynamicError, run } from './test-utils';
 
 describe('ElementaryJS', () => {
@@ -613,26 +612,28 @@ describe('ElementaryJS', () => {
       });`)).resolves.toBeUndefined();
   });
 
-  test('If-else must be a block', async () => {
+  test('All conditional branches must be a block', () => {
     expect.assertions(4);
     expect(staticError(`let s = 1; if (true) ++s;`)).toEqual(
       expect.arrayContaining([
-        `if statement body must be enclosed in braces.`
+        `All branches of an if-statement must be enclosed in braces.`
       ]));
-    expect(staticError(`let i = 0; if (true) ++i; else ++i`)).toEqual(
+    expect(staticError(`let i = 0; if (true) { ++i; } else ++i;`)).toEqual(
       expect.arrayContaining([
-        `Body of if-else statement must be enclosed in braces.`
-      ]));
-    await expect(run(`let i = 0; if (true) { ++i}; i;`)).resolves.toBe(1);
-    await expect(run(`
-      let i = 0;
-      if (false) {
-        ++i
-      } else {
-        i += 2;
-      }
-      i;
-    `)).resolves.toBe(2);
+        `All branches of an if-statement must be enclosed in braces.`
+    ]));
+    compileOK(`let i = 0; if (true) { ++i; } else { ++i; }`);
+    expect(staticError(`let i = 0; if (true) { ++i; }
+      else if (false) { ++i; } else ++i;`)).toEqual(
+      expect.arrayContaining([
+        `All branches of an if-statement must be enclosed in braces.`
+    ]));
+    expect(staticError(`let i = 0; if (true) { ++i; }
+      else if (false) ++i; else { ++i; }`)).toEqual(
+      expect.arrayContaining([
+        `All branches of an if-statement must be enclosed in braces.`
+    ]));
+    compileOK(`let i = 0; if (true) { ++i; } else if (false) { ++i; } else { ++i; }`);
   });
 
   test('For statement must have three parts present', async () => {
