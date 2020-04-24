@@ -456,19 +456,19 @@ const visitor = {
   },
   IfStatement: {
     enter(path: NodePath<t.IfStatement>, st: S) {
-      if (!t.isBlockStatement(path.node.consequent) && path.node.alternate === null) {
-        st.elem.error(path, 'if statement body must be enclosed in braces.');
-      } else if (!t.isBlockStatement(path.node.consequent) &&
-                  !t.isBlockStatement(path.node.alternate)) {
-        st.elem.error(path, 'Body of if-else statement must be enclosed in braces.');
+      if (!t.isBlockStatement(path.node.consequent) || path.node.alternate &&
+          !t.isBlockStatement(path.node.alternate) && !t.isIfStatement(path.node.alternate)) {
+        st.elem.error(path, 'All branches of an if-statement must be enclosed in braces.');
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
       // if (a) => if (checkIfBoolean(a))
       const a = path.node.test,
             check = dynCheck('checkIfBoolean', path.node.loc, a, t.nullLiteral()),
-            consequent = path.node.consequent,
-            alternate = path.node.alternate,
+            consequent = t.isBlockStatement(path.node.consequent) ?
+              path.node.consequent : t.blockStatement([path.node.consequent]),
+            alternate = path.node.alternate && (t.isBlockStatement(path.node.alternate) ?
+              path.node.alternate : t.blockStatement([path.node.alternate])),
             replacement = t.ifStatement(check, consequent, alternate);
       replacement.loc = path.node.loc;
       path.replaceWith(replacement);
@@ -478,6 +478,7 @@ const visitor = {
   VariableDeclaration(path: NodePath<t.VariableDeclaration>, st: S) {
     // Arrow transform uses 'var' declarations, we can skip over them instead
     if ((path.node as any)._generated && path.node.kind === 'var') {
+      path.skip();
       return;
     }
     if (path.node.kind !== 'let' && path.node.kind !== 'const') {
