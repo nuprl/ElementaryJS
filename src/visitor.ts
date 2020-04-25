@@ -529,6 +529,9 @@ const visitor = {
       }
     }
   },
+  TryStatement(path: NodePath<t.TryStatement>, st: S) {
+    st.elem.error(path, `The try-catch statment is not supported.`);
+  },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
   },
