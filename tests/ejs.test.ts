@@ -867,6 +867,28 @@ describe('ElementaryJS', () => {
     `)).resolves.toBe(0);
   });
 
+  test('Non-empty switch cases must have braces', () => {
+    expect(staticError(`
+      let x = 1;
+      switch(x) {
+        case 1:
+          console.log(x);
+      }
+    `)).toEqual(
+      expect.arrayContaining([
+        `If a switch case is not empty then it must be in braces.`
+      ]));
+    compileOK(`
+      let x = 1;
+      switch(x) {
+        case 0:
+        case 1: {
+          console.log(x);
+        }
+      }
+    `);
+  });
+
   test('Parser should work', async () => {
     await expect(run(`
       parser.parseProgram('let x = 1; let y = x * 2;').kind;
