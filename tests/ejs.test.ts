@@ -406,6 +406,13 @@ describe('ElementaryJS', () => {
       ]));
   });
 
+  test('No try-catch', () => {
+    expect(staticError(`try { let x = 1; } catch (e) {}`)).toEqual(
+      expect.arrayContaining([
+        `The try-catch statment is not supported.`
+      ]));
+  });
+
   test('Can use string concatenation and assignment operator', async () => {
     expect.assertions(1);
     await expect(run(`let a = "hello "; a += "world"`))
