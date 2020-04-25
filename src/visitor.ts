@@ -529,6 +529,12 @@ const visitor = {
       }
     }
   },
+  SwitchCase(path: NodePath<t.SwitchCase>, st: S) {
+    if (path.node.consequent.length > 1 || path.node.consequent.length === 1 &&
+        !t.isBlockStatement(path.node.consequent[0])) {
+      st.elem.error(path, `If a switch case is not empty then it must be in braces.`);
+    }
+  },
   TryStatement(path: NodePath<t.TryStatement>, st: S) {
     st.elem.error(path, `The try-catch statment is not supported.`);
   },
