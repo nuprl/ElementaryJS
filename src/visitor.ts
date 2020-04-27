@@ -55,10 +55,13 @@ export class State implements CompileError {
 }
 
 class EnvironmentList {
-  private list: Environment[];
+  private list: (Environment | null)[][];
 
-  constructor(...envs: Environment[]) {
-    this.list = envs;
+  constructor(e: Environment[]) {
+    if (e.length !== 1) {
+      throw Error('Global environment must be of size 1.');
+    }
+    this.list = [e];
   }
 
   private add(setToAdd: Set<t.Identifier>, id: t.Identifier): void {
@@ -68,33 +71,56 @@ class EnvironmentList {
     setToAdd.add(id);
   }
 
+  private peek(): number {
+    for (var i = this.list.length - 1; this.list[i].every(e => e === null); i--) {}
+    return i;
+  }
+
   public addI(id: t.Identifier): void {
-    this.add(this.peek().I, id);
+    this.add(this.peekEnvironment().I, id);
   }
 
   public addU(id: t.Identifier): void {
-    this.add(this.peek().U, id);
+    this.add(this.peekEnvironment().U, id);
   }
 
-  public peek(): Environment { // Why doesn't TS complain here like w/ pop below?
-    return this.list[this.list.length - 1];
+  public peekEnvironment(): Environment {
+    const _e: (Environment | null)[] = this.list[this.peek()];
+    for (var i = _e.length - 1; _e[i] === null; i--) {}
+    return _e[i] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS
   }
 
-  public push(e: Environment): void {
+  // TODO: Address case when we're not in if/switch.
+  public pushEnvironment(name: string): void {
+    const _i: number = this.peek(),
+          _e: (Environment | null)[] = this.list[_i];
+    for (var i = 0; _e[i] !== null; i++) {}
+    this.list[_i][i] = {
+      name,
+      I: new Set(this.peekEnvironment().I),
+      U: new Set(this.peekEnvironment().U)
+    };
+  }
+
+  public push(e: null[]): void {
     this.list.push(e);
   }
 
-  public pop(): Environment {
-    const res: Environment | undefined = this.list.pop();
-    if (!res) {
-      throw Error('Attempting to remove global env is forbidden.');
+  public pop(): void {
+    if (!this.list.pop()) {
+      throw Error('List is empty.');
+    } else if (!this.list.length) {
+      throw Error('Popped global environment.');
     }
-    return res;
+  }
+
+  // TODO
+  public merge(): void {
   }
 
   public swap(id: t.Identifier): void {
-    const envU: Set<t.Identifier> = this.peek().U,
-          envI: Set<t.Identifier> = this.peek().I;
+    const envU: Set<t.Identifier> = this.peekEnvironment().U,
+          envI: Set<t.Identifier> = this.peekEnvironment().I;
 
     if (!envU.has(id)) { // Redundant; we check if an ID is in U before call.
       throw Error(`Identifier ${id} cannot be found in ${envU}.`);
@@ -104,18 +130,6 @@ class EnvironmentList {
       envU.delete(id);
       envI.add(id);
     }
-  }
-
-  // For debugging purposes.
-  public toString(): string {
-    let res: string = 'Current Env List:\n';
-    for (let i = 0; i < this.list.length; i++) {
-      res += this.list[i].name + '\n\tI:';
-      this.list[i].I.forEach(id => res += '\n\t\t' + id.name);
-      res += '\n\tU:';
-      this.list[i].U.forEach(id => res += '\n\t\t' + id.name);
-    }
-    return res;
   }
 }
 
@@ -192,11 +206,11 @@ const visitor = {
   Program: {
     enter(path: NodePath<t.Program>, st: S) {
       st.elem = new State([]);
-      envList = new EnvironmentList({
+      envList = new EnvironmentList([{
         name: path.node.type,
         I: new Set(),
         U: new Set()
-      });
+      }]);
       // Insert 'use strict' if needed
       if (path.node.directives === undefined) {
         path.node.directives = [];
@@ -361,7 +375,7 @@ const visitor = {
 
       // We have to manually assign the `loc` obj for potential future dyn checks.
       if (t.isIdentifier(left)) {
-        if (envList.peek().U.has(path.scope.getBindingIdentifier(left.name))) {
+        if (envList.peekEnvironment().U.has(path.scope.getBindingIdentifier(left.name))) {
           st.elem.error(path, `You must initialize the variable '${left.name}' before use.`);
         }
         const a = t.assignmentExpression('=', left,
@@ -392,7 +406,7 @@ const visitor = {
       } else if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         throw new Error('syntactic check error');
       } else if (t.isIdentifier(left)) {
-        if (envList.peek().U.has(path.scope.getBindingIdentifier(left.name))) {
+        if (envList.peekEnvironment().U.has(path.scope.getBindingIdentifier(left.name))) {
           envList.swap(path.scope.getBindingIdentifier(left.name));
         }
         return;
@@ -498,7 +512,7 @@ const visitor = {
     if (path.node.name === 'Array') {
       path.replaceWith(t.memberExpression(t.identifier('rts'), path.node, false));
       path.skip();
-    } else if (envList.peek().U.has(path.scope.getBindingIdentifier(path.node.name))) {
+    } else if (envList.peekEnvironment().U.has(path.scope.getBindingIdentifier(path.node.name))) {
       st.elem.error(path, `You must initialize the variable '${path.node.name}' before use.`);
     }
   },
