@@ -165,8 +165,7 @@ class EnvironmentList {
           uSet = this.setU(uSet, new Set(toSquash[i].U));
         }
       }
-      env.I = this.setI(env.I, iSet);
-      env.U = this.setU(env.U, uSet);
+      env.I = iSet; env.U = uSet;
     }
   }
 
@@ -681,18 +680,23 @@ const visitor = {
   },
   TryStatement(path: NodePath<t.TryStatement>, st: S) {
     st.elem.error(path, `The try-catch statment is not supported.`);
+    path.skip();
   },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
     st.elem.error(path, `Do not use the 'throw' operator.`);
+    path.skip();
   },
   WithStatement(path: NodePath<t.WithStatement>, st: S) {
     st.elem.error(path, `Do not use the 'with' statement.`);
+    path.skip();
   },
   ForOfStatement(path: NodePath<t.ForOfStatement>, st: S) {
     st.elem.error(path, 'Do not use for-of loops.');
+    path.skip();
   },
   ForInStatement(path: NodePath<t.ForInStatement>, st: S) {
     st.elem.error(path, 'Do not use for-in loops.');
+    path.skip();
   }
 };
 
