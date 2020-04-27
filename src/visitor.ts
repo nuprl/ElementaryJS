@@ -59,21 +59,27 @@ class EnvironmentList {
 
   constructor(e: Environment[]) {
     if (e.length !== 1) {
-      throw Error('Global environment must be of size 1.');
+      throw Error('EnvironmentList: Global environment must be of size 1.');
     }
     this.list = [e];
   }
 
   private add(setToAdd: Set<t.Identifier>, id: t.Identifier): void {
     if (setToAdd.has(id)) {
-      throw Error(`Identifier ${id} already in ${setToAdd}.`);
+      throw Error(`EnvironmentList.prototype.add: Identifier ${id} already in ${setToAdd}.`);
     }
     setToAdd.add(id);
   }
 
   private peek(): number {
-    for (var i = this.list.length - 1; this.list[i].every(e => e === null); i--) {}
+    for (var i: number = this.list.length - 1;
+      i > 0 && this.list[i].every(e => e === null); i--) {}
     return i;
+  }
+
+  // TODO
+  private push(): number {
+    return 0;
   }
 
   public addI(id: t.Identifier): void {
@@ -86,15 +92,15 @@ class EnvironmentList {
 
   public peekEnvironment(): Environment {
     const _e: (Environment | null)[] = this.list[this.peek()];
-    for (var i = _e.length - 1; _e[i] === null; i--) {}
+    for (var i: number = _e.length - 1; _e[i] === null; i--) {}
     return _e[i] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS
   }
 
   // TODO: Address case when we're not in if/switch.
   public pushEnvironment(name: string): void {
-    const _i: number = this.peek(),
+    const _i: number = this.push(),
           _e: (Environment | null)[] = this.list[_i];
-    for (var i = 0; _e[i] !== null; i++) {}
+    for (var i: number = 0; _e[i] !== null; i++) {}
     this.list[_i][i] = {
       name,
       I: new Set(this.peekEnvironment().I),
@@ -102,15 +108,15 @@ class EnvironmentList {
     };
   }
 
-  public push(e: null[]): void {
+  public pushNull(e: null[]): void {
     this.list.push(e);
   }
 
   public pop(): void {
     if (!this.list.pop()) {
-      throw Error('List is empty.');
+      throw Error('EnvironmentList.prototype.pop: List is empty.');
     } else if (!this.list.length) {
-      throw Error('Popped global environment.');
+      throw Error('EnvironmentList.prototype.pop: Popped global environment.');
     }
   }
 
@@ -123,9 +129,9 @@ class EnvironmentList {
           envI: Set<t.Identifier> = this.peekEnvironment().I;
 
     if (!envU.has(id)) { // Redundant; we check if an ID is in U before call.
-      throw Error(`Identifier ${id} cannot be found in ${envU}.`);
+      throw Error(`EnvironmentList.prototype.swap: Identifier ${id} cannot be found in ${envU}.`);
     } else if (envI.has(id)) {
-      throw Error(`Identifier ${id} already in ${envI}.`);
+      throw Error(`EnvironmentList.prototype.swap: Identifier ${id} already in ${envI}.`);
     } else {
       envU.delete(id);
       envI.add(id);
