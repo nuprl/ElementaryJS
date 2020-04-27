@@ -152,7 +152,7 @@ class EnvironmentList {
 
   public squash(): void {
     if (this.list[this.list.length - 1].includes(null)) {
-      throw Error('EnvironmentList.prototype.merge: Not ready for merge; null entry.');
+      throw Error('EnvironmentList.prototype.squash: Not ready for merge; null entry.');
     } else {
       const toSquash: any[] = this.list.pop() || [], // TS
             env: Environment = this.peekEnvironment();
@@ -165,6 +165,20 @@ class EnvironmentList {
           uSet = this.setU(uSet, new Set(toSquash[i].U));
         }
       }
+      iSet.forEach(id => {
+        if (env.I.has(id) && env.U.has(id)) {
+          throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
+        }
+        if (!env.I.has(id) && !env.U.has(id)) { iSet.delete(id); }
+      });
+      uSet.forEach(id => {
+        if (env.I.has(id) && env.U.has(id)) {
+          throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
+        }
+        // Checking the just the U set would be sufficient here.
+        if (!env.I.has(id) && !env.U.has(id)) { uSet.delete(id); }
+      });
+
       env.I = iSet; env.U = uSet;
     }
   }
