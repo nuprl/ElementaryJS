@@ -77,9 +77,32 @@ class EnvironmentList {
     return i;
   }
 
-  // TODO
   private push(): number {
-    return 0;
+    for (var i: number = this.list.length - 1;
+      i > 0 && this.list[i].every(e => e !== null); i--) {}
+    if (i !== 0 && i !== this.list.length - 1) {
+      // Needs to call merge/pop:
+      throw Error('EnvironmentList.prototype.push: Null environments found, but not at end.');
+    }
+    return i;
+  }
+
+  private setI(set1: Set<t.Identifier>, set2: Set<t.Identifier>): Set<t.Identifier> {
+    const _intersection: Set<t.Identifier> = new Set();
+    for (const id of set1) {
+      if (set2.has(id)) {
+        _intersection.add(id);
+      }
+    }
+    return _intersection;
+  }
+
+  private setU(set1: Set<t.Identifier>, set2: Set<t.Identifier>): Set<t.Identifier> {
+    const _union: Set<t.Identifier> = new Set(set1);
+    for (const id of set2) {
+      _union.add(id);
+    }
+    return _union;
   }
 
   public addI(id: t.Identifier): void {
@@ -96,16 +119,23 @@ class EnvironmentList {
     return _e[i] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS
   }
 
-  // TODO: Address case when we're not in if/switch.
   public pushEnvironment(name: string): void {
-    const _i: number = this.push(),
-          _e: (Environment | null)[] = this.list[_i];
-    for (var i: number = 0; _e[i] !== null; i++) {}
-    this.list[_i][i] = {
-      name,
-      I: new Set(this.peekEnvironment().I),
-      U: new Set(this.peekEnvironment().U)
-    };
+    const _i: number = this.push();
+    if (_i) {
+      const _e: (Environment | null)[] = this.list[_i];
+      for (var i: number = 0; _e[i] !== null; i++) {}
+      this.list[_i][i] = {
+        name,
+        I: new Set(this.peekEnvironment().I),
+        U: new Set(this.peekEnvironment().U)
+      };
+    } else {
+      this.list.push([{
+        name,
+        I: new Set(this.peekEnvironment().I),
+        U: new Set(this.peekEnvironment().U)
+      }]);
+    }
   }
 
   public pushNull(e: null[]): void {
@@ -120,8 +150,24 @@ class EnvironmentList {
     }
   }
 
-  // TODO
-  public merge(): void {
+  public squash(): void {
+    if (this.list[this.list.length - 1].includes(null)) {
+      throw Error('EnvironmentList.prototype.merge: Not ready for merge; null entry.');
+    } else {
+      const toSquash: any[] = this.list.pop() || [], // TS
+            env: Environment = this.peekEnvironment();
+      let iSet: Set<t.Identifier> = new Set(toSquash[0].I),
+          uSet: Set<t.Identifier> = new Set(toSquash[0].U);
+
+      if (toSquash.length > 1) {
+        for (let i = 1; i < toSquash.length; i++) {
+          iSet = this.setI(iSet, new Set(toSquash[i].I));
+          uSet = this.setU(uSet, new Set(toSquash[i].U));
+        }
+      }
+      env.I = this.setI(env.I, iSet);
+      env.U = this.setU(env.U, uSet);
+    }
   }
 
   public swap(id: t.Identifier): void {
