@@ -280,7 +280,6 @@ const visitor = {
       }
       path.stop();
 
-      // console.log(`AST TRAVERSED. ${envList}`);
       const l = st.elem.errors.length;
       if (l > 0) {
         if (State.ejsOff) {
@@ -335,10 +334,8 @@ const visitor = {
     }
     // NOTE(joseph): Here we have: (getOwnBindingIdentifier === getBindingIdentifier === path.node.id).
     if (!t.isExpression(path.node.init)) {
-      // console.log(`VariableDeclarator: Adding ${path.node.id.name} to U of ${envList.peek().name}`);
       envList.addU(path.node.id);
     } else {
-      // console.log(`VariableDeclarator: Adding ${path.node.id.name} to I of ${envList.peek().name}`);
       envList.addI(path.node.id);
     }
   },
@@ -671,6 +668,22 @@ const visitor = {
         }
       }
     }
+  },
+  BlockStatement: {
+    enter(path: NodePath<t.BlockStatement>, st: S) {
+      if (!t.isSwitchCase(path.parent) && !t.isIfStatement(path.parent)) {
+        envList.pushEnvironment(path.parent.type);
+      }
+    },
+    exit(path: NodePath<t.BlockStatement>, st: S) {
+      if (t.isProgram(path.parent) || t.isBlockStatement(path.parent) ||
+          t.isDoWhileStatement(path.parent)) {
+        envList.squash();
+      } else if (t.isFunction(path.parent) || t.isForStatement(path.parent) ||
+          t.isWhileStatement(path.parent)) {
+        envList.pop();
+      }
+    },
   },
   SwitchCase(path: NodePath<t.SwitchCase>, st: S) {
     if (path.node.consequent.length > 1 || path.node.consequent.length === 1 &&
