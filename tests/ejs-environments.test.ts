@@ -96,7 +96,7 @@ describe('ElementaryJS Environments', () => {
     compileOK(`let x;
       for (let x = 0; x < 1; ++x) {}
     `);
-    // init before test
+    // initialize before test
     compileOK(`let x;
       for (x = 0; false; ++x) {}
       x;
@@ -155,6 +155,21 @@ describe('ElementaryJS Environments', () => {
     `);
   });
 
+  test('Function reference parent scope (+)', () => {
+    compileOK(`let x;
+      function t() {
+        x = 1;
+        return x;
+      }
+    `);
+    compileOK(`let x, y = function t() { x = 0; return x; };`);
+    compileOK(`let x;
+      class T {
+        constructor() { x = 0; this.x = x; }
+      }
+    `);
+  });
+
   test('Function reference parent scope (-)', () => {
     compileError(`let x;
       function t() {
@@ -169,18 +184,22 @@ describe('ElementaryJS Environments', () => {
     `);
   });
 
-  test('Function reference parent scope (+)', () => {
+  test('Function environment popped on exit (+)', () => {
     compileOK(`let x;
       function t() {
         x = 1;
         return x;
       }
+      x = t();
+      x;
     `);
-    compileOK(`let x, y = function t() { x = 0; return x; };`);
+    compileOK(`let x, y = function t() { x = 0; return x; }; x = y(); x;`);
     compileOK(`let x;
       class T {
         constructor() { x = 0; this.x = x; }
       }
+      x = new T();
+      x;
     `);
   });
 
@@ -215,25 +234,6 @@ describe('ElementaryJS Environments', () => {
     `);
   });
 
-  test('Function environment popped on exit (+)', () => {
-    compileOK(`let x;
-      function t() {
-        x = 1;
-        return x;
-      }
-      x = t();
-      x;
-    `);
-    compileOK(`let x, y = function t() { x = 0; return x; }; x = y(); x;`);
-    compileOK(`let x;
-      class T {
-        constructor() { x = 0; this.x = x; }
-      }
-      x = new T();
-      x;
-    `);
-  });
-
   test('Function environment popped on exit nested (+)', () => {
     compileOK(`
       function t() {
@@ -249,6 +249,264 @@ describe('ElementaryJS Environments', () => {
         let x, y = () => { x = 1; x; };
         return x;
       }
+    `);
+  });
+
+  test('If statement without alternate (-)', () => {
+    compileError(`let x;
+      if (true) {
+        x = 0;
+      }
+      x;
+    `);
+  });
+
+  test('If statement with alternate (+)', () => {
+    compileOK(`let x;
+      if (true) {
+        x = 0; x;
+      } else {
+        x = 1; x;
+      }
+      x;
+    `);
+    // nested plain block
+    compileOK(`let x;
+      if (true) {
+        { x = 0; x; }
+      } else {
+        { x = 1; x; }
+      }
+      x;
+    `);
+  });
+
+  test('If statement with alternate (-)', () => {
+    compileError(`let x;
+      if (true) {
+        x = 0;
+      } else {
+        1 + 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        1 + 2;
+      } else {
+        x = 0;
+      }
+      x;
+    `);
+  });
+
+  test('If statement with multiple branches (+)', () => {
+    compileOK(`let x;
+      if (true) {
+        x = 0; x;
+      } else if (false) {
+        x = 0; x;
+      } else {
+        x = 0; x;
+      }
+      x;
+    `);
+  });
+
+  test('If statement with multiple branches (-)', () => {
+    compileError(`let x;
+      if (true) {
+        x = 0;
+      } else if (false) {
+        1 + 2;
+      } else {
+        1 + 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        1 + 2;
+      } else if (false) {
+        x = 0;
+      } else {
+        1 + 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        1 + 2;
+      } else if (false) {
+        1 + 2;
+      } else {
+        x = 0;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        x = 0;
+      } else if (false) {
+        x = 0;
+      } else {
+        1 + 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        x = 0;
+      } else if (false) {
+        1 + 2;
+      } else {
+        x = 0;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        1 + 2;
+      } else if (false) {
+        x = 0;
+      } else {
+        x = 0;
+      }
+      x;
+    `);
+  });
+
+  test('If statement with multiple nested branches (+)', () => {
+    compileOK(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else {
+            x = 1;
+          }
+        } else {
+          x = 5;
+        }
+      } else {
+       x = 1;
+      }
+      x;
+    `);
+    compileOK(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else if (false) {
+            x = 1;
+          } else {
+            x = 8;
+          }
+        } else if (false) {
+          x = 5;
+        } else if (false) {
+          x = 5;
+        } else {
+          x = 9;
+        }
+      } else if (false) {
+        x = 1;
+      } else {
+        x = 2;
+      }
+      x;
+    `);
+  });
+
+  test.skip('If statement with multiple nested branches (-)', () => {
+    compileError(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else {
+            1 + 2;
+          }
+        } else {
+          x = 5;
+        }
+      } else {
+       x = 1;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else if (false) {
+            1 + 2;
+          } else {
+            x = 8;
+          }
+        } else if (false) {
+          x = 5;
+        } else if (false) {
+          x = 5;
+        } else {
+          x = 9;
+        }
+      } else if (false) {
+        x = 1;
+      } else {
+        x = 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else if (false) {
+            x = 0;
+          } else {
+            x = 8;
+          }
+        } else if (false) {
+          x = 5;
+        } else if (false) {
+          1 + 2;
+        } else {
+          x = 9;
+        }
+      } else if (false) {
+        x = 1;
+      } else {
+        x = 2;
+      }
+      x;
+    `);
+    compileError(`let x;
+      if (true) {
+        if (true) {
+          if (true) {
+            x = 0;
+          } else if (false) {
+            x = 0;
+          } else {
+            x = 8;
+          }
+        } else if (false) {
+          x = 5;
+        } else if (false) {
+          x = 1;
+        } else {
+          x = 9;
+        }
+      } else if (false) {
+        x = 1;
+      } else {
+        1 + 2;
+      }
+      x;
     `);
   });
 });
