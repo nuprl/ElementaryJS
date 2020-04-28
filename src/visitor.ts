@@ -77,14 +77,26 @@ class EnvironmentList {
     return i;
   }
 
-  private push(): number {
+  private pushIndex(): number {
     for (var i: number = this.list.length - 1;
       i > 0 && this.list[i].every(e => e !== null); i--) {}
-    if (i !== 0 && i !== this.list.length - 1) {
+    if (i !== 0 && i !== this.list.length - 1) { // TODO
       // Needs to call merge/pop:
-      throw Error('EnvironmentList.prototype.push: Null environments found, but not at end.');
+      // throw Error('EnvironmentList.prototype.pushIndex: Null environments found, but not at end.');
     }
     return i;
+  }
+
+  private pushRootEnv(): Environment {
+    for (var i: number = this.list.length - 1;
+      i > 0 && this.list[i].some(e => e === null); i--) {}
+    const j: number = this.list[i].findIndex(e => !e) < 0 ? this.list[i].length - 1 :
+              this.list[i].findIndex(e => !e) - 1;
+
+    if (j !== 0) { // TODO
+      // throw Error('EnvironmentList.prototype.pushRootEnv: Trouble identifying source environment.');
+    }
+    return this.list[i][j] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS;
   }
 
   private setI(set1: Set<t.Identifier>, set2: Set<t.Identifier>): Set<t.Identifier> {
@@ -105,6 +117,15 @@ class EnvironmentList {
     return _union;
   }
 
+  private squashTarget(): number {
+    const i: number = this.list[this.list.length - 1].findIndex(e => !e) < 0 ? 0 :
+      this.list[this.list.length - 1].findIndex(e => !e);
+    if (i === 0 && this.list[this.list.length - 1].length > 1) { // TODO
+      // throw Error('EnvironmentList.prototype.squashTarget: Trouble identifying target environment.');
+    }
+    return i;
+  }
+
   public addI(id: t.Identifier): void {
     this.add(this.peekEnvironment().I, id);
   }
@@ -120,14 +141,15 @@ class EnvironmentList {
   }
 
   public pushEnvironment(name: string): void {
-    const _i: number = this.push();
-    if (_i) {
-      const _e: (Environment | null)[] = this.list[_i];
-      for (var i: number = 0; _e[i] !== null; i++) {}
-      this.list[_i][i] = {
+    const i: number = this.pushIndex();
+    if (i) {
+      const E: (Environment | null)[] = this.list[i],
+            j: number = E.findIndex(_e => !_e),
+            e: Environment = this.pushRootEnv();
+      this.list[i][j] = {
         name,
-        I: new Set(this.peekEnvironment().I),
-        U: new Set(this.peekEnvironment().U)
+        I: new Set(e.I),
+        U: new Set(e.U)
       };
     } else {
       this.list.push([{
@@ -152,10 +174,13 @@ class EnvironmentList {
 
   public squash(): void {
     if (this.list[this.list.length - 1].includes(null)) {
-      throw Error('EnvironmentList.prototype.squash: Not ready for merge; null entry.');
+      this.pop(); // TODO
+      // throw Error('EnvironmentList.prototype.squash: Not ready for merge; null entry.');
     } else {
       const toSquash: any[] = this.list.pop() || [], // TS
-            env: Environment = this.peekEnvironment();
+            // TODO: Figure out how to set correct target; this expression or peekEnv.
+            env: Environment | null = this.list[this.list.length - 1][this.squashTarget()];
+
       let iSet: Set<t.Identifier> = new Set(toSquash[0].I),
           uSet: Set<t.Identifier> = new Set(toSquash[0].U);
 
@@ -165,21 +190,29 @@ class EnvironmentList {
           uSet = this.setU(uSet, new Set(toSquash[i].U));
         }
       }
-      iSet.forEach(id => {
-        if (env.I.has(id) && env.U.has(id)) {
-          throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
-        }
-        if (!env.I.has(id) && !env.U.has(id)) { iSet.delete(id); }
-      });
-      uSet.forEach(id => {
-        if (env.I.has(id) && env.U.has(id)) {
-          throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
-        }
-        // Checking the just the U set would be sufficient here.
-        if (!env.I.has(id) && !env.U.has(id)) { uSet.delete(id); }
-      });
+      if (env) {
+        iSet.forEach(id => {
+          if (env.I.has(id) && env.U.has(id)) {
+            throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
+          }
+          if (!env.I.has(id) && !env.U.has(id)) { iSet.delete(id); }
+        });
+        uSet.forEach(id => {
+          if (env.I.has(id) && env.U.has(id)) {
+            throw Error('EnvironmentList.prototype.squash: ID found in both sets.');
+          }
+          // Checking the just the U set would be sufficient here.
+          if (!env.I.has(id) && !env.U.has(id)) { uSet.delete(id); }
+        });
 
-      env.I = iSet; env.U = uSet;
+        env.I = iSet; env.U = uSet;
+      } else {
+        this.list[this.list.length - 1][this.squashTarget()] = {
+          name: toSquash[0].name, // TODO: Not necessarily the case.
+          I: iSet,
+          U: uSet
+        };
+      }
     }
   }
 
@@ -347,11 +380,7 @@ const visitor = {
       return;
     }
     // NOTE(joseph): Here we have: (getOwnBindingIdentifier === getBindingIdentifier === path.node.id).
-    if (!t.isExpression(path.node.init)) {
-      envList.addU(path.node.id);
-    } else {
-      envList.addI(path.node.id);
-    }
+    t.isExpression(path.node.init) ? envList.addI(path.node.id) : envList.addU(path.node.id);
   },
   CallExpression: {
     exit(path: NodePath<t.CallExpression>) {
@@ -647,9 +676,25 @@ const visitor = {
       if (!t.isBlockStatement(path.node.consequent) || path.node.alternate &&
           !t.isBlockStatement(path.node.alternate) && !t.isIfStatement(path.node.alternate)) {
         st.elem.error(path, 'All branches of an if-statement must be enclosed in braces.');
+        path.skip();
+      }
+      /*
+        Yes, this else-if is very bad.
+        However, `path.skip` in the exit node is not working as intended.
+        This was first seen in the fix for #171.
+        Needs more investigation...
+      */
+      else if (!t.isCallExpression(path.node.test) ||
+          !t.isMemberExpression(path.node.test.callee) ||
+          !t.isIdentifier(path.node.test.callee.object) ||
+          !t.isIdentifier(path.node.test.callee.property) ||
+          path.node.test.callee.object.name !== 'rts' ||
+          path.node.test.callee.property.name !== 'checkIfBoolean') {
+        envList.pushNull([null, null]);
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
+      path.node.alternate ? envList.squash() : envList.pop();
       // if (a) => if (checkIfBoolean(a))
       const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
             consequent = t.isBlockStatement(path.node.consequent) ?
@@ -685,7 +730,7 @@ const visitor = {
   },
   BlockStatement: {
     enter(path: NodePath<t.BlockStatement>, st: S) {
-      if (!t.isSwitchCase(path.parent) && !t.isIfStatement(path.parent)) {
+      if (!t.isSwitchCase(path.parent)) {
         envList.pushEnvironment(path.parent.type);
       }
     },
@@ -693,8 +738,7 @@ const visitor = {
       if (t.isProgram(path.parent) || t.isBlockStatement(path.parent) ||
           t.isDoWhileStatement(path.parent)) {
         envList.squash();
-      } else if (t.isFunction(path.parent) || t.isForStatement(path.parent) ||
-          t.isWhileStatement(path.parent)) {
+      } else if (!t.isSwitchCase(path.parent) && !t.isIfStatement(path.parent)) {
         envList.pop();
       }
     },
