@@ -66,19 +66,19 @@ class EnvironmentList {
 
   private peek(): number {
     for (var i: number = this.list.length - 1;
-      i > 0 && this.list[i].every(e => e === null); i--) {}
+      i > 0 && this.list[i].every(e => !e); i--) {}
     return i;
   }
 
   private pushIndex(): number {
     for (var i: number = this.list.length - 1;
-      i > 0 && this.list[i].every(e => e !== null); i--) {}
+      i > 0 && this.list[i].every(e => e); i--) {}
     return i;
   }
 
   private pushRootEnv(): Environment {
     for (var i: number = this.list.length - 1;
-      i > 0 && this.list[i].some(e => e === null); i--) {}
+      i > 0 && this.list[i].some(e => !e); i--) {}
     const j: number = this.list[i].findIndex(e => !e) < 0 ? this.list[i].length - 1 :
       this.list[i].findIndex(e => !e) - 1;
     return this.list[i][j]!;
@@ -124,13 +124,13 @@ class EnvironmentList {
 
   public peekEnvironment(): Environment {
     const e: (Environment | null)[] = this.list[this.peek()];
-    for (var i: number = e.length - 1; e[i] === null; i--) {}
+    for (var i: number = e.length - 1; !e[i]; i--) {}
     return e[i]!;
   }
 
   public pushEnvironment(name: string): void {
     const i: number = this.pushIndex();
-    if (i) {
+    if (i && name === 'IfStatement') {
       const E: (Environment | null)[] = this.list[i],
             j: number = E.findIndex(_e => !_e),
             e: Environment = this.pushRootEnv();
@@ -164,7 +164,7 @@ class EnvironmentList {
     if (this.list[this.list.length - 1].includes(null)) {
       this.pop();
     } else {
-      const toSquash: (Environment | null) [] = this.list.pop()!,
+      const toSquash: (Environment | null)[] = this.list.pop()!,
             env: Environment | null = isIf ?
               this.list[this.list.length - 1][this.squashIndex()] : this.peekEnvironment();
 
