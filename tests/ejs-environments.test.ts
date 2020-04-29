@@ -419,7 +419,7 @@ describe('ElementaryJS Environments', () => {
     `);
   });
 
-  test.skip('If statement with multiple nested branches (-)', () => {
+  test('If statement with multiple nested branches (-)', () => {
     compileError(`let x;
       if (true) {
         if (true) {

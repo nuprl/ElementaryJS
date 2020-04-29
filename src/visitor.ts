@@ -64,13 +64,6 @@ class EnvironmentList {
     this.list = [e];
   }
 
-  private add(setToAdd: Set<t.Identifier>, id: t.Identifier): void {
-    if (setToAdd.has(id)) {
-      throw Error(`EnvironmentList.prototype.add: Identifier ${id} already in ${setToAdd}.`);
-    }
-    setToAdd.add(id);
-  }
-
   private peek(): number {
     for (var i: number = this.list.length - 1;
       i > 0 && this.list[i].every(e => e === null); i--) {}
@@ -80,10 +73,6 @@ class EnvironmentList {
   private pushIndex(): number {
     for (var i: number = this.list.length - 1;
       i > 0 && this.list[i].every(e => e !== null); i--) {}
-    if (i !== 0 && i !== this.list.length - 1) { // TODO
-      // Needs to call merge/pop:
-      // throw Error('EnvironmentList.prototype.pushIndex: Null environments found, but not at end.');
-    }
     return i;
   }
 
@@ -91,53 +80,52 @@ class EnvironmentList {
     for (var i: number = this.list.length - 1;
       i > 0 && this.list[i].some(e => e === null); i--) {}
     const j: number = this.list[i].findIndex(e => !e) < 0 ? this.list[i].length - 1 :
-              this.list[i].findIndex(e => !e) - 1;
-
-    if (j !== 0) { // TODO
-      // throw Error('EnvironmentList.prototype.pushRootEnv: Trouble identifying source environment.');
-    }
-    return this.list[i][j] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS;
+      this.list[i].findIndex(e => !e) - 1;
+    return this.list[i][j]!;
   }
 
-  private setI(set1: Set<t.Identifier>, set2: Set<t.Identifier>): Set<t.Identifier> {
-    const _intersection: Set<t.Identifier> = new Set();
-    for (const id of set1) {
-      if (set2.has(id)) {
-        _intersection.add(id);
+  private setA(s: Set<t.Identifier>, id: t.Identifier): void {
+    if (s.has(id)) {
+      throw Error(`EnvironmentList.prototype.setA: Identifier ${id} already in ${s}.`);
+    }
+    s.add(id);
+  }
+
+  private setI(s1: Set<t.Identifier>, s2: Set<t.Identifier>): Set<t.Identifier> {
+    const i: Set<t.Identifier> = new Set();
+    for (const id of s1) {
+      if (s2.has(id)) {
+        i.add(id);
       }
-    }
-    return _intersection;
-  }
-
-  private setU(set1: Set<t.Identifier>, set2: Set<t.Identifier>): Set<t.Identifier> {
-    const _union: Set<t.Identifier> = new Set(set1);
-    for (const id of set2) {
-      _union.add(id);
-    }
-    return _union;
-  }
-
-  private squashTarget(): number {
-    const i: number = this.list[this.list.length - 1].findIndex(e => !e) < 0 ? 0 :
-      this.list[this.list.length - 1].findIndex(e => !e);
-    if (i === 0 && this.list[this.list.length - 1].length > 1) { // TODO
-      // throw Error('EnvironmentList.prototype.squashTarget: Trouble identifying target environment.');
     }
     return i;
   }
 
+  private setU(s1: Set<t.Identifier>, s2: Set<t.Identifier>): Set<t.Identifier> {
+    const u: Set<t.Identifier> = new Set(s1);
+    for (const id of s2) {
+      u.add(id);
+    }
+    return u;
+  }
+
+  private squashIndex(): number {
+    return this.list[this.list.length - 1].findIndex(e => !e) < 0 ? 0 :
+      this.list[this.list.length - 1].findIndex(e => !e);
+  }
+
   public addI(id: t.Identifier): void {
-    this.add(this.peekEnvironment().I, id);
+    this.setA(this.peekEnvironment().I, id);
   }
 
   public addU(id: t.Identifier): void {
-    this.add(this.peekEnvironment().U, id);
+    this.setA(this.peekEnvironment().U, id);
   }
 
   public peekEnvironment(): Environment {
-    const _e: (Environment | null)[] = this.list[this.peek()];
-    for (var i: number = _e.length - 1; _e[i] === null; i--) {}
-    return _e[i] || { name: 'ERROR', I: new Set(), U: new Set() }; // TS
+    const e: (Environment | null)[] = this.list[this.peek()];
+    for (var i: number = e.length - 1; e[i] === null; i--) {}
+    return e[i]!;
   }
 
   public pushEnvironment(name: string): void {
@@ -172,22 +160,21 @@ class EnvironmentList {
     }
   }
 
-  public squash(): void {
+  public squash(isIf: boolean = false, name?: string): void {
     if (this.list[this.list.length - 1].includes(null)) {
-      this.pop(); // TODO
-      // throw Error('EnvironmentList.prototype.squash: Not ready for merge; null entry.');
+      this.pop();
     } else {
-      const toSquash: any[] = this.list.pop() || [], // TS
-            // TODO: Figure out how to set correct target; this expression or peekEnv.
-            env: Environment | null = this.list[this.list.length - 1][this.squashTarget()];
+      const toSquash: (Environment | null) [] = this.list.pop()!,
+            env: Environment | null = isIf ?
+              this.list[this.list.length - 1][this.squashIndex()] : this.peekEnvironment();
 
-      let iSet: Set<t.Identifier> = new Set(toSquash[0].I),
-          uSet: Set<t.Identifier> = new Set(toSquash[0].U);
+      let iSet: Set<t.Identifier> = new Set(toSquash[0]!.I),
+          uSet: Set<t.Identifier> = new Set(toSquash[0]!.U);
 
       if (toSquash.length > 1) {
         for (let i = 1; i < toSquash.length; i++) {
-          iSet = this.setI(iSet, new Set(toSquash[i].I));
-          uSet = this.setU(uSet, new Set(toSquash[i].U));
+          iSet = this.setI(iSet, new Set(toSquash[i]!.I));
+          uSet = this.setU(uSet, new Set(toSquash[i]!.U));
         }
       }
       if (env) {
@@ -207,8 +194,8 @@ class EnvironmentList {
 
         env.I = iSet; env.U = uSet;
       } else {
-        this.list[this.list.length - 1][this.squashTarget()] = {
-          name: toSquash[0].name, // TODO: Not necessarily the case.
+        this.list[this.list.length - 1][this.squashIndex()] = {
+          name: name || '<empty>',
           I: iSet,
           U: uSet
         };
@@ -694,7 +681,8 @@ const visitor = {
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
-      path.node.alternate ? envList.squash() : envList.pop();
+      path.node.alternate ? (t.isIfStatement(path.parent) ? envList.squash(true) :
+        envList.squash()) : envList.pop();
       // if (a) => if (checkIfBoolean(a))
       const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
             consequent = t.isBlockStatement(path.node.consequent) ?
