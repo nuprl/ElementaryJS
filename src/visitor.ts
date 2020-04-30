@@ -76,9 +76,9 @@ class EnvironmentList {
     return i;
   }
 
-  private pushRootEnv(): Environment {
+  private pushRootEnv(isIf: boolean): Environment {
     for (var i: number = this.list.length - 1;
-      i > 0 && this.list[i].some(e => !e); i--) {}
+      i > 0 && (isIf ? this.list[i].some(e => !e) : this.list[i].every(e => !e)); i--) {}
     const j: number = this.list[i].findIndex(e => !e) < 0 ? this.list[i].length - 1 :
       this.list[i].findIndex(e => !e) - 1;
     return this.list[i][j]!;
@@ -128,12 +128,12 @@ class EnvironmentList {
     return e[i]!;
   }
 
-  public pushEnvironment(name: string): void {
+  public pushEnvironment(name: string, isIf: boolean): void {
     const i: number = this.pushIndex();
     if (i && name === 'IfStatement') {
       const E: (Environment | null)[] = this.list[i],
             j: number = E.findIndex(_e => !_e),
-            e: Environment = this.pushRootEnv();
+            e: Environment = this.pushRootEnv(isIf);
       this.list[i][j] = {
         name,
         I: new Set(e.I),
@@ -719,7 +719,8 @@ const visitor = {
   BlockStatement: {
     enter(path: NodePath<t.BlockStatement>, st: S) {
       if (!t.isSwitchCase(path.parent)) {
-        envList.pushEnvironment(path.parent.type);
+        envList.pushEnvironment(path.parent.type, t.isIfStatement(path.parentPath.parent) ||
+          (t.isIfStatement(path.parent) && (path.parent.alternate === path.node)));
       }
     },
     exit(path: NodePath<t.BlockStatement>, st: S) {
