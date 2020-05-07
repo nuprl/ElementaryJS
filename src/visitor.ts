@@ -56,12 +56,14 @@ export class State implements CompileError {
 
 class EnvironmentList {
   private list: (Environment | null)[][];
+  private root: Environment[];
 
   constructor(e: Environment[]) {
     if (e.length !== 1) {
       throw Error('EnvironmentList: Global environment must be of size 1.');
     }
     this.list = [e];
+    this.root = [];
   }
 
   private peek(): number {
@@ -74,14 +76,6 @@ class EnvironmentList {
     for (var i: number = this.list.length - 1;
       i > 0 && this.list[i].every(e => e); i--) {}
     return i;
-  }
-
-  private pushRootEnv(isIf: boolean): Environment {
-    for (var i: number = this.list.length - 1;
-      i > 0 && (isIf ? this.list[i].some(e => !e) : this.list[i].every(e => !e)); i--) {}
-    const j: number = this.list[i].findIndex(e => !e) < 0 ? this.list[i].length - 1 :
-      this.list[i].findIndex(e => !e) - 1;
-    return this.list[i][j]!;
   }
 
   private setA(s: Set<t.Identifier>, id: t.Identifier): void {
@@ -128,12 +122,12 @@ class EnvironmentList {
     return e[i]!;
   }
 
-  public pushEnvironment(name: string, isIf: boolean): void {
+  public pushEnvironment(name: string): void {
     const i: number = this.pushIndex();
     if (i && name === 'IfStatement') {
       const E: (Environment | null)[] = this.list[i],
             j: number = E.findIndex(_e => !_e),
-            e: Environment = this.pushRootEnv(isIf);
+            e: Environment = this.root[this.root.length - 1];
       this.list[i][j] = {
         name,
         I: new Set(e.I),
@@ -148,21 +142,28 @@ class EnvironmentList {
     }
   }
 
-  public pushNull(e: null[]): void {
+  public pushNull(e: null[], isParentIf: boolean): void {
     this.list.push(e);
+    !isParentIf && this.root.push(this.peekEnvironment());
   }
 
-  public pop(): void {
+  public popList(): void {
     if (!this.list.pop()) {
-      throw Error('EnvironmentList.prototype.pop: List is empty.');
+      throw Error('EnvironmentList.prototype.popList: Environment list is empty.');
     } else if (!this.list.length) {
-      throw Error('EnvironmentList.prototype.pop: Popped global environment.');
+      throw Error('EnvironmentList.prototype.popList: Popped global environment.');
+    }
+  }
+
+  public popRoot(): void {
+    if (!this.root.pop()) {
+      throw Error('EnvironmentList.prototype.popRoot: Root environment list is empty.');
     }
   }
 
   public squash(isIf: boolean = false, name?: string): void {
     if (this.list[this.list.length - 1].includes(null)) {
-      this.pop();
+      this.popList();
     } else {
       const toSquash: (Environment | null)[] = this.list.pop()!,
             env: Environment | null = isIf ?
@@ -677,12 +678,13 @@ const visitor = {
           !t.isIdentifier(path.node.test.callee.property) ||
           path.node.test.callee.object.name !== 'rts' ||
           path.node.test.callee.property.name !== 'checkIfBoolean') {
-        envList.pushNull([null, null]);
+        envList.pushNull([null, null], t.isIfStatement(path.parent));
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
       path.node.alternate ? (t.isIfStatement(path.parent) ? envList.squash(true) :
-        envList.squash()) : envList.pop();
+        envList.squash()) : envList.popList();
+      !t.isIfStatement(path.parent) && envList.popRoot();
       // if (a) => if (checkIfBoolean(a))
       const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
             consequent = t.isBlockStatement(path.node.consequent) ?
@@ -719,8 +721,7 @@ const visitor = {
   BlockStatement: {
     enter(path: NodePath<t.BlockStatement>, st: S) {
       if (!t.isSwitchCase(path.parent)) {
-        envList.pushEnvironment(path.parent.type, t.isIfStatement(path.parentPath.parent) ||
-          (t.isIfStatement(path.parent) && (path.parent.alternate === path.node)));
+        envList.pushEnvironment(path.parent.type);
       }
     },
     exit(path: NodePath<t.BlockStatement>, st: S) {
@@ -728,7 +729,7 @@ const visitor = {
           t.isDoWhileStatement(path.parent)) {
         envList.squash();
       } else if (!t.isSwitchCase(path.parent) && !t.isIfStatement(path.parent)) {
-        envList.pop();
+        envList.popList();
       }
     },
   },
