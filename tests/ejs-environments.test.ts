@@ -509,4 +509,121 @@ describe('ElementaryJS Environments', () => {
       x;
     `);
   });
+
+  test('Nested statements (+)', () => {
+    compileOK(`let x;
+      function t() {
+        let x;
+        if (true) {
+          if (true) {
+            x = 0;
+          } else {
+            do {
+              if (false) {
+                x = 1;
+              } else if (true) {
+                x = 2;
+              } else {
+                x = 1;
+              }
+              x;
+            } while (false);
+            x;
+          }
+        } else if (false) {
+          x = 5;
+        } else {
+          x = 1;
+        }
+        x;
+      }
+    `);
+     compileOK(`let x;
+      function t() {
+        let x;
+        while(true) {
+          if (true) {
+            x = 1;
+            if (true) {
+              1 + 2;
+            } else {
+              for (let y = 1; x < 0; y += 1) {
+                if (false) {
+                  x = 1;
+                } else if (true) {
+                  x = 2;
+                } else {
+                  x = 1;
+                }
+              }
+              x;
+            }
+            x;
+          } else if (false) {
+            x = 5;
+          } else {
+            x = 1;
+          }
+          x;
+        }
+      }
+    `);
+  });
+
+  test('Nested statements (-)', () => {
+    compileError(`let x;
+      function t() {
+        let x;
+        if (true) {
+          if (true) {
+            x = 0;
+          } else {
+            do {
+              if (false) {
+                x = 1;
+              } else if (true) {
+                1 + 2;
+              } else {
+                x = 1;
+              }
+            } while (false);
+            x;
+          }
+        } else if (false) {
+          x = 5;
+        } else {
+          x = 1;
+        }
+      }
+    `);
+     compileError(`let x;
+      function t() {
+        let x;
+        while(true) {
+          if (true) {
+            x = 1;
+            if (true) {
+              1 + 2;
+            } else {
+              for (let y = 1; x < 0; y += 1) {
+                if (false) {
+                  x = 1;
+                } else if (true) {
+                  x = 2;
+                } else {
+                  x = 1;
+                }
+              }
+              x;
+            }
+          } else if (false) {
+            x = 5;
+          } else {
+            x = 1;
+          }
+        }
+        x;
+      }
+    `);
+  });
 });
