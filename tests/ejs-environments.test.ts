@@ -626,4 +626,102 @@ describe('ElementaryJS Environments', () => {
       }
     `);
   });
+
+  test('Deep nesting (+)', () => {
+    compileOK(`let x;
+      function t() {
+        let x;
+        if (true) {
+          if (true) {
+            x = 0;
+            if (true) {
+              x;
+              if (true) {
+                x;
+                if (true) {
+                  x;
+                  if (true) {
+                    x;
+                  }
+                }
+              }
+            }
+            x;
+          }
+        }
+      }
+    `);
+     compileOK(`let x;
+      function t() {
+        let x;
+        {
+          if (true) {
+            x = 0;
+            if (true) {
+              x;
+              while (x < -1) {
+                x;
+                if (true) {
+                  x;
+                  {
+                    x;
+                  }
+                }
+              }
+            }
+            x;
+          }
+        }
+      }
+    `);
+  });
+
+  test('Deep nesting (-)', () => {
+    compileError(`let x;
+      function t() {
+        let x;
+        if (true) {
+          if (true) {
+            x = 0;
+            if (true) {
+              x;
+              if (true) {
+                x;
+                if (true) {
+                  let x;
+                  if (true) {
+                    x;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `);
+     compileError(`let x;
+      function t() {
+        let x;
+        {
+          if (true) {
+            x = 0;
+            if (true) {
+              x;
+              while (x < -1) {
+                x;
+                if (true) {
+                  x;
+                  {
+                    x;
+                  }
+                }
+              }
+            }
+            x;
+          }
+          x;
+        }
+      }
+    `);
+  });
 });
