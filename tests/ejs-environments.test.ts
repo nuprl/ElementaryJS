@@ -800,4 +800,94 @@ describe('ElementaryJS Environments', () => {
       x;
     `);
   });
+
+  test('Nested switch statements (+)', () => {
+    compileOK(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            x = 1; x;
+            switch (y) {
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+      }
+    `);
+    compileOK(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            switch (y) {
+              case 0: {
+                let x;
+              }
+            }
+            x = 1; x;
+          }
+        }
+      }
+    `);
+    compileOK(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            switch (y) {
+              default: {
+                x = 1;
+              }
+            }
+            x;
+          }
+        }
+      }
+    `);
+  });
+
+  test('Nested switch statements (-)', () => {
+    compileError(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            switch (y) {
+              case 0: {
+                x = 1;
+              }
+            }
+            x;
+          }
+        }
+      }
+    `);
+    compileError(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            switch (y) {
+              case 0: {
+                x;
+              }
+            }
+            x = 1;
+          }
+        }
+      }
+    `);
+    compileError(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            switch (y) {
+              default: {
+                x = 1;
+              }
+            }
+          }
+        }
+        x;
+      }
+    `);
+  });
 });
