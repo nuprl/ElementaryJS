@@ -9,12 +9,12 @@
  * NodeType: {
  *   enter(path, st: S): {
  *     // Implement any static checks here by adding an error message by
- *     st.elem.error(<message>);
+ *       st.elem.error(<message>);
  *     // If the node is totally crazy and will break everything else, consider
  *     // using path.skip() to give up processing this part of the AST. You
  *     // can also use path.stop() to stop all further error-checks.
  *
- *     // If you are going to desugar this node, do it here and  *do not*
+ *     // If you are going to desugar this node, do it here and *do not*
  *     // use path.skip(). i.e., desugaring needs to revisit the node.
  *   },
  *   exit(path, st: S): {
