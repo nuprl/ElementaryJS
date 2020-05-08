@@ -890,4 +890,174 @@ describe('ElementaryJS Environments', () => {
       }
     `);
   });
+
+  test('Switch and if (+)', () => {
+    compileOK(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else if (false) {
+              x = 1; x;
+            } else {
+              x = 1;
+            }
+            switch (y) {
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+      }
+    `);
+    compileOK(`let x, y = 0;
+      {
+        switch (y) {
+          default:
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else if (false) {
+              x = 1; x;
+            } else {
+              x = 1;
+            }
+            switch (y) {
+              case 1:
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+        x;
+      }
+    `);
+    compileOK(`let x, y = 0;
+      if (true) {
+        switch (y) {
+          default:
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else if (false) {
+              x = 1; x;
+            } else {
+              x = 1;
+            }
+            switch (y) {
+              case 1:
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+        x;
+      } else if (false) {
+        switch (y) {
+          default: { x = 1; }
+        }
+        x;
+      } else {
+        x = 1;
+      }
+      x;
+    `);
+  });
+
+  test('Switch and if (-)', () => {
+    compileError(`let x, y = 0;
+      {
+        switch (y) {
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else if (false) {
+              1 + 2;
+            } else {
+              x = 1;
+            }
+            switch (y) {
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+      }
+    `);
+    compileError(`let x, y = 0;
+      {
+        switch (y) {
+          default:
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else if (false) {
+              x = 1; x;
+            } else {
+              let x = 1;
+            }
+            switch (y) {
+              case 1:
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+        x;
+      }
+    `);
+    compileError(`let x, y = 0;
+      if (true) {
+        switch (y) {
+          default:
+          case 0: {
+            if (true) {
+              do {
+                x = 1;
+              } while (false);
+              x;
+            } else {
+              x = 1;
+            }
+            switch (y) {
+              case 1:
+              case 0: {
+                x;
+              }
+            }
+          }
+        }
+        x;
+      } else if (false) {
+        switch (y) {
+          default: { let x = 1; }
+        }
+        x;
+      } else {
+        x = 1;
+      }
+      x;
+    `);
+  });
 });
