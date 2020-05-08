@@ -724,4 +724,80 @@ describe('ElementaryJS Environments', () => {
       }
     `);
   });
+
+  test('Switch statement (+)', () => {
+    compileOK(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          x = 1; x;
+        }
+      }
+    `);
+    compileOK(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          x = 1; x;
+        }
+        case 1:
+        case 2: {
+          x = 1; x;
+        }
+      }
+    `);
+    compileOK(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          x = 1; x;
+        }
+        case 1:
+        case 2: {
+          x = 1; x;
+        }
+        default: {
+          x = 1; x;
+        }
+      }
+      x;
+    `);
+  });
+
+  test('Switch statement (-)', () => {
+    compileError(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          x = 1; x;
+        }
+        case 1: {
+          x;
+        }
+      }
+    `);
+    compileError(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          x = 1; x;
+        }
+        case 1:
+        case 2: {
+          x = 1; x;
+        }
+      }
+      x;
+    `);
+    compileError(`let x, y = 0;
+      switch (y) {
+        case 0: {
+          1 + 2;
+        }
+        case 1:
+        case 2: {
+          x = 1; x;
+        }
+        default: {
+          x = 1; x;
+        }
+      }
+      x;
+    `);
+  });
 });

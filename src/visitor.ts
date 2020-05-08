@@ -56,14 +56,16 @@ export class State implements CompileError {
 
 class EnvironmentList {
   private list: (Environment | null)[][];
-  private root: Environment[];
+  private rootIf: Environment[];
+  private rootSw: Environment[];
 
   constructor(e: Environment[]) {
     if (e.length !== 1) {
       throw Error('EnvironmentList: Global environment must be of size 1.');
     }
     this.list = [e];
-    this.root = [];
+    this.rootIf = [];
+    this.rootSw = [];
   }
 
   private peek(): number {
@@ -124,10 +126,11 @@ class EnvironmentList {
 
   public pushEnvironment(name: string): void {
     const i: number = this.pushIndex();
-    if (i && name === 'IfStatement') {
+    if (i && (name === 'IfStatement' || name === 'SwitchCase')) {
       const E: (Environment | null)[] = this.list[i],
             j: number = E.findIndex(_e => !_e),
-            e: Environment = this.root[this.root.length - 1];
+            e: Environment = name === 'IfStatement' ?
+              this.rootIf[this.rootIf.length - 1] : this.rootSw[this.rootSw.length - 1];
       this.list[i][j] = {
         name,
         I: new Set(e.I),
@@ -142,9 +145,13 @@ class EnvironmentList {
     }
   }
 
-  public pushNull(e: null[], isParentIf: boolean): void {
+  public pushNull(e: null[], name: string): void {
     this.list.push(e);
-    !isParentIf && this.root.push(this.peekEnvironment());
+    if (name === 'SwitchStatement') {
+      this.rootSw.push(this.peekEnvironment());
+    } else if (name !== 'IfStatement') {
+      this.rootIf.push(this.peekEnvironment());
+    }
   }
 
   public popList(): void {
@@ -155,9 +162,11 @@ class EnvironmentList {
     }
   }
 
-  public popRoot(): void {
-    if (!this.root.pop()) {
-      throw Error('EnvironmentList.prototype.popRoot: Root environment list is empty.');
+  public popRoot(isIf: boolean): void {
+    if (isIf && !this.rootIf.pop()) {
+      throw Error('EnvironmentList.prototype.popRoot: If root environment list is empty.');
+    } else if (!isIf && !this.rootSw.pop()) {
+      throw Error('EnvironmentList.prototype.popRoot: Switch root environment list is empty.');
     }
   }
 
@@ -678,13 +687,13 @@ const visitor = {
           !t.isIdentifier(path.node.test.callee.property) ||
           path.node.test.callee.object.name !== 'rts' ||
           path.node.test.callee.property.name !== 'checkIfBoolean') {
-        envList.pushNull([null, null], t.isIfStatement(path.parent));
+        envList.pushNull([null, null], path.parent.type);
       }
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
       path.node.alternate ? (t.isIfStatement(path.parent) ? envList.squash(true) :
         envList.squash()) : envList.popList();
-      !t.isIfStatement(path.parent) && envList.popRoot();
+      !t.isIfStatement(path.parent) && envList.popRoot(true);
       // if (a) => if (checkIfBoolean(a))
       const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
             consequent = t.isBlockStatement(path.node.consequent) ?
@@ -720,9 +729,7 @@ const visitor = {
   },
   BlockStatement: {
     enter(path: NodePath<t.BlockStatement>, st: S) {
-      if (!t.isSwitchCase(path.parent)) {
-        envList.pushEnvironment(path.parent.type);
-      }
+      envList.pushEnvironment(path.parent.type);
     },
     exit(path: NodePath<t.BlockStatement>, st: S) {
       if (t.isProgram(path.parent) || t.isBlockStatement(path.parent) ||
@@ -731,7 +738,17 @@ const visitor = {
       } else if (!t.isSwitchCase(path.parent) && !t.isIfStatement(path.parent)) {
         envList.popList();
       }
+    }
+  },
+  SwitchStatement: {
+    enter(path: NodePath<t.SwitchStatement>, st: S) {
+      envList.pushNull((new Array(path.node.cases.filter(c =>
+        c.consequent.length).length)).fill(null), path.node.type);
     },
+    exit(path: NodePath<t.SwitchStatement>, st: S) {
+      path.node.cases.some(c => !c.test) ? envList.squash() : envList.popList();
+      envList.popRoot(false);
+    }
   },
   SwitchCase(path: NodePath<t.SwitchCase>, st: S) {
     if (path.node.consequent.length > 1 || path.node.consequent.length === 1 &&
