@@ -424,34 +424,49 @@ const visitor = {
       path.skip();
     }
   },
-  ForStatement(path: NodePath<t.ForStatement>, st: S) {
-    if (path.node.init === null) {
-      st.elem.error(path, 'for statement variable initialization must be present');
-    }
-    if (path.node.init !== null &&
-        !t.isAssignmentExpression(path.node.init) &&
-        !t.isVariableDeclaration(path.node.init)) {
-      st.elem.error(path,
-        'for statement variable initialization must be an assignment or a variable declaration');
-    }
-    if (path.node.test === null) {
-      st.elem.error(path, 'for statement termination test must be present');
-    }
-    if (path.node.update === null) {
-      st.elem.error(path, 'for statement update expression must be present');
-    }
-    if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, 'Loop body must be enclosed in braces.');
+  ForStatement: {
+    enter(path: NodePath<t.ForStatement>, st: S) {
+      if (path.node.init === null) {
+        st.elem.error(path, 'for statement variable initialization must be present');
+      }
+      if (path.node.init !== null &&
+          !t.isAssignmentExpression(path.node.init) &&
+          !t.isVariableDeclaration(path.node.init)) {
+        st.elem.error(path,
+          'for statement variable initialization must be an assignment or a variable declaration');
+      }
+      if (path.node.test === null) {
+        st.elem.error(path, 'for statement termination test must be present');
+      }
+      if (path.node.update === null) {
+        st.elem.error(path, 'for statement update expression must be present');
+      }
+      if (!t.isBlockStatement(path.node.body)) {
+        st.elem.error(path, 'Loop body must be enclosed in braces.');
+      }
+    },
+    exit(path: NodePath<t.ForStatement>, st: S) {
+
     }
   },
-  WhileStatement(path: NodePath<t.WhileStatement>, st: S) {
-    if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, 'Loop body must be enclosed in braces.');
+  WhileStatement: {
+    enter(path: NodePath<t.WhileStatement>, st: S) {
+      if (!t.isBlockStatement(path.node.body)) {
+        st.elem.error(path, 'Loop body must be enclosed in braces.');
+      }
+    },
+    exit(path: NodePath<t.WhileStatement>, st: S) {
+
     }
   },
-  DoWhileStatement(path: NodePath<t.DoWhileStatement>, st: S) {
-    if (!t.isBlockStatement(path.node.body)) {
-      st.elem.error(path, 'Loop body must be enclosed in braces.');
+  DoWhileStatement: {
+    enter(path: NodePath<t.DoWhileStatement>, st: S) {
+      if (!t.isBlockStatement(path.node.body)) {
+        st.elem.error(path, 'Loop body must be enclosed in braces.');
+      }
+    },
+    exit(path: NodePath<t.WhileStatement>, st: S) {
+
     }
   },
   IfStatement: {
