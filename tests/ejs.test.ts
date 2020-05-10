@@ -268,8 +268,18 @@ describe('ElementaryJS', () => {
 
   test('Dynamic error when using non-boolean in if statement', async () => {
     expect.assertions(1);
-    await expect(dynamicError('let x = 0; if (x = 42) { }'))
+    await expect(dynamicError('if (42) {}'))
       .resolves.toMatch(`expected a boolean expression, instead received '42'`);
+  });
+
+  test('Dynamic error when using non-boolean in loop', async () => {
+    expect.assertions(3);
+    await expect(dynamicError('while (0) {}'))
+      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
+    await expect(dynamicError('do {} while (0);'))
+      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
+    await expect(dynamicError('for (let x = 0; x; ++x) {}'))
+      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
   });
 
   test('Can access property when value is undefined', async () => {
