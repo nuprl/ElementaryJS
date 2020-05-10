@@ -31,7 +31,7 @@ describe('ElementaryJS', () => {
   });
 
   test('Invalid array creation', async () => {
-    expect.assertions(3);
+    expect.assertions(4);
     await expect(dynamicError(`let a = new Array();`)).resolves.toMatch(
       `Class constructor ArrayStub cannot be invoked without 'new'`
     );
@@ -40,13 +40,12 @@ describe('ElementaryJS', () => {
     );
     await expect(dynamicError(`let a = Array.create(3.5, 0); a`)).resolves.toMatch(
       'positive integer');
+    await expect(dynamicError(`let a = Array.create(0, 0); a`)).resolves.toMatch(
+      'positive integer');
   });
 
-  test('Valid array creation (1)', async () => {
+  test('Valid array creation', async () => {
     await expect(run(`let a = Array.create(2, 42); a`)).resolves.toEqual([42, 42]);
-  });
-
-  test('Valid array creation (2)', async () => {
     await expect(run(`let a = Array.create(3, 0); a`)).resolves.toEqual([0, 0, 0]);
   });
 
@@ -190,12 +189,13 @@ describe('ElementaryJS', () => {
   });
 
   test('Accessing members of anonymous objects', async () => {
-    expect.assertions(3);
+    expect.assertions(4);
     await expect(dynamicError(`[].x`))
       .resolves.toMatch(`object does not have member 'x'`);
     await expect(dynamicError(`[0, 1][10]`))
         .resolves.toMatch(`index '10' is out of array bounds`);
     await expect(run(`[3, 4][1]`)).resolves.toBe(4);
+    await expect(run(`[].indexOf`)).resolves.toBeInstanceOf(Function);
   });
 
   test('Cannot access array non-members', async () => {

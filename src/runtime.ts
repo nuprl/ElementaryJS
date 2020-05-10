@@ -37,7 +37,7 @@ class ArrayStub {
     if (arguments.length !== 2) {
       errorHandle(`.create expects 2 arguments, received ${arguments.length}`, 'Array.create');
     }
-    if (typeof n !== 'number' || (n | 0) !== n || n <= 0) {
+    if (!Number.isInteger(n) || n < 1) {
       errorHandle('array size must be a positive integer', 'Array.create');
     }
 
@@ -124,7 +124,7 @@ export function dot(object: any, index: string, line: number) {
       typeof object !== 'function') {
     errorHandle('cannot access member of non-object value types', 'dot', line);
   }
-  if (object && !object.hasOwnProperty(index)) {
+  if (object && !object.hasOwnProperty(index) && typeof object[index] !== 'function') {
     errorHandle(`object does not have member '${index}'`, 'dot', line);
   }
   if (typeof object === 'string' && index === 'split') {
