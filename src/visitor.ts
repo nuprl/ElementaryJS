@@ -446,7 +446,14 @@ const visitor = {
       }
     },
     exit(path: NodePath<t.ForStatement>, st: S) {
-
+      const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test ||
+              t.nullLiteral(), t.nullLiteral()),
+            body = t.isBlockStatement(path.node.body) ?
+              path.node.body : t.blockStatement([path.node.body]),
+            replacement = t.forStatement(path.node.init, check, path.node.update, body);
+      replacement.loc = path.node.loc;
+      path.replaceWith(replacement);
+      path.skip();
     }
   },
   WhileStatement: {
@@ -456,7 +463,13 @@ const visitor = {
       }
     },
     exit(path: NodePath<t.WhileStatement>, st: S) {
-
+      const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
+            body = t.isBlockStatement(path.node.body) ?
+              path.node.body : t.blockStatement([path.node.body]),
+            replacement = t.whileStatement(check, body);
+      replacement.loc = path.node.loc;
+      path.replaceWith(replacement);
+      path.skip();
     }
   },
   DoWhileStatement: {
@@ -466,7 +479,13 @@ const visitor = {
       }
     },
     exit(path: NodePath<t.WhileStatement>, st: S) {
-
+      const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
+            body = t.isBlockStatement(path.node.body) ?
+              path.node.body : t.blockStatement([path.node.body]),
+            replacement = t.doWhileStatement(check, body);
+      replacement.loc = path.node.loc;
+      path.replaceWith(replacement);
+      path.skip();
     }
   },
   IfStatement: {
@@ -478,8 +497,7 @@ const visitor = {
     },
     exit(path: NodePath<t.IfStatement>, st: S) {
       // if (a) => if (checkIfBoolean(a))
-      const a = path.node.test,
-            check = dynCheck('checkIfBoolean', path.node.loc, a, t.nullLiteral()),
+      const check = dynCheck('checkIfBoolean', path.node.loc, path.node.test, t.nullLiteral()),
             consequent = t.isBlockStatement(path.node.consequent) ?
               path.node.consequent : t.blockStatement([path.node.consequent]),
             alternate = path.node.alternate && (t.isBlockStatement(path.node.alternate) ?
