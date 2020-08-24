@@ -1,6 +1,6 @@
 # ElementaryJS
 
-[![Build Status](https://travis-ci.org/plasma-umass/ElementaryJS.svg?branch=master)](https://travis-ci.org/plasma-umass/ElementaryJS)
+[![Build Status](https://api.travis-ci.org/umass-compsci220/ElementaryJS.svg?branch=master)](https://travis-ci.org/umass-compsci220/ElementaryJS)
 
 JavaScript without sharp edges. **WARNING: ElementaryJS is not ready for general use.**
 
