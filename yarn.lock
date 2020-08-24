@@ -357,10 +357,10 @@
     source-map-support "^0.5.6"
     trie "^0.2.1"
 
-"@stopify/project-interpreter@1.1.4":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@stopify/project-interpreter/-/project-interpreter-1.1.4.tgz#6b07d1373aec2ab2250b3607e6472e8b2cfcd61a"
-  integrity sha512-a1a0Ou8FFekiFDaHDIqnO1+HUGPaslg1cqXpfBRqRCzaiQ6gRI2uugILoMhtpYpskRXTjfPVVBaf8uYhwIiHtQ==
+"@stopify/project-interpreter@1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@stopify/project-interpreter/-/project-interpreter-1.1.5.tgz#668b10cca8e740dc95d7d901b52552a2d8ff38fc"
+  integrity sha512-YkQbyzRt2S+6SpfXg3ujkoAD/2s1ePfkfwUqjQMhLw9tCYhQbfzZybSAaEgXqNQqwLxi4y1TJl7fMQTobMrEYg==
   dependencies:
     immutable "^4.0.0-rc.12"
     parsimmon "^1.12.0"
