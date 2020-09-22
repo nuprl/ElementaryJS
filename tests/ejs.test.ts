@@ -27,7 +27,7 @@ describe('ElementaryJS', () => {
   test('Can dynamically change types', async () => {
     expect.assertions(2);
     await expect(run(`let x = "foo"; x = 42`)).resolves.toBe(42);
-    await expect(run(`let x = 42; x = "foo"`)).resolves.toBe("foo");
+    await expect(run(`let x = 42; x = "foo"`)).resolves.toBe('foo');
   });
 
   test('Invalid array creation', async () => {
@@ -416,7 +416,7 @@ describe('ElementaryJS', () => {
   test('Can use string concatenation and assignment operator', async () => {
     expect.assertions(1);
     await expect(run(`let a = "hello "; a += "world"`))
-      .resolves.toBe("hello world");
+      .resolves.toBe('hello world');
   });
 
   test('Can use arithmetic assignment operators', async () => {

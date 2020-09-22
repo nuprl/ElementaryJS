@@ -152,7 +152,7 @@ describe('ElementaryJS Test Mode', () => {
         test(i.toString(), function() { assert(false); });
       }
     `)).toBeUndefined();
-    let output: string[] = [];
+    const output: string[] = [];
     for (let i = 0; i < 10; i++) {
       output.push(testOk(i.toString()));
     }
