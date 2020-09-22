@@ -660,7 +660,7 @@ describe('ElementaryJS', () => {
       }
     `)).toEqual(expect.arrayContaining([
       `for statement variable initialization must be present`,
-      `for statement termination test must be present`,
+      `for statement termination test must be present and cannot be an assignment expression`,
       `for statement update expression must be present`
     ]));
     expect(staticError(`
@@ -668,7 +668,7 @@ describe('ElementaryJS', () => {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement termination test must be present`,
+      `for statement termination test must be present and cannot be an assignment expression`,
       `for statement update expression must be present`
     ]));
     expect(staticError(`

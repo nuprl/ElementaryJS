@@ -457,9 +457,17 @@ const visitor = {
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
         st.elem.error(path, 'Do not use patterns');
         return;
+      } else if (t.isLogicalExpression(path.parent)
+        || t.isBinaryExpression(path.parent) || t.isUnaryExpression(path.parent)
+        || t.isConditionalExpression(path.parent) || t.isIfStatement(path.parent)
+        // Since we require braces, the following checks are sufficient.
+        || t.isWhileStatement(path.parent) || t.isDoWhileStatement(path.parent)
+        || t.isSwitchStatement(path.parent) || t.isSwitchCase(path.parent)) {
+        st.elem.error(path, 'Forbidden assignment expression');
+        return;
+      } else if (op === '=') {
+        return; // Desugar everything that is not '='
       }
-      // Desugar everything that is not '='
-      if (op === '=') { return; }
 
       // We have to manually assign the `loc` obj for potential future dyn checks.
       if (t.isIdentifier(left)) {
@@ -615,8 +623,9 @@ const visitor = {
         st.elem.error(path,
           'for statement variable initialization must be an assignment or a variable declaration');
       }
-      if (path.node.test === null) {
-        st.elem.error(path, 'for statement termination test must be present');
+      if (path.node.test === null || t.isAssignmentExpression(path.node.test)) {
+        st.elem.error(path,
+          'for statement termination test must be present and cannot be an assignment expression');
       }
       if (path.node.update === null) {
         st.elem.error(path, 'for statement update expression must be present');
