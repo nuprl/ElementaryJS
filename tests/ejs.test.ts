@@ -97,7 +97,7 @@ describe('ElementaryJS', () => {
       .resolves.toMatch(`'myModule1' not found.`);
   });
 
-  test('Require same module over', async done => {
+  test('Require same module over', done => {
     expect.assertions(3);
     const runner = compileOK(`let o = require('myModule'), p = require('myModule');
       o = require('myModule');`);
@@ -679,6 +679,13 @@ describe('ElementaryJS', () => {
       `for statement update expression must be present`
     ]));
     expect(staticError(`
+      for (let i = 0; i = false; ++i) {
+        break;
+      }
+    `)).toEqual(expect.arrayContaining([
+      `for statement termination test must be present and cannot be an assignment expression`,
+    ]));
+    expect(staticError(`
       for (something(); i < 10; ++i) {
         break;
       }
@@ -870,7 +877,7 @@ describe('ElementaryJS', () => {
   test('Non-empty switch cases must have braces', () => {
     expect(staticError(`
       let x = 1;
-      switch(x) {
+      switch (x) {
         case 1:
           console.log(x);
       }
@@ -880,7 +887,7 @@ describe('ElementaryJS', () => {
       ]));
     compileOK(`
       let x = 1;
-      switch(x) {
+      switch (x) {
         case 0:
         case 1: {
           console.log(x);
@@ -977,5 +984,63 @@ describe('ElementaryJS', () => {
       let randomObj = makeObj(220);
       [randomObj.getA(), randomObj.getA];
     `)).resolves.toEqual([220, expect.any(Function)]);
+  });
+
+  test('Assignment expression forbidden in certain statements', () => {
+    const errStr: string = `Forbidden assignment expression`;
+    expect.assertions(5);
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      while (a = b) {}
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      do {} while (a = b);
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      if (a = b) {}
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      switch (a = b) {
+        case 0: {
+          console.log(x);
+        }
+      }
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      switch (1) {
+        case (a = b): {
+          console.log(x);
+        }
+      }
+    `)).toEqual(expect.arrayContaining([errStr]));
+  });
+
+  test('Assignment expression forbidden in certain expressions', () => {
+    const errStr: string = `Forbidden assignment expression`;
+    expect.assertions(5);
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      const c = true && (a = b);
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      const c = (a = b) || false;
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      const c = (a = b) ? true : false
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      const c = true ? (a = b) : false
+    `)).toEqual(expect.arrayContaining([errStr]));
+    expect(staticError(`
+      let a = 'nonsense', b = false;
+      const c = false ? true : (a = b);
+    `)).toEqual(expect.arrayContaining([errStr]));
   });
 });
