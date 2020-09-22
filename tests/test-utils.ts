@@ -2,8 +2,8 @@ import { compile, CompileOK, Result } from '../src/index';
 
 export const compileOpts = {
   isOnline: true,
-  consoleLog: (message: any) => console.log(message),
-  version: () => console.log('No version'),
+  consoleLog: (message: any) => void message,
+  version: () => {},
   whitelistCode: {
     myModule: `function myModule() {
       return {
@@ -51,12 +51,12 @@ export function dynamicError(code: string) {
     if (result.kind === 'error') {
       return reject(result);
     }
-    return result.run((result: Result) => {
-      return result.type === 'normal' ?
-        reject(`Expected exception, got result ${result.value}`) :
-        typeof result.value.message !== 'string' ?
-          reject(`Expected exception, got result ${result.value}`) :
-          resolve(result.value.message);
+    return result.run((result2: Result) => {
+      return result2.type === 'normal' ?
+        reject(`Expected exception, got result ${result2.value}`) :
+        typeof result2.value.message !== 'string' ?
+          reject(`Expected exception, got result ${result2.value}`) :
+          resolve(result2.value.message);
     });
   });
 }
@@ -83,9 +83,9 @@ export function run(code: string) {
       if (result.type === 'exception') {
         return reject(result.value);
       }
-      runner.eval(code, (result: Result) => {
-        return result.type === 'exception' ? reject(result.value) :
-          resolve(result.value);
+      runner.eval(code, (result2: Result) => {
+        return result2.type === 'exception' ? reject(result2.value) :
+          resolve(result2.value);
       });
     });
   });
