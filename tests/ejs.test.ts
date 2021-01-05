@@ -72,7 +72,9 @@ describe('ElementaryJS', () => {
   });
 
   test('Can access array members', async () => {
-    expect.assertions(1);
+    expect.assertions(2);
+    await expect(run(`[0, undefined][1]`))
+      .resolves.toBeUndefined();
     await expect(run(`let obj = [10]; obj[0] = 42`))
       .resolves.toBe(42);
   });
