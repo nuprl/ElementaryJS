@@ -110,7 +110,7 @@ export function arrayBoundsCheck(object: any, index: string, line: number) {
   if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
     errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck', line);
   }
-  if (object && object[index] === undefined) {
+  if (object && index >= object.length) {
     errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck', line);
   }
   return object && object[index];
