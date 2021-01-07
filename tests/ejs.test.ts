@@ -128,7 +128,7 @@ describe('ElementaryJS', () => {
   test('Error for undefined accessor of require', async () => {
     expect.assertions(1);
     await expect(dynamicError(`const o = require('myModule'); o.p;`))
-      .resolves.toMatch(`object does not have member 'p'`);
+      .resolves.toMatch(`Object does not have member 'p'.`);
   });
 
   test('Change require', async () => {
@@ -193,9 +193,9 @@ describe('ElementaryJS', () => {
   test('Accessing members of anonymous objects', async () => {
     expect.assertions(4);
     await expect(dynamicError(`[].x`))
-      .resolves.toMatch(`object does not have member 'x'`);
+      .resolves.toMatch(`Object does not have member 'x'.`);
     await expect(dynamicError(`[0, 1][10]`))
-        .resolves.toMatch(`index '10' is out of array bounds`);
+        .resolves.toMatch(`Index '10' is out of array bounds.`);
     await expect(run(`[3, 4][1]`)).resolves.toBe(4);
     await expect(run(`[].indexOf`)).resolves.toBeInstanceOf(Function);
   });
@@ -203,43 +203,43 @@ describe('ElementaryJS', () => {
   test('Cannot access array non-members', async () => {
     expect.assertions(2);
     await expect(dynamicError(`let a = []; let b = a[0];`))
-      .resolves.toMatch(`index '0' is out of array bounds`);
+      .resolves.toMatch(`Index '0' is out of array bounds.`);
     await expect(dynamicError(`let a = []; a[0] = 0;`))
-      .resolves.toMatch(`index '0' is out of array bounds`);
+      .resolves.toMatch(`Index '0' is out of array bounds.`);
   });
 
   test('Array index must be a positive integer', async () => {
     expect.assertions(2);
     await expect(dynamicError(`let a = []; let b = a[3.1415]`))
-      .resolves.toMatch(`array index '3.1415' is not valid`);
+      .resolves.toMatch(`Array index '3.1415' is not valid.`);
     await expect(dynamicError(`let a = []; let b = a[-1]`))
-        .resolves.toMatch(`array index '-1' is not valid`);
+        .resolves.toMatch(`Array index '-1' is not valid`);
   });
 
   test('Cannot pass array non-members as arguments to function', async () => {
     expect.assertions(1);
     await expect(dynamicError(`let a = []; Math.abs(a[0]);`))
-      .resolves.toMatch(`index '0' is out of array bounds`);
+      .resolves.toMatch(`Index '0' is out of array bounds.`);
   });
 
   test('Cannot assign array non-members', async () => {
     expect.assertions(1);
     await expect(dynamicError(`let obj = []; obj[10] += 5`))
-      .resolves.toMatch(`index '10' is out of array bounds`);
+      .resolves.toMatch(`Index '10' is out of array bounds.`);
   });
 
   test('Cannot update array non-members', async () => {
     expect.assertions(1);
     await expect(dynamicError(`let obj = []; ++obj[0]`))
-      .resolves.toMatch(`index '0' is out of array bounds`);
+      .resolves.toMatch(`Index '0' is out of array bounds.`);
   });
 
   test('Dynamic error when looking up non-member', async () => {
     expect.assertions(2);
     await expect(dynamicError(`let obj = { x: 500 }; obj.y`))
-      .resolves.toMatch(`object does not have member 'y'`);
+      .resolves.toMatch(`Object does not have member 'y'.`);
     await expect(dynamicError(`let obj = { x: 500 }; ++obj.y`))
-      .resolves.toMatch(`object does not have member 'y'`);
+      .resolves.toMatch(`Object does not have member 'y'.`);
   });
 
   test('Dynamic error when calling non-member function', async () => {
@@ -251,37 +251,37 @@ describe('ElementaryJS', () => {
   test('Dynamic error when looking up non-member 2', async () => {
     expect.assertions(1);
     await expect(dynamicError(`let obj = { x: 500 }; obj.y += 1`))
-      .resolves.toMatch(`object does not have member 'y'`);
+      .resolves.toMatch(`Object does not have member 'y'.`);
   });
 
   test('Dynamic error when incrementing or decrementing non-number', async () => {
     expect.assertions(2);
     await expect(dynamicError(`let a = {}; --a`))
-      .resolves.toMatch("argument of operator '--' must be a number");
+      .resolves.toMatch("Argument of operator '--' must be a number.");
     await expect(dynamicError(`let a = "foo"; ++a`))
-      .resolves.toMatch("argument of operator '++' must be a number");
+      .resolves.toMatch("Argument of operator '++' must be a number.");
   });
 
   test('Dynamic error when assigning a value to a non-member', async () => {
     expect.assertions(1);
     await expect(dynamicError(`let obj = {}; obj.y = 0;`))
-      .resolves.toMatch(`object does not have member 'y'`);
+      .resolves.toMatch(`Object does not have member 'y'.`);
   });
 
   test('Dynamic error when using non-boolean in if statement', async () => {
     expect.assertions(1);
     await expect(dynamicError('if (42) {}'))
-      .resolves.toMatch(`expected a boolean expression, instead received '42'`);
+      .resolves.toMatch(`Expected a boolean expression, instead received '42'.`);
   });
 
   test('Dynamic error when using non-boolean in loop', async () => {
     expect.assertions(3);
     await expect(dynamicError('while (0) {}'))
-      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
+      .resolves.toMatch(`Expected a boolean expression, instead received '0'.`);
     await expect(dynamicError('do {} while (0);'))
-      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
+      .resolves.toMatch(`Expected a boolean expression, instead received '0'.`);
     await expect(dynamicError('for (let x = 0; x; ++x) {}'))
-      .resolves.toMatch(`expected a boolean expression, instead received '0'`);
+      .resolves.toMatch(`Expected a boolean expression, instead received '0'.`);
   });
 
   test('Can access property when value is undefined', async () => {
@@ -335,18 +335,18 @@ describe('ElementaryJS', () => {
   test('Dynamic error when mixing types', async () => {
     expect.assertions(2);
     await expect(dynamicError(`let a = {}, b = 1; a + b`))
-      .resolves.toMatch("arguments of operator '+' must both be numbers or strings");
+      .resolves.toMatch("Arguments of operator '+' must both be numbers or strings.");
     await expect(dynamicError(`let a = "foo", b = 1; a - b`))
-      .resolves.toMatch("arguments of operator '-' must both be numbers");
+      .resolves.toMatch("Arguments of operator '-' must both be numbers.");
   });
 
   test('Dynamic numeric operator check order', async () => {
     expect.assertions(2);
-    // The * operator has precedence over -, hence should be dyn. checked first.
+    // The * operator has precedence over -, hence should be dynamic checked first.
     await expect(dynamicError(`let a = "", b = 1, c = {}; a * b - c`))
-      .resolves.toMatch("arguments of operator '*' must both be numbers");
+      .resolves.toMatch("Arguments of operator '*' must both be numbers.");
     await expect(dynamicError(`let a = "", b = 1, c = {}; a / b * c`))
-      .resolves.toMatch("arguments of operator '/' must both be numbers");
+      .resolves.toMatch("Arguments of operator '/' must both be numbers.");
   });
 
   test('Can use pre-update operator with numbers', async () => {
@@ -379,7 +379,7 @@ describe('ElementaryJS', () => {
   test('Cannot have duplicate names in object literals', () => {
     expect(staticError(`let myObj = { a: true, a: false };`)).toEqual(
       expect.arrayContaining([
-        `Object member name may only be used once; a.`
+        `Object member name may only be used once; 'a'.`
       ]));
   });
 
@@ -411,7 +411,7 @@ describe('ElementaryJS', () => {
   test('No try-catch', () => {
     expect(staticError(`try { let x = 1; } catch (e) {}`)).toEqual(
       expect.arrayContaining([
-        `The try-catch statment is not supported.`
+        `The try-catch statement is not supported.`
       ]));
   });
 
@@ -481,11 +481,11 @@ describe('ElementaryJS', () => {
   test('Disallowed comparison operators', () => {
     expect(staticError(`let x = "1", y = 1; x == y`)).toEqual(
       expect.arrayContaining([
-        `Do not use the '==' operator. Use '===' instead.`
+        `Do not use the '==' operator; use '===' instead.`
       ]));
     expect(staticError(`let x = "1", y = 1; x != y`)).toEqual(
       expect.arrayContaining([
-        `Do not use the '!=' operator. Use '!==' instead.`
+        `Do not use the '!=' operator; use '!==' instead.`
       ]));
   });
 
@@ -549,7 +549,7 @@ describe('ElementaryJS', () => {
           o.x = 5;
         }
       }
-      new C({ })`)).resolves.toMatch(`object does not have member 'x'`);
+      new C({ })`)).resolves.toMatch(`Object does not have member 'x'.`);
   });
 
   test('Dynamic check for this.x = y in function nested in constructor', async () => {
@@ -560,7 +560,7 @@ describe('ElementaryJS', () => {
           (function() { this.x = 5; })();
         }
       }
-      new C()`)).resolves.toMatch(`cannot access member of non-object value type`);
+      new C()`)).resolves.toMatch(`Cannot access member of non-object value types.`);
   });
 
   test('Arity-mismatch: too few arguments', async () => {
@@ -568,7 +568,7 @@ describe('ElementaryJS', () => {
     await expect(dynamicError(`
       function F(x) {}
       F();
-    `)).resolves.toMatch(`function F expected 1 argument but received 0 arguments`);
+    `)).resolves.toMatch(`Function F expected 1 argument but received 0 arguments.`);
   });
 
   test('Arity-mismatch: too many arguments', async () => {
@@ -576,7 +576,7 @@ describe('ElementaryJS', () => {
     await expect(dynamicError(`
       function F(x) {}
       F(1,2,3);
-    `)).resolves.toMatch(`function F expected 1 argument but received 3 arguments`);
+    `)).resolves.toMatch(`Function F expected 1 argument but received 3 arguments.`);
   });
 
   test('Classes test', async () => {
@@ -661,38 +661,38 @@ describe('ElementaryJS', () => {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement variable initialization must be present`,
-      `for statement termination test must be present and cannot be an assignment expression`,
-      `for statement update expression must be present`
+      `For statement variable initialization must be present.`,
+      `For statement termination test must be present and cannot be an assignment expression.`,
+      `For statement update expression must be present.`
     ]));
     expect(staticError(`
       for (let i = 0;;) {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement termination test must be present and cannot be an assignment expression`,
-      `for statement update expression must be present`
+      `For statement termination test must be present and cannot be an assignment expression.`,
+      `For statement update expression must be present.`
     ]));
     expect(staticError(`
       for (let i = 0; i < 10;) {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement update expression must be present`
+      `For statement update expression must be present.`
     ]));
     expect(staticError(`
       for (let i = 0; i = false; ++i) {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement termination test must be present and cannot be an assignment expression`,
+      `For statement termination test must be present and cannot be an assignment expression.`,
     ]));
     expect(staticError(`
       for (something(); i < 10; ++i) {
         break;
       }
     `)).toEqual(expect.arrayContaining([
-      `for statement variable initialization must be an assignment or a variable declaration`
+      `For statement variable initialization must be an assignment or a variable declaration.`
     ]));
     await expect(run(`
       let i = 0;
@@ -707,17 +707,17 @@ describe('ElementaryJS', () => {
     await expect(run(`true || 123`)).resolves.toBe(true);
     await expect(run(`false || true`)).resolves.toBe(true);
     await expect(dynamicError(`false || doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
-    await expect(dynamicError(`false || 123`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
-    await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
-    await expect(dynamicError(`0 || false`)).resolves.toMatch(`arguments of operator '||' must both be booleans`);
+    await expect(dynamicError(`false || 123`)).resolves.toMatch(`Arguments of operator '||' must both be booleans.`);
+    await expect(dynamicError(`false || 'as'`)).resolves.toMatch(`Arguments of operator '||' must both be booleans.`);
+    await expect(dynamicError(`0 || false`)).resolves.toMatch(`Arguments of operator '||' must both be booleans.`);
     // and:
     await expect(run(`false && doesNotExists()`)).resolves.toBe(false);
     await expect(run(`false && 123`)).resolves.toBe(false);
     await expect(run(`false && true`)).resolves.toBe(false);
     await expect(dynamicError(`true && doesNotExists()`)).resolves.toMatch(`doesNotExists is not defined`);
-    await expect(dynamicError(`true && 123`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
-    await expect(dynamicError(`true && 'as'`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
-    await expect(dynamicError(`1 && false`)).resolves.toMatch(`arguments of operator '&&' must both be booleans`);
+    await expect(dynamicError(`true && 123`)).resolves.toMatch(`Arguments of operator '&&' must both be booleans.`);
+    await expect(dynamicError(`true && 'as'`)).resolves.toMatch(`Arguments of operator '&&' must both be booleans.`);
+    await expect(dynamicError(`1 && false`)).resolves.toMatch(`Arguments of operator '&&' must both be booleans.`);
     // function invocation:
     await expect(run(`
       function returnTrue() {
@@ -732,7 +732,7 @@ describe('ElementaryJS', () => {
       const x = 1;
       x = 2;
     `)).toEqual(expect.arrayContaining([
-      `variable is 'const'`
+      `Variable is 'const'.`
     ]));
   });
 
@@ -772,12 +772,12 @@ describe('ElementaryJS', () => {
 
   test('Cannot set .length of arrays', async () => {
     await expect(dynamicError(`[1,2,3].length = 5`,))
-    .resolves.toMatch(`cannot set .length of an array`);
+    .resolves.toMatch(`Cannot set '.length' of an array.`);
   });
 
   test('Cannot use computed member expressions on objects', async () => {
     await expect(dynamicError(`let r = {a: 5}[10]`,))
-    .resolves.toMatch(`array indexing called on a non-array value type`);
+    .resolves.toMatch(`Array indexing called on a non-array value type.`);
   });
 
   test('Overwriting globals causes runtime error', async () => {
@@ -851,7 +851,7 @@ describe('ElementaryJS', () => {
     await expect(dynamicError(`
       let a = (a) => 1;
       a();
-    `)).resolves.toMatch('function (anonymous) expected 1 argument but received 0 arguments');
+    `)).resolves.toMatch('Function (anonymous) expected 1 argument but received 0 arguments.');
   })
 
   test('Arrow functions have no implicit parameters (1)', async () => {
@@ -862,7 +862,7 @@ describe('ElementaryJS', () => {
        };
 
        a.c();
-    `)).resolves.toMatch(`cannot access member of non-object value types`);
+    `)).resolves.toMatch(`Cannot access member of non-object value types.`);
   });
 
   test('Arrow functions have no implicit parameters (2)', async () => {
@@ -946,7 +946,7 @@ describe('ElementaryJS', () => {
     await expect(dynamicError(`
       let obj = {x: (y) => y + 1};
       obj['x'](1);
-    `)).resolves.toMatch(`array indexing called on a non-array value type`);
+    `)).resolves.toMatch(`Array indexing called on a non-array value type.`);
     await expect(dynamicError(`
       class A {
         static funcA() {
@@ -954,7 +954,7 @@ describe('ElementaryJS', () => {
         }
       }
       A['funcA']();
-    `)).resolves.toMatch(`array indexing called on a non-array value type`);
+    `)).resolves.toMatch(`Array indexing called on a non-array value type.`);
   });
 
   test('Function calls work', async () => {
@@ -989,7 +989,7 @@ describe('ElementaryJS', () => {
   });
 
   test('Assignment expression forbidden in certain statements', () => {
-    const errStr: string = `Forbidden assignment expression`;
+    const errStr: string = `Forbidden assignment expression.`;
     expect.assertions(5);
     expect(staticError(`
       let a = 'nonsense', b = false;
@@ -1022,7 +1022,7 @@ describe('ElementaryJS', () => {
   });
 
   test('Assignment expression forbidden in certain expressions', () => {
-    const errStr: string = `Forbidden assignment expression`;
+    const errStr: string = `Forbidden assignment expression.`;
     expect.assertions(5);
     expect(staticError(`
       let a = 'nonsense', b = false;

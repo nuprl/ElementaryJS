@@ -3,7 +3,7 @@ import * as runtime from '../src/runtime';
 import { compileOpts, compileOK, run } from './test-utils';
 
 // Returns the expected failure message from testing
-function testFailure(description: string, errorMsg: string = 'Error: assertion failed') {
+function testFailure(description: string, errorMsg: string = 'Error: Assertion failed.') {
   return ` FAILED  ${description}\n         ${errorMsg}`;
 }
 
@@ -15,8 +15,8 @@ function testOk(description: string) {
 // Returns the expected test summary given number failed and number passed
 function testSummary(failed: number, passed: number) {
   return failed > 0 ?
-    `Tests:     ${failed} failed, ${passed} passed, ${failed + passed} total` :
-    `Tests:     ${passed} passed, ${failed + passed} total`;
+    `Tests:     ${failed} failed, ${passed} passed, ${failed + passed} total.` :
+    `Tests:     ${passed} passed, ${failed + passed} total.`;
 }
 
 describe('ElementaryJS Test Mode', () => {
@@ -33,7 +33,7 @@ describe('ElementaryJS Test Mode', () => {
       });
     `)).resolves.toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure('loop forever', 'time limit exceeded'),
+      testFailure('loop forever', 'Time limit exceeded.'),
       testSummary(1, 0)
     ].join('\n'));
   });
@@ -47,7 +47,7 @@ describe('ElementaryJS Test Mode', () => {
       test('succeeds', function() {});
     `)).resolves.toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure('loop forever', 'time limit exceeded'),
+      testFailure('loop forever', 'Time limit exceeded.'),
       testOk('succeeds'),
       testSummary(1, 1)
     ].join('\n'));
@@ -71,8 +71,8 @@ describe('ElementaryJS Test Mode', () => {
       test('adder', function() { adder(1)(2) });
     `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure('higher order', 'time limit exceeded'),
-      testFailure('adder', 'time limit exceeded'),
+      testFailure('higher order', 'Time limit exceeded.'),
+      testFailure('adder', 'Time limit exceeded.'),
       testSummary(2, 0)
     ].join('\n'));
   }, 7000); // should take no more than 7 seconds (running two tests)
@@ -91,15 +91,15 @@ describe('ElementaryJS Test Mode', () => {
       test('run a while', function() { hof(function(x) { return x + 1; }); });
     `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure('run a while', 'time limit exceeded'),
+      testFailure('run a while', 'Time limit exceeded.'),
       testSummary(1, 0),
     ].join('\n'));
   }, 4000); // should take no more than 4 seconds
 
   test('No tests', () => {
     expect(runtime.summary(false).output).toBe([
-      `◈ You don't seem to have any tests written`,
-      `◈ To run a test, begin a function name with 'test'`
+      `◈ You do not seem to have any tests written.`,
+      `◈ To run a test, begin a function name with 'test'.`
     ].join('\n'));
   });
 
@@ -107,10 +107,10 @@ describe('ElementaryJS Test Mode', () => {
     expect(runtime.assert(true)).toBe(true);
     expect(() => {
       runtime.assert(false);
-    }).toThrow('assertion failed');
+    }).toThrow('Assertion failed.');
     expect(() => {
       runtime.assert(2 as any);
-    }).toThrow('not a boolean');
+    }).toThrow(`Assertion argument '2' is not a boolean value.`);
   });
 
   test('One OK test', async () => {
@@ -126,7 +126,7 @@ describe('ElementaryJS Test Mode', () => {
       assert(false);
     });`)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
-      testFailure('Failed Test', 'Error: assertion failed'),
+      testFailure('Failed Test'),
       testSummary(1, 0)
     ].join('\n'));
   });
@@ -138,7 +138,7 @@ describe('ElementaryJS Test Mode', () => {
     `)).toBeUndefined();
     expect(runtime.summary(false).output).toBe([
       testOk('Ok test'),
-      testFailure('Failed', 'Error: assertion failed'),
+      testFailure('Failed'),
       testSummary(1, 1),
     ].join('\n'));
   });
@@ -157,7 +157,7 @@ describe('ElementaryJS Test Mode', () => {
       output.push(testOk(i.toString()));
     }
     for (let i = 10; i < 20; i++) {
-      output.push(testFailure(i.toString(), 'Error: assertion failed'));
+      output.push(testFailure(i.toString()));
     }
     output.push(testSummary(10, 10));
     expect(runtime.summary(false).output).toBe(output.join('\n'));
