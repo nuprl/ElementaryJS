@@ -30,15 +30,15 @@ Please report this to the developers along with the following message:
 class ArrayStub {
   constructor() {
     // TODO: Can this message actually be triggered?
-    errorHandle('use Array.create(length, init)', 'Array constructor');
+    errorHandle(`Use 'Array.create(length, init)'.`, 'Array constructor');
   }
 
   static create(n: any, v: any) {
     if (arguments.length !== 2) {
-      errorHandle(`.create expects 2 arguments, received ${arguments.length}`, 'Array.create');
+      errorHandle(`'.create' expects 2 arguments, received ${arguments.length}.`, 'Array.create');
     }
     if (!Number.isInteger(n) || n < 1) {
-      errorHandle('array size must be a positive integer', 'Array.create');
+      errorHandle('Array size must be a positive integer.', 'Array.create');
     }
 
     const a = new Array(n);
@@ -53,7 +53,7 @@ export { ArrayStub as Array };
 export function stopifyArray(array: any[]) {
   const maybeRunner = getRunner();
   if (maybeRunner.kind === 'error') {
-    return elementaryJSBug(`Stopify not loaded`);
+    return elementaryJSBug('Stopify not loaded.');
   }
   // TODO(arjun): Why may runner be undefined?
   return maybeRunner.value.runner!.g.$stopifyArray(array);
@@ -89,15 +89,15 @@ export function checkCall(object: any, field: string, args: any[]) {
   } else if (typeof object === 'function' && object.name === 'Object') {
     return stopifyArray(object[field](args[0]));
   }
-  elementaryJSBug(`checkCall with ${field} on ${typeof object}`);
+  elementaryJSBug(`In 'checkCall' with ${field} on ${typeof object}.`);
 }
 
 export function checkIfBoolean(value: any, operator: '||' | '&&' | undefined, line: number) {
   if (typeof value !== 'boolean' && !operator) { // for the if statement
-    errorHandle(`expected a boolean expression, instead received '${value}'`, 'checkIfBoolean',
+    errorHandle(`Expected a boolean expression, instead received '${value}'.`, 'checkIfBoolean',
       line);
   } else if (typeof value !== 'boolean') {
-    errorHandle(`arguments of operator '${operator}' must both be booleans`, 'checkIfBoolean',
+    errorHandle(`Arguments of operator '${operator}' must both be booleans.`, 'checkIfBoolean',
       line);
   }
   return value;
@@ -105,13 +105,13 @@ export function checkIfBoolean(value: any, operator: '||' | '&&' | undefined, li
 
 export function arrayBoundsCheck(object: any, index: string, line: number) {
   if (!Array.isArray(object)) {
-    errorHandle('array indexing called on a non-array value type', 'arrayBoundsCheck', line);
+    errorHandle('Array indexing called on a non-array value type.', 'arrayBoundsCheck', line);
   }
   if (typeof index !== 'number' || index < 0 || (index % 1) !== 0) {
-    errorHandle(`array index '${index}' is not valid`, 'arrayBoundsCheck', line);
+    errorHandle(`Array index '${index}' is not valid.`, 'arrayBoundsCheck', line);
   }
   if (object && index >= object.length) {
-    errorHandle(`index '${index}' is out of array bounds`, 'arrayBoundsCheck', line);
+    errorHandle(`Index '${index}' is out of array bounds.`, 'arrayBoundsCheck', line);
   }
   return object && object[index];
 }
@@ -122,10 +122,10 @@ export function dot(object: any, index: string, line: number) {
       typeof object !== 'boolean' &&
       typeof object !== 'number'  &&
       typeof object !== 'function') {
-    errorHandle('cannot access member of non-object value types', 'dot', line);
+    errorHandle('Cannot access member of non-object value types.', 'dot', line);
   }
   if (object && !object.hasOwnProperty(index) && typeof object[index] !== 'function') {
-    errorHandle(`object does not have member '${index}'`, 'dot', line);
+    errorHandle(`Object does not have member '${index}'.`, 'dot', line);
   }
   if (typeof object === 'string' && index === 'split') {
     return function(sep: string) {
@@ -137,13 +137,13 @@ export function dot(object: any, index: string, line: number) {
 
 export function updateOnlyNumbers(opcode: string, object: any, line: number) {
   if (typeof object !== 'number') {
-    errorHandle(`argument of operator '${opcode}' must be a number`, 'updateOnlyNumbers', line);
+    errorHandle(`Argument of operator '${opcode}' must be a number.`, 'updateOnlyNumbers', line);
   }
 }
 
 export function checkMember(o: any, k: any, v: any, line: number) {
   if (Array.isArray(o)) {
-    errorHandle(`cannot set .${k} of an array`, 'checkMember', line);
+    errorHandle(`Cannot set '.${k}' of an array.`, 'checkMember', line);
   }
   dot(o, k, line);
   return o && (o[k] = v);
@@ -157,13 +157,13 @@ export function checkArray(o: any, k: any, v: any, line: number) {
 export function checkUpdateOperand(opcode: string, obj: any, member: string | number, line: number) {
   if (obj && !obj.hasOwnProperty(member)) {
     if (typeof member === 'number') {
-      errorHandle(`index '${member}' is out of array bounds`, 'checkUpdateOperand', line);
+      errorHandle(`Index '${member}' is out of array bounds.`, 'checkUpdateOperand', line);
     } else {
-      errorHandle(`object does not have member '${member}'`, 'checkUpdateOperand', line);
+      errorHandle(`Object does not have member '${member}'.`, 'checkUpdateOperand', line);
     }
   }
   if (obj && typeof obj[member] !== 'number') {
-    errorHandle(`argument of operator '${opcode}' must be a number`, 'checkUpdateOperand', line);
+    errorHandle(`Argument of operator '${opcode}' must be a number.`, 'checkUpdateOperand', line);
   }
   if (opcode === '++') {
     return obj && (++obj[member]);
@@ -171,14 +171,14 @@ export function checkUpdateOperand(opcode: string, obj: any, member: string | nu
     return obj && (--obj[member]);
   } else {
     // This will only happen if there is an update expression with an opcode other than ++ or --.
-    return elementaryJSBug('UpdateOperand dynamic check');
+    return elementaryJSBug(`In 'checkUpdateOperand'.`);
   }
 }
 
 export function applyNumOrStringOp(op: string, lhs: any, rhs: any, line: number) {
   if (!((typeof lhs === 'string' && typeof rhs === 'string') ||
       (typeof lhs === 'number' && typeof rhs === 'number'))) {
-    errorHandle(`arguments of operator '${op}' must both be numbers or strings`,
+    errorHandle(`Arguments of operator '${op}' must both be numbers or strings.`,
       'applyNumOrStringOp', line);
   }
   switch (op) {
@@ -186,14 +186,14 @@ export function applyNumOrStringOp(op: string, lhs: any, rhs: any, line: number)
       return (lhs as any) + (rhs as any);
     } break;
     default: {
-      elementaryJSBug(`applyNumOrStringOp '${op}'`);
+      elementaryJSBug(`In 'applyNumOrStringOp' with '${op}'.`);
     }
   }
 }
 
 export function applyNumOp(op: string, lhs: any, rhs: any, line: number) {
   if (!(typeof (lhs) === 'number' && typeof (rhs) === 'number')) {
-    errorHandle(`arguments of operator '${op}' must both be numbers`, 'applyNumOp', line);
+    errorHandle(`Arguments of operator '${op}' must both be numbers.`, 'applyNumOp', line);
   }
   switch (op) {
     case '-': {
@@ -239,7 +239,7 @@ export function applyNumOp(op: string, lhs: any, rhs: any, line: number) {
       return (lhs % rhs);
     } break;
     default: {
-      elementaryJSBug(`applyNumOp '${op}'`);
+      elementaryJSBug(`In 'applyNumOp' with '${op}'.`);
       return 0;
     }
   }
@@ -249,7 +249,7 @@ export function arityCheck(name: string, expected: number, actual: number, line:
   if (expected !== actual) {
     const expectedStr = `${expected} argument${expected === 1 ? '' : 's'}`,
           actualStr = `${actual} argument${actual === 1 ? '' : 's'}`;
-    errorHandle(`function ${name} expected ${expectedStr} but received ${actualStr}`,
+    errorHandle(`Function ${name} expected ${expectedStr} but received ${actualStr}.`,
       'arityCheck', line);
   }
 }
@@ -312,9 +312,9 @@ export function enableTests(enable: boolean, timeout: number = 5000) {
  */
 export function assert(val: boolean) {
   if (typeof val !== 'boolean') {
-    throw new ElementaryTestingError(`assertion argument '${val}' is not a boolean value`);
+    throw new ElementaryTestingError(`Assertion argument '${val}' is not a boolean value.`);
   } else if (!val) {
-    throw new ElementaryTestingError('assertion failed');
+    throw new ElementaryTestingError('Assertion failed.');
   }
   return true;
 }
@@ -345,7 +345,7 @@ export function test(description: string, testFunction: () => void) {
           suspend.onDone = onDone;
           tests.push({
             failed: true,
-            error: 'time limit exceeded',
+            error: 'Time limit exceeded.',
             description
           });
           setImmediate(() => runner.resume());
@@ -388,7 +388,7 @@ export function test(description: string, testFunction: () => void) {
 export function summary(hasStyles: boolean) {
   if (!testsEnabled) {
     return {
-      output: 'Test not enabled',
+      output: 'Test not enabled.',
       style: []
     }
   }
@@ -396,7 +396,7 @@ export function summary(hasStyles: boolean) {
   if (tests.length === 0) {
     enableTests(false);
     return {
-      output: `${styleMark}◈ You don't seem to have any tests written\n◈ To run a test, begin a function name with 'test'`,
+      output: `${styleMark}◈ You do not seem to have any tests written.\n◈ To run a test, begin a function name with 'test'.`,
       style: hasStyles ? ['color: #e87ce8'] : []
     };
   }
@@ -416,10 +416,10 @@ export function summary(hasStyles: boolean) {
     numPassed += 1;
   }
   if (numFailed > 0) {
-    output.push(`Tests:     ${styleMark}${numFailed} failed, ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
+    output.push(`Tests:     ${styleMark}${numFailed} failed, ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total.`);
     hasStyles && style.push('color: #f44336; font-weight: bold', 'color: #2ac093; font-weight: bold', 'font-weight: bold');
   } else {
-    output.push(`Tests:     ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total`);
+    output.push(`Tests:     ${styleMark}${numPassed} passed, ${styleMark}${numPassed + numFailed} total.`);
     hasStyles && style.push('color: #2ac093; font-weight: bold', 'font-weight: bold');
   }
   enableTests(false);
