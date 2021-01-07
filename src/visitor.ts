@@ -258,7 +258,7 @@ function unassign(op: string) {
     case '&=': return '&';
     case '^=': return '^';
     case '|=': return '|';
-    default: throw new Error(`unexpected operator type '${op}'`);
+    default: throw Error(`Unexpected operator type '${op}'.`);
   }
 }
 
@@ -271,7 +271,7 @@ function functionBody(node: t.Function | t.Program): t.Statement[] {
               t.isObjectMethod(node)) {
     return node.body.body;
   } else {
-    throw new Error(`node is a ${node.type}`);
+    throw Error(`Node is a ${node.type}.`);
   }
 }
 
@@ -284,7 +284,7 @@ function enclosingScopeBlock(path: NodePath<t.Node>): t.Statement[] {
       t.isObjectMethod(parent)) {
     return functionBody(parent);
   } else {
-    throw new Error(`parent is a ${parent.type}`);
+    throw Error(`Parent is a ${parent.type}.`);
   }
 }
 
@@ -406,7 +406,7 @@ const visitor = {
           st.elem.error(path, 'Object member name must be an identifier.');
         } else {
           propertyNames.has(prop.key.name) ? st.elem.error(path,
-            `Object member name may only be used once; ${prop.key.name}.`) :
+            `Object member name may only be used once; '${prop.key.name}'.`) :
             propertyNames.add(prop.key.name);
         }
       }
@@ -432,7 +432,7 @@ const visitor = {
       // path.node.computed is false onwards
       if (!t.isIdentifier(p)) {
         // This should never happen.
-        throw new Error(`ElementaryJS expected id. in MemberExpression`);
+        throw Error(`ElementaryJS expected identifier in 'MemberExpression'.`);
       }
       if (t.isCallExpression(parent) && parent.callee === path.node) {
         // This MemberExpression is the callee in a CallExpression, i.e., obj.method(...).
@@ -455,7 +455,7 @@ const visitor = {
         st.elem.error(path, `Do not use the '${op}' operator.`);
       }
       if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
-        st.elem.error(path, 'Do not use patterns');
+        st.elem.error(path, 'Do not use patterns.');
         return;
       } else if (t.isLogicalExpression(path.parent)
         || t.isBinaryExpression(path.parent) || t.isUnaryExpression(path.parent)
@@ -463,7 +463,7 @@ const visitor = {
         // Since we require braces, the following checks are sufficient.
         || t.isWhileStatement(path.parent) || t.isDoWhileStatement(path.parent)
         || t.isSwitchStatement(path.parent) || t.isSwitchCase(path.parent)) {
-        st.elem.error(path, 'Forbidden assignment expression');
+        st.elem.error(path, 'Forbidden assignment expression.');
         return;
       } else if (op === '=') {
         return; // Desugar everything that is not '='
@@ -498,9 +498,9 @@ const visitor = {
     exit(path: NodePath<t.AssignmentExpression>, st: S) {
       const { left, right } = path.node;
       if (path.node.operator !== '=') {
-        throw new Error('desugaring error');
+        throw Error('Desugaring error.');
       } else if (!t.isIdentifier(left) && !t.isMemberExpression(left)) {
-        throw new Error('syntactic check error');
+        throw Error('Syntactic check error.');
       } else if (t.isIdentifier(left)) {
         if (envList.peekEnvironment().U.has(path.scope.getBindingIdentifier(left.name))) {
           envList.swap(path.scope.getBindingIdentifier(left.name));
@@ -535,9 +535,9 @@ const visitor = {
     enter(path: NodePath<t.BinaryExpression>, st: S) {
       const op = path.node.operator;
       if (op === '==') {
-        st.elem.error(path, `Do not use the '==' operator. Use '===' instead.`);
+        st.elem.error(path, `Do not use the '==' operator; use '===' instead.`);
       } else if (op === '!=') {
-        st.elem.error(path, `Do not use the '!=' operator. Use '!==' instead.`);
+        st.elem.error(path, `Do not use the '!=' operator; use '!==' instead.`);
       } else if (!(allowedBinaryOperators.includes(op))) {
         st.elem.error(path, `Do not use the '${op}' operator.`);
       }
@@ -567,7 +567,7 @@ const visitor = {
   },
   UnaryExpression(path: NodePath<t.UnaryExpression>, st: S) {
     if (path.node.operator === 'delete') {
-      st.elem.error(path, `Do not use the '${path.node.operator}' operator.`);
+      st.elem.error(path, `Do not use the 'delete' operator.`);
     }
   },
   UpdateExpression: {
@@ -579,7 +579,7 @@ const visitor = {
     exit(path: NodePath<t.UpdateExpression>, st: S) {
       const a = path.node.argument;
       if (!t.isIdentifier(a) && !t.isMemberExpression(a)) {
-        throw new Error('not an l-value in update expression');
+        throw Error('Not an l-value in update expression.');
       }
       const opName = t.stringLiteral(path.node.operator);
       if (t.isIdentifier(a)) {
@@ -615,20 +615,20 @@ const visitor = {
   ForStatement: {
     enter(path: NodePath<t.ForStatement>, st: S) {
       if (path.node.init === null) {
-        st.elem.error(path, 'for statement variable initialization must be present');
+        st.elem.error(path, 'For statement variable initialization must be present.');
       }
       if (path.node.init !== null &&
           !t.isAssignmentExpression(path.node.init) &&
           !t.isVariableDeclaration(path.node.init)) {
         st.elem.error(path,
-          'for statement variable initialization must be an assignment or a variable declaration');
+          'For statement variable initialization must be an assignment or a variable declaration.');
       }
       if (path.node.test === null || t.isAssignmentExpression(path.node.test)) {
         st.elem.error(path,
-          'for statement termination test must be present and cannot be an assignment expression');
+          'For statement termination test must be present and cannot be an assignment expression.');
       }
       if (path.node.update === null) {
-        st.elem.error(path, 'for statement update expression must be present');
+        st.elem.error(path, 'For statement update expression must be present.');
       }
       if (!t.isBlockStatement(path.node.body)) {
         st.elem.error(path, 'Loop body must be enclosed in braces.');
@@ -731,7 +731,7 @@ const visitor = {
       for (const x of names) {
         const violations = path.scope.bindings[x.name].constantViolations;
         if (violations.length > 0) {
-          st.elem.error(violations[0], `variable is 'const'`);
+          st.elem.error(violations[0], `Variable is 'const'.`);
         }
       }
     }
@@ -762,11 +762,11 @@ const visitor = {
   SwitchCase(path: NodePath<t.SwitchCase>, st: S) {
     if (path.node.consequent.length > 1 || path.node.consequent.length === 1 &&
         !t.isBlockStatement(path.node.consequent[0])) {
-      st.elem.error(path, `If a switch case is not empty then it must be in braces.`);
+      st.elem.error(path, 'If a switch case is not empty then it must be in braces.');
     }
   },
   TryStatement(path: NodePath<t.TryStatement>, st: S) {
-    st.elem.error(path, `The try-catch statment is not supported.`);
+    st.elem.error(path, 'The try-catch statement is not supported.');
     path.skip();
   },
   ThrowStatement(path: NodePath<t.ThrowStatement>, st: S) {
