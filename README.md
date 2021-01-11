@@ -1,12 +1,8 @@
 # ElementaryJS
 
-[![Build Status](https://api.travis-ci.org/umass-compsci220/ElementaryJS.svg?branch=master)](https://travis-ci.org/umass-compsci220/ElementaryJS)
-
-JavaScript without sharp edges. **WARNING: ElementaryJS is not ready for general use.**
-
-## Usage
-
-[FILL] *Describe how to embed in a web page.*
+ElementaryJS is JavaScript, but with sharp edges removed. We use it
+in the Ocelot JavaScript IDE. For an overview of what ElementaryJS does,
+[see this page](https://umass-compsci220.github.io/Ocelot/)
 
 ## Building
 
