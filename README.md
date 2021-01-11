@@ -12,19 +12,19 @@ JavaScript without sharp edges. **WARNING: ElementaryJS is not ready for general
 
 On initialization (or when you update `package.json`):
 
-    yarn install
+    npm install
 
 To build:
 
-    yarn build
+    npm run-script build
 
 To lint:
 
-    yarn lint
+    npm run-script lint
 
 To test:
 
-    yarn test
+    npm run-script test
 
 ## Development
 
