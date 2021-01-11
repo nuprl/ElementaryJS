@@ -316,7 +316,7 @@ const visitor = {
     },
     exit(path: NodePath<t.Program>, st: S) {
       if (path.node.body.length !== 0) {
-        path.get('body.0').insertBefore(
+        (path.get('body.0') as unknown as NodePath<Node>).insertBefore(
           t.variableDeclaration('var', [
             t.variableDeclarator(t.identifier('rts'),
               t.identifier('elementaryjs'))
