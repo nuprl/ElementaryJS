@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Build
         run: npm run-script build
       - name: Unit tests
@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: npm ci
+      - run: npm run-script build
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
