@@ -1045,4 +1045,9 @@ describe('ElementaryJS', () => {
       const c = false ? true : (a = b);
     `)).toEqual(expect.arrayContaining([errStr]));
   });
+
+  test('JSON round-trip works', async () => {
+    expect.assertions(1);
+    await expect(run(`JSON.parse(JSON.stringify({ x: 42 })).x`)).resolves.toBe(42);
+  });
 });
