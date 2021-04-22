@@ -35,3 +35,10 @@ To test:
 - `tests/`: Unit tests.
 
 - `eval/`: Scripts and files used for evaluating ElementaryJS effectiveness.
+
+## Unsupported Features
+
+ElementaryJS does not support some JavaScript features, not because we intend to omit them, but because we haven't done the work to support them:
+
+1. Array spread syntax
+2. Destructuring assignment
