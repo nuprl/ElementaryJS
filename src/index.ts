@@ -47,8 +47,10 @@ class ElementaryRunner implements CompileOK {
       this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}(${config}))`);
     });
 
-    const JSONStopfied = Object.assign({}, JSON);
-    JSONStopfied.parse = (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text));
+    const JSONStopfied = Object.freeze({
+      stringify: (o: any) => JSON.stringify(o),
+      parse: (text: string) => runtime.stopifyObjectArrayRecur(JSON.parse(text))
+    });
 
     const globals = {
       elementaryjs: runtime,
