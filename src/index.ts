@@ -37,14 +37,18 @@ class ElementaryRunner implements CompileOK {
     if (this.ejsOff) { runtime.disableEJS(); }
 
     this.codeMap = {};
-    const config: string = `{
+    const config = {
       getRunner: runtime.getRunner,
       stopifyArray: runtime.stopifyArray,
-      stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur
-    }`;
+      stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur,
+      baseUrl: (window.location.hostname === 'code.ocelot-ide.org') ?
+        'https://us-central1-ocelot-ide-org.cloudfunctions.net/ocelot/' :
+        'https://us-central1-arjunguha-research-group.cloudfunctions.net/ocelot-beta/'      
+    };
     Object.keys(opts.whitelistCode).forEach((moduleName: string) => {
       // tslint:disable-next-line:no-eval
-      this.codeMap[moduleName] = eval(`(${opts.whitelistCode[moduleName]}(${config}))`);
+      let theModule = eval(`(${opts.whitelistCode[moduleName]})`);
+      this.codeMap[moduleName] = theModule(config);
     });
 
     const JSONStopfied = Object.freeze({
