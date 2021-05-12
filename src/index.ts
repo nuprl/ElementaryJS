@@ -23,6 +23,7 @@ const transformArrowFunctions = require('babel-plugin-transform-es2015-arrow-fun
 // do them here or we do them within the implementation of Stopify. I want
 // them here for now until I'm certain there isn't a cleaner way.
 const theGlobal: any = (typeof window !== 'undefined') ? window : global;
+const hostname = theGlobal.location?.hostname;
 theGlobal.elementaryJS = runtime;
 theGlobal.stopify = stopify;
 
@@ -41,7 +42,7 @@ class ElementaryRunner implements CompileOK {
       getRunner: runtime.getRunner,
       stopifyArray: runtime.stopifyArray,
       stopifyObjectArrayRecur: runtime.stopifyObjectArrayRecur,
-      baseUrl: (window.location.hostname === 'code.ocelot-ide.org') ?
+      baseUrl: (hostname === 'code.ocelot-ide.org') ?
         'https://us-central1-ocelot-ide-org.cloudfunctions.net/ocelot/' :
         'https://us-central1-arjunguha-research-group.cloudfunctions.net/ocelot-beta/'      
     };
